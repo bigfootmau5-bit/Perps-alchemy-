@@ -15,14 +15,14 @@
     --fg: #ffffff;
     --fg-muted: #a0a0a0;
     --fg-inverse: #000;
-    --accent-primary: #FFD700;
+    --accent-primary: #FFDE00;
     --accent-success: #22c55e;
     --accent-warn: #f59e0b;
     --accent-danger: #f43f5e;
-    --accent-info: #FFD700;
-    --accent-magenta: #FFD700;
-    --accent-purple: #FFD700;
-    --border: #FFD700;
+    --accent-info: #FFDE00;
+    --accent-magenta: #FFDE00;
+    --accent-purple: #FFDE00;
+    --border: #FFDE00;
     --border-w: 1px;
     --border-w-sm: 1px;
     --shadow-sm: none;
@@ -143,9 +143,9 @@
     background: transparent !important;
   }
   /* Explicit exceptions: gold buttons stay gold with black text (accent affordance) */
-  /* Gold buttons stay gold — covers BOTH #FFD700 (legacy) and #FFDE00 (app standard) */
-  button[style*="background:#FFD700"],
-  button[style*="background: #FFD700"],
+  /* Gold buttons stay gold — covers BOTH #FFDE00 (legacy) and #FFDE00 (app standard) */
+  button[style*="background:#FFDE00"],
+  button[style*="background: #FFDE00"],
   button[style*="background:#FFDE00"],
   button[style*="background: #FFDE00"] {
     background: #FFDE00 !important;
@@ -183,7 +183,7 @@
 
   /* All borders normalize to thin gold */
   [style*="border:"] {
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
   /* Any thick border → thin */
   [style*="border:5px"],
@@ -194,7 +194,7 @@
   [style*="border: 3px"] {
     border-width: 1px !important;
     border-style: solid !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
 
   /* CSS-class-defined cards → flat dark */
@@ -202,7 +202,7 @@
   .disclaimer, .box {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
     box-shadow: none !important;
   }
   .stat-label, .stat-value {
@@ -260,7 +260,7 @@
   [style*="color:#991b1b"], [style*="color: #991b1b"],
   [style*="color:#b91c1c"], [style*="color: #b91c1c"] { color: #f43f5e !important; }
   /* Ensure buttons with muted text stay readable */
-  .btn-secondary { color: #ffffff !important; background: #141414 !important; border: 1px solid #FFD700 !important; }
+  .btn-secondary { color: #ffffff !important; background: #141414 !important; border: 1px solid #FFDE00 !important; }
   /* Force any remaining pure-black text inside body → white */
   body, body * {
     /* This is a fallback: only applies if nothing more specific already set the color to gold or white.
@@ -279,12 +279,12 @@
   /* Sub-tab pills — GOLD trigger and menu, black text */
   .subtab-dropdown-trigger,
   .subtab-dropdown-menu {
-    background: #FFD700 !important;
+    background: #FFDE00 !important;
     color: #000 !important;
     border-color: #000 !important;
   }
   .subtab-dropdown-item {
-    background: #FFD700 !important;
+    background: #FFDE00 !important;
     color: #000 !important;
   }
   .subtab-dropdown-item:hover:not(.active) {
@@ -293,7 +293,7 @@
   }
   .subtab-dropdown-item.active {
     background: #000 !important;
-    color: #FFD700 !important;
+    color: #FFDE00 !important;
   }
   /* Skeleton loader */
   .skeleton { background: #1a1a1a !important; }
@@ -303,21 +303,21 @@
   .setup-body, .setup-header {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
   .setup-illustration svg { background: transparent !important; }
   .setup-illustration svg text,
   .setup-illustration svg tspan { fill: #ffffff !important; }
   .setup-illustration svg path,
   .setup-illustration svg line,
-  .setup-illustration svg rect { stroke: #FFD700 !important; }
+  .setup-illustration svg rect { stroke: #FFDE00 !important; }
 
   /* Timeframe tags (tf-1m, tf-5m, tf-15m, tf-1h, tf-4h, tf-1D, tf-1W) — flatten to gold-outlined pills */
   .tag, .tag-5m, .tag-15m, .tag-1h, .tag-4h, .tag-1D, .tag-1W, .tag-1m,
   [class*="tf-"] {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border: 1px solid #FFD700 !important;
+    border: 1px solid #FFDE00 !important;
   }
 
   /* Asset selector buttons (BTC/ETH/SOL etc.) */
@@ -327,32 +327,32 @@
     border: 1px solid rgba(255,215,0,0.4) !important;
   }
   .asset-btn.active, .chart-asset.active {
-    background: #FFD700 !important;
+    background: #FFDE00 !important;
     color: #000 !important;
-    border: 1px solid #FFD700 !important;
+    border: 1px solid #FFDE00 !important;
   }
   /* Scanner + control rows */
   .scanner-controls, .chart-controls, .plan-controls, .paper-controls,
   .filter-bar, .control-row {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
   /* Cornsilk (#fff8dc) inline callouts — force dark (case-insensitive attribute match) */
   [style*="#fff8dc"], [style*="#FFF8DC"], [style*="#Fff8Dc"] {
     background: #141414 !important;
     color: #ffffff !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
   /* Heatmap panel widgets */
   .hm-magnet, .microbar, .hm-compare-wrap, .heatmap-container,
   .hm-header, .hm-depth-body, .hm-compare-body {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
   /* Scanner signal rows — keep semantic tone but dark bg */
-  .signal { background: #0a0a0a !important; color: #ffffff !important; border-color: #FFD700 !important; }
+  .signal { background: #0a0a0a !important; color: #ffffff !important; border-color: #FFDE00 !important; }
   .signal.bullish { border-left: 3px solid #22c55e !important; }
   .signal.bearish { border-left: 3px solid #f43f5e !important; }
   /* Coach avatar options, badges, empty-state cards, plan/paper empty rows */
@@ -361,27 +361,27 @@
   .avatar-picker, .style-picker {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
   .avatar-option.selected, .rank-badge.selected {
-    background: #FFD700 !important;
+    background: #FFDE00 !important;
     color: #000 !important;
   }
   /* ALL form fields — dark bg, white text, gold border. EXCEPT native select dropdowns → gold bg */
   input, textarea {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border: 1px solid #FFD700 !important;
+    border: 1px solid #FFDE00 !important;
   }
   select {
-    background: #FFD700 !important;
+    background: #FFDE00 !important;
     color: #000 !important;
     border: 1px solid #000 !important;
     font-weight: 700 !important;
   }
   input::placeholder, textarea::placeholder { color: #666 !important; }
-  select option { background: #FFD700 !important; color: #000 !important; font-weight: 600 !important; }
-  select option:checked { background: #000 !important; color: #FFD700 !important; }
+  select option { background: #FFDE00 !important; color: #000 !important; font-weight: 600 !important; }
+  select option:checked { background: #000 !important; color: #FFDE00 !important; }
   /* Heatmap cells + micro widgets */
   .cell, .cell.up, .cell.down, .cell.bias, .cell.neutral,
   .hm-depth-toggle, .hm-micro, .hm-toggle, .hm-price,
@@ -389,7 +389,7 @@
   .price-big, .val, .lbl {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
   /* NOTE: removed global `.hm-compare-wrap *, .hm-compare-body *` white-color force —
      it stomped every child (headers, buttons, badges) and caused white-on-gold collisions.
@@ -398,7 +398,7 @@
   .cell .val { color: #ffffff !important; }
   #hm-pair { color: #ffffff !important; }
   /* Refresh button on hm-compare */
-  .hm-refresh-btn, [class*="refresh"] { background: #FFD700 !important; color: #000 !important; border: 1px solid #FFD700 !important; }
+  .hm-refresh-btn, [class*="refresh"] { background: #FFDE00 !important; color: #000 !important; border: 1px solid #FFDE00 !important; }
   /* Heatmap legend row — was pure black text on dark */
   .heatmap-legend, .heatmap-legend * { color: #ffffff !important; }
   /* All Live sub-tab micro/mini labels that had inline black */
@@ -411,10 +411,10 @@
   .fresh-cat-btn, .fresh-sort-btn, .fresh-filter-btn {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border: 1px solid #FFD700 !important;
+    border: 1px solid #FFDE00 !important;
   }
   .fresh-cat-btn.active, .fresh-sort-btn.active {
-    background: #FFD700 !important;
+    background: #FFDE00 !important;
     color: #000 !important;
   }
   /* Chart tab controls — timeframe / draw / indicator / stat / zoom / canvas-wrap */
@@ -423,12 +423,12 @@
   .chart-toolbar, .chart-controls {
     background: #0a0a0a !important;
     color: #ffffff !important;
-    border-color: #FFD700 !important;
+    border-color: #FFDE00 !important;
   }
   .chart-tf.active, .chart-ind.active, .chart-draw.active {
-    background: #FFD700 !important;
+    background: #FFDE00 !important;
     color: #000 !important;
-    border: 1px solid #FFD700 !important;
+    border: 1px solid #FFDE00 !important;
   }
   /* Preserve semantic swatches (green/red for long/short liq bands) */
   .clm-swatch.clm-long { background: #22c55e !important; }
@@ -866,18 +866,18 @@
   }
   .book-cover.collapsed .book-cover-collapsed-bar { display: flex; }
   .book-cover-expand-btn {
-    background: #FFD700; color: #000; border: 2px solid #000;
+    background: #FFDE00; color: #000; border: 2px solid #000;
     padding: 3px 10px; border-radius: 8px;
     font-size: 11px; font-weight: 800; text-transform: uppercase;
     cursor: pointer; letter-spacing: 0.5px;
   }
-  .book-cover-expand-btn:hover { background: #000; color: #FFD700; }
+  .book-cover-expand-btn:hover { background: #000; color: #FFDE00; }
   /* Floating "skip to app" button — always visible on non-collapsed cover */
   .book-cover-skip-btn {
     position: absolute;
     top: 12px; left: 50%; transform: translateX(-50%);
     z-index: 20;
-    background: #FFD700; color: #000;
+    background: #FFDE00; color: #000;
     border: 3px solid #000;
     padding: 8px 18px;
     border-radius: 22px;
@@ -962,7 +962,7 @@
     font-family: 'Trebuchet MS', 'Helvetica Neue', sans-serif;
     font-size: 52px;
     font-weight: 900;
-    color: #FFD700;
+    color: #FFDE00;
     line-height: 0.95;
     letter-spacing: -1.5px;
     margin-bottom: 4px;
@@ -972,7 +972,7 @@
     font-size: 26px;
     font-weight: 400;
     font-style: italic;
-    color: #FFD700;
+    color: #FFDE00;
     opacity: 0.7;
     margin: 4px 0;
     letter-spacing: -0.5px;
@@ -982,7 +982,7 @@
     font-size: 58px;
     font-weight: 900;
     letter-spacing: -2px;
-    color: #FFD700;
+    color: #FFDE00;
     display: block;
   }
   .book-subtitle {
@@ -995,7 +995,7 @@
     display: inline-block;
     padding: 4px 12px;
     border-radius: 20px;
-    border: 1px solid #FFD700;
+    border: 1px solid #FFDE00;
     box-shadow: none;
     opacity: 0.9;
   }
@@ -1004,7 +1004,7 @@
     color: #ffffff;
     display: block;
     padding: 10px 16px;
-    border: 1px solid #FFD700;
+    border: 1px solid #FFDE00;
     border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
@@ -1871,7 +1871,7 @@
   @keyframes pfd-fade { from { opacity: 0; } to { opacity: 1; } }
   .pfd-onb-card {
     background: #0a0a0a;
-    border: 1px solid #FFD700; border-radius: 14px;
+    border: 1px solid #FFDE00; border-radius: 14px;
     box-shadow: 0 0 40px rgba(255,215,0,0.15);
     max-width: 460px; width: 100%; padding: 24px;
     color: #ffffff; text-align: center; position: relative;
@@ -1886,9 +1886,9 @@
   }
   .pfd-onb-dot {
     width: 8px; height: 8px; border-radius: 50%;
-    background: rgba(255,215,0,0.25); border: 1px solid #FFD700;
+    background: rgba(255,215,0,0.25); border: 1px solid #FFDE00;
   }
-  .pfd-onb-dot.active { background: #FFD700; }
+  .pfd-onb-dot.active { background: #FFDE00; }
   .pfd-onb-title {
     font-size: 22px; font-weight: 800; text-transform: uppercase;
     letter-spacing: 0.5px; margin-bottom: 6px; line-height: 1.2;
@@ -1904,7 +1904,7 @@
   }
   .pfd-onb-bullets {
     list-style: none; text-align: left;
-    background: transparent; border: 1px solid #FFD700; border-radius: 10px;
+    background: transparent; border: 1px solid #FFDE00; border-radius: 10px;
     padding: 12px 14px; margin: 12px 0; box-shadow: none;
     color: #ffffff;
   }
@@ -1919,30 +1919,30 @@
     margin: 10px 0;
   }
   .pfd-onb-pick {
-    background: #141414; border: 1px solid #FFD700; border-radius: 10px;
+    background: #141414; border: 1px solid #FFDE00; border-radius: 10px;
     padding: 10px 4px; cursor: pointer; font-size: 22px;
     box-shadow: none; transition: transform 0.08s;
     color: #ffffff;
   }
   .pfd-onb-pick:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #000; }
   .pfd-onb-pick.selected {
-    background: linear-gradient(135deg, #FFD700, #b8941f); color: #000;
-    transform: translate(2px, 2px); box-shadow: 0 0 0 #FFD700, 0 0 15px rgba(255,215,0,0.6);
+    background: linear-gradient(135deg, #FFDE00, #b8941f); color: #000;
+    transform: translate(2px, 2px); box-shadow: 0 0 0 #FFDE00, 0 0 15px rgba(255,215,0,0.6);
   }
   .pfd-onb-styles {
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0;
   }
   .pfd-onb-style {
-    background: #0a0a0a; border: 3px solid #FFD700; border-radius: 10px;
+    background: #0a0a0a; border: 3px solid #FFDE00; border-radius: 10px;
     padding: 10px 8px; cursor: pointer; font-weight: 900;
     font-size: 13px; font-weight: 600; text-transform: uppercase;
-    box-shadow: 2px 2px 0 #FFD700; transition: transform 0.08s;
-    color: #FFD700;
+    box-shadow: 2px 2px 0 #FFDE00; transition: transform 0.08s;
+    color: #FFDE00;
   }
-  .pfd-onb-style:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #FFD700; }
+  .pfd-onb-style:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #FFDE00; }
   .pfd-onb-style.selected {
-    background: linear-gradient(135deg, #FFD700, #b8941f); color: #000;
-    transform: translate(2px, 2px); box-shadow: 0 0 0 #FFD700, 0 0 15px rgba(255,215,0,0.6);
+    background: linear-gradient(135deg, #FFDE00, #b8941f); color: #000;
+    transform: translate(2px, 2px); box-shadow: 0 0 0 #FFDE00, 0 0 15px rgba(255,215,0,0.6);
   }
   .pfd-onb-nav {
     display: flex; justify-content: space-between; gap: 10px; margin-top: 16px;
@@ -1951,15 +1951,15 @@
     flex: 1; padding: 12px 16px; border-radius: 10px;
     font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;
     font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer;
-    border: 3px solid #FFD700;
-    background: #FFD700;
+    border: 3px solid #FFDE00;
+    background: #FFDE00;
     color: #000; box-shadow: 4px 4px 0 rgba(255,215,0,0.5);
     transition: transform 0.08s;
   }
   .pfd-onb-btn:hover { transform: translate(1px, 1px); box-shadow: 3px 3px 0 rgba(255,215,0,0.5); }
   .pfd-onb-btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 rgba(255,215,0,0.5); }
   .pfd-onb-btn.secondary {
-    background: #0a0a0a; color: #FFD700;
+    background: #0a0a0a; color: #FFDE00;
   }
   .pfd-onb-skip {
     background: transparent; border: none; color: #b8941f;
@@ -1967,7 +1967,7 @@
     text-decoration: underline; margin-top: 8px;
     font-family: inherit;
   }
-  .pfd-onb-skip:hover { color: #FFD700; }
+  .pfd-onb-skip:hover { color: #FFDE00; }
 
   /* ============ RESPONSIVE / MOBILE-FIRST SWEEP (Phase 1) ============ */
   @media (max-width: 640px) {
@@ -2337,7 +2337,7 @@
   }
   .hero-skip {
     position: absolute; top: 8px; right: 12px;
-    background: transparent; border: 1px solid #FFD700; border-radius: 8px;
+    background: transparent; border: 1px solid #FFDE00; border-radius: 8px;
     padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
     color: #ffffff;
     z-index: 2;
@@ -20835,11 +20835,11 @@ function renderMTFAlign() {
   const html = LIVE_PERP_COINS.map(coin => {
     const r = _mtfResults[coin];
     if (!r) {
-      return `<div style="background:rgba(255,255,255,0.05); border:2px solid #FFD700; border-radius:8px; padding:10px; color:#FFD700; font-weight:700;">${coin} — loading…</div>`;
+      return `<div style="background:rgba(255,255,255,0.05); border:2px solid #FFDE00; border-radius:8px; padding:10px; color:#FFDE00; font-weight:700;">${coin} — loading…</div>`;
     }
     if (r.error) {
       return `<div style="background:rgba(255,255,255,0.05); border:2px solid #ef4444; border-radius:8px; padding:10px; color:#fca5a5; font-weight:700;">
-        <span style="color:#FFD700;">${coin}</span> — ⚠ Data unavailable (${r.error})
+        <span style="color:#FFDE00;">${coin}</span> — ⚠ Data unavailable (${r.error})
       </div>`;
     }
     const label = _mtfLabel(r.alignment, r.dominant);
@@ -20851,10 +20851,10 @@ function renderMTFAlign() {
     const tradeBtn = showTradeBtn
       ? `<button class="mtf-trade-btn" data-coin="${coin}" data-side="${tradeSide}" style="background:${tradeBg}; color:#fff; border:2px solid #000; border-radius:6px; padding:6px 12px; font-weight:900; font-size:12px; cursor:pointer; box-shadow:2px 2px 0 #000;">TRADE ${tradeSide}</button>`
       : `<div style="font-size:10px; color:#94a3b8; font-weight:600; opacity:0.7;">await better alignment</div>`;
-    return `<div style="background:rgba(255,255,255,0.06); border:2px solid #FFD700; border-radius:8px; padding:12px; display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center;">
+    return `<div style="background:rgba(255,255,255,0.06); border:2px solid #FFDE00; border-radius:8px; padding:12px; display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center;">
       <div>
         <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:8px; flex-wrap:wrap;">
-          <span style="font-size:18px; font-weight:900; color:#FFD700; text-shadow:1px 1px 0 #000;">${coin}</span>
+          <span style="font-size:18px; font-weight:900; color:#FFDE00; text-shadow:1px 1px 0 #000;">${coin}</span>
           <span style="font-size:13px; color:#e2e8f0; font-weight:700;">${priceStr}</span>
           <span style="background:${label.bg}; color:${label.fg}; border:2px solid #000; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:900; box-shadow:1px 1px 0 #000;">${label.text}</span>
           <span style="font-size:10px; color:#94a3b8; font-weight:700;">${r.alignment}/4</span>
@@ -33344,7 +33344,7 @@ function _pfdChartBuildExplainHTML(hit) {
       + '<div style="font-size:9px;color:#a0a0a0;margin-bottom:5px;">'+deltaTxt+'</div>'
       + '<div style="font-size:11px;font-weight:800;color:'+color+';margin-bottom:8px;">💰 '+_pfdChartFmtBigUsd(hit.liqDollars)+' at risk here</div>'
       + '<div style="font-size:10px;color:#e0e0e0;line-height:1.35;margin-bottom:5px;">'+story+'</div>'
-      + '<div style="font-size:10px;color:#ffffff;line-height:1.35;background:#141414;padding:5px 6px;border-radius:5px;border:1px solid #FFD700;">'+play+'</div>'
+      + '<div style="font-size:10px;color:#ffffff;line-height:1.35;background:#141414;padding:5px 6px;border-radius:5px;border:1px solid #FFDE00;">'+play+'</div>'
       + '</div>';
   }
   if (hit.kind === 'bookwall') {
@@ -33361,7 +33361,7 @@ function _pfdChartBuildExplainHTML(hit) {
       + '<div style="font-size:9px;color:#a0a0a0;margin-bottom:5px;">'+deltaTxt+'</div>'
       + '<div style="font-size:11px;font-weight:800;color:'+col2+';margin-bottom:8px;">💵 '+_pfdChartFmtBigUsd(hit.usd)+' resting here (live)</div>'
       + '<div style="font-size:10px;color:#e0e0e0;line-height:1.35;margin-bottom:5px;">'+story2+'</div>'
-      + '<div style="font-size:10px;color:#ffffff;line-height:1.35;background:#141414;padding:5px 6px;border-radius:5px;border:1px solid #FFD700;">'+caveat+'</div>'
+      + '<div style="font-size:10px;color:#ffffff;line-height:1.35;background:#141414;padding:5px 6px;border-radius:5px;border:1px solid #FFDE00;">'+caveat+'</div>'
       + '</div>';
   }
   if (hit.kind === 'yhl') {
@@ -33379,7 +33379,7 @@ function _pfdChartBuildExplainHTML(hit) {
       + '<div style="font-size:16px;font-weight:900;color:#ffffff;margin:2px 0 1px;">'+priceFmt+'</div>'
       + '<div style="font-size:9px;color:#a0a0a0;margin-bottom:5px;">'+deltaTxt+'</div>'
       + '<div style="font-size:10px;color:#e0e0e0;line-height:1.35;margin-bottom:5px;">'+story3+'</div>'
-      + '<div style="font-size:10px;color:#ffffff;line-height:1.35;background:#141414;padding:5px 6px;border-radius:5px;border:1px solid #FFD700;">'+play3+'</div>'
+      + '<div style="font-size:10px;color:#ffffff;line-height:1.35;background:#141414;padding:5px 6px;border-radius:5px;border:1px solid #FFDE00;">'+play3+'</div>'
       + '</div>';
   }
   return '<div style="color:#ffffff;">Level: '+priceFmt+'</div>';
@@ -33395,14 +33395,14 @@ function _pfdChartShowExplainTooltip(hit, clientX, clientY) {
     tip.style.cssText = [
       'position:fixed', 'z-index:99999', 'max-width:230px', 'min-width:180px',
       'background:#0a0a0a', 'color:#ffffff',
-      'border:1px solid #FFD700', 'border-radius:10px',
+      'border:1px solid #FFDE00', 'border-radius:10px',
       'box-shadow:0 0 14px rgba(255,215,0,0.3)',
       'padding:9px 10px 8px', 'font-family:system-ui,-apple-system,sans-serif',
       'pointer-events:auto', 'user-select:none'
     ].join(';');
     document.body.appendChild(tip);
   }
-  var closeBtn = '<button aria-label="Close" onclick="_pfdChartHideExplainTooltip()" style="position:absolute;top:4px;right:5px;background:#FFD700;color:#000;border:1px solid #FFD700;border-radius:50%;width:20px;height:20px;font-weight:900;font-size:11px;cursor:pointer;line-height:1;padding:0;">×</button>';
+  var closeBtn = '<button aria-label="Close" onclick="_pfdChartHideExplainTooltip()" style="position:absolute;top:4px;right:5px;background:#FFDE00;color:#000;border:1px solid #FFDE00;border-radius:50%;width:20px;height:20px;font-weight:900;font-size:11px;cursor:pointer;line-height:1;padding:0;">×</button>';
   tip.innerHTML = closeBtn + _pfdChartBuildExplainHTML(hit);
   tip.style.display = 'block';
 
