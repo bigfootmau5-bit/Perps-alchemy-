@@ -33886,7 +33886,6 @@ function _pfdChartCheckAlerts() {
       try {
         if (window.PW && PW.showToast) PW.showToast(msg);
         else if (typeof showToast === 'function') showToast(msg, 5000);
-        else
 } catch(e){}
       toRemove.push(i);
     }
