@@ -1,0 +1,108 @@
+{
+  "version": "optimized_final",
+  "timestamp": "2026-08-19T20:27:33.361241",
+  "changes": [
+    "Dropped Long Reversal",
+    "Dropped Bear Flag",
+    "Dropped Golden/Death Cross",
+    "Dropped Stairway",
+    "Blacklisted OP and SUI",
+    "Tightened Double Top RSI to 65+"
+  ],
+  "setups": [
+    "Bull Flag (long)",
+    "Double Top (short)"
+  ],
+  "overall": {
+    "signals": 41,
+    "wins": 30,
+    "hit_rate": 73.17073170731707,
+    "pnl": 212.5572462727763,
+    "longs": 11,
+    "long_wins": 9,
+    "shorts": 30,
+    "short_wins": 21
+  },
+  "per_coin": {
+    "BTC": {
+      "signals": 3,
+      "wins": 3,
+      "wr": 100.0,
+      "pnl": 23.906680879082597,
+      "longs": 1,
+      "long_wins": 1,
+      "shorts": 2,
+      "short_wins": 2
+    },
+    "ETH": {
+      "signals": 4,
+      "wins": 2,
+      "wr": 50.0,
+      "pnl": 3.509189908084397,
+      "longs": 1,
+      "long_wins": 1,
+      "shorts": 3,
+      "short_wins": 1
+    },
+    "SOL": {
+      "signals": 8,
+      "wins": 7,
+      "wr": 87.5,
+      "pnl": 66.57785448122236,
+      "longs": 1,
+      "long_wins": 1,
+      "shorts": 7,
+      "short_wins": 6
+    },
+    "HYPE": {
+      "signals": 8,
+      "wins": 5,
+      "wr": 62.5,
+      "pnl": 40.99285419361409,
+      "longs": 1,
+      "long_wins": 1,
+      "shorts": 7,
+      "short_wins": 4
+    },
+    "XRP": {
+      "signals": 1,
+      "wins": 1,
+      "wr": 100.0,
+      "pnl": 2.1810250817884427,
+      "longs": 1,
+      "long_wins": 1,
+      "shorts": 0,
+      "short_wins": 0
+    },
+    "DOGE": {
+      "signals": 6,
+      "wins": 4,
+      "wr": 66.66666666666666,
+      "pnl": 26.84857656718353,
+      "longs": 2,
+      "long_wins": 1,
+      "shorts": 4,
+      "short_wins": 3
+    },
+    "AVAX": {
+      "signals": 6,
+      "wins": 4,
+      "wr": 66.66666666666666,
+      "pnl": 32.470920616416876,
+      "longs": 3,
+      "long_wins": 2,
+      "shorts": 3,
+      "short_wins": 2
+    },
+    "ARB": {
+      "signals": 5,
+      "wins": 4,
+      "wr": 80.0,
+      "pnl": 16.070144545384004,
+      "longs": 1,
+      "long_wins": 1,
+      "shorts": 4,
+      "short_wins": 3
+    }
+  }
+}
