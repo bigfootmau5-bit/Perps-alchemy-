@@ -4860,6 +4860,423 @@
     cursor: pointer;
   }
 
+
+  /* ============================================================
+     PERPS ALCHEMY — UI ENHANCEMENT LAYER v2.0
+     Full-section premium polish — "best of the best"
+     ============================================================ */
+
+  /* ---- COACH HERO — DARK PREMIUM ---- */
+  #panel-coach .coach-hero,
+  .coach-hero {
+    background: linear-gradient(135deg, rgba(13,13,16,0.95) 0%, rgba(5,5,5,0.85) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 48px rgba(255,222,0,0.04) !important;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+  .coach-hero::before {
+    background: repeating-conic-gradient(from 0deg,
+      rgba(255,222,0,0.03) 0deg 15deg,
+      transparent 15deg 30deg) !important;
+  }
+  .coach-avatar {
+    background: radial-gradient(circle, rgba(255,222,0,0.15) 0%, rgba(255,222,0,0.05) 70%, transparent 100%) !important;
+    border: 2px solid var(--pfd-gold-line, rgba(255,222,0,0.25)) !important;
+    box-shadow: 0 0 24px rgba(255,222,0,0.15), 0 0 1px rgba(255,222,0,0.3) inset !important;
+    animation: pfd-float 4s ease-in-out infinite !important;
+  }
+  @keyframes pfd-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .coach-name {
+    font-family: var(--pfd-font-display) !important;
+    text-shadow: 0 0 12px rgba(255,222,0,0.2) !important;
+    letter-spacing: 0.02em;
+  }
+  .coach-style {
+    background: linear-gradient(135deg, rgba(239,68,68,0.9) 0%, rgba(236,72,153,0.9) 100%) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(236,72,153,0.3);
+    font-family: var(--pfd-font-display) !important;
+  }
+  .coach-quote {
+    font-family: var(--pfd-font-body) !important;
+    color: var(--pfd-text-dim, rgba(244,244,245,0.55)) !important;
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* ---- LEVEL CARD — DARK PREMIUM ---- */
+  .level-card {
+    background: linear-gradient(135deg, rgba(13,13,16,0.95) 0%, rgba(5,5,5,0.85) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .level-rank {
+    font-family: var(--pfd-font-display) !important;
+    text-shadow: 0 0 12px rgba(255,222,0,0.15) !important;
+  }
+  .level-xp {
+    font-family: var(--pfd-font-mono) !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- BOOK COVER TITLE ---- */
+  .book-title {
+    font-family: var(--pfd-font-display) !important;
+    color: var(--pfd-gold, #FFDE00) !important;
+    letter-spacing: -1px;
+    text-shadow: 0 0 30px rgba(255,222,0,0.1);
+  }
+  .book-title .for {
+    font-family: var(--pfd-font-display) !important;
+    color: var(--pfd-gold-dim, rgba(255,222,0,0.55)) !important;
+  }
+  .book-tagline {
+    font-family: var(--pfd-font-body) !important;
+    color: var(--pfd-text-dim, rgba(244,244,245,0.55)) !important;
+    letter-spacing: 0.02em;
+  }
+  .book-cover-collapsed-bar span {
+    color: var(--pfd-gold, #FFDE00) !important;
+  }
+
+  /* ---- SETUP CARDS ---- */
+  .setup-card {
+    background: linear-gradient(135deg, rgba(13,13,16,0.9) 0%, rgba(8,8,10,0.8) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
+    transition: all 250ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  .setup-card:hover {
+    border-color: rgba(255, 222, 0, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 24px rgba(255,222,0,0.06) !important;
+    transform: translateY(-2px) !important;
+  }
+  .setup-card::before {
+    background: var(--pfd-gold, #FFDE00) !important;
+    color: #000 !important;
+    border: 1px solid rgba(255,222,0,0.3) !important;
+    border-radius: 6px !important;
+    font-family: var(--pfd-font-display) !important;
+    font-size: 9px !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  /* ---- VIBE MOOD BUTTONS ---- */
+  .vibe-mood-btn {
+    border-radius: 14px !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 250ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    border-width: 1px !important;
+  }
+  .vibe-mood-btn:hover {
+    transform: translateY(-2px) !important;
+    filter: brightness(1.2) !important;
+  }
+  .vibe-mood-btn.active {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 0 20px currentColor, 0 4px 16px rgba(0,0,0,0.3) !important;
+    border-width: 2px !important;
+  }
+
+  /* ---- VIBE TRACK CARDS ---- */
+  .vibe-track-card {
+    background: linear-gradient(135deg, rgba(13,13,16,0.9) 0%, rgba(5,5,5,0.7) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 12px !important;
+    transition: all 200ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  .vibe-track-card:hover {
+    border-color: rgba(255, 222, 0, 0.3) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  /* ---- MUSIC PANEL — GLASSMORPHISM ---- */
+  #music-panel {
+    background: rgba(10, 10, 12, 0.92) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.2)) !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 48px rgba(255,222,0,0.06) !important;
+  }
+  .music-track-btn {
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 10px !important;
+    transition: all 200ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-family: var(--pfd-font-display) !important;
+    letter-spacing: 0.04em;
+  }
+  .music-track-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+    border-color: rgba(255,255,255,0.15) !important;
+  }
+  .music-track-btn:active {
+    transform: scale(0.97) !important;
+  }
+
+  /* ---- LEARN SECTION TABS ---- */
+  #panel-learn .asset-btn {
+    border-radius: 10px !important;
+  }
+  .learn-section {
+    animation: pfd-panel-enter 300ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  /* ---- TUTORIAL STEPS ---- */
+  .tutorial-step, [class*="tutorial"] > div {
+    background: linear-gradient(135deg, rgba(13,13,16,0.9) 0%, rgba(8,8,10,0.7) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.1)) !important;
+    border-radius: 12px !important;
+    transition: all 250ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  .tutorial-step:hover {
+    border-color: rgba(255, 222, 0, 0.25) !important;
+  }
+
+  /* ---- LEADERBOARD ---- */
+  #panel-leaderboard, #leaderboard-body {
+    font-family: var(--pfd-font-body) !important;
+  }
+  #leaderboard-body > div, .leaderboard-row, .leaderboard-entry {
+    background: linear-gradient(135deg, rgba(13,13,16,0.9) 0%, rgba(5,5,5,0.7) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.1)) !important;
+    border-radius: 10px !important;
+    transition: all 200ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  #leaderboard-body > div:hover {
+    border-color: rgba(255, 222, 0, 0.25) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* ---- COMMUNITY PANEL ---- */
+  #panel-community, #community-root {
+    font-family: var(--pfd-font-body) !important;
+  }
+  #community-root > * {
+    animation: pfd-panel-enter 300ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  /* ---- JOURNAL ENTRIES ---- */
+  .journal-entry {
+    background: linear-gradient(135deg, rgba(13,13,16,0.9) 0%, rgba(5,5,5,0.7) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.1)) !important;
+    border-radius: 10px !important;
+    transition: all 200ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  .journal-entry:hover {
+    border-color: rgba(255, 222, 0, 0.2) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* ---- PAPER TRADING ---- */
+  #panel-paper .pfd-card, #panel-paper .card {
+    background: linear-gradient(135deg, rgba(13,13,16,0.9) 0%, rgba(8,8,10,0.8) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+  }
+
+  /* ---- AVATAR OPTIONS ---- */
+  .avatar-option {
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 10px !important;
+    transition: all 200ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    background: rgba(13,13,16,0.8) !important;
+  }
+  .avatar-option:hover {
+    border-color: rgba(255, 222, 0, 0.35) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 16px rgba(255,222,0,0.06) !important;
+  }
+
+  /* ---- ONBOARDING ---- */
+  .pfd-onb-title {
+    font-family: var(--pfd-font-display) !important;
+    letter-spacing: 0.04em;
+  }
+  .pfd-onb-pick {
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 12px !important;
+    transition: all 200ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    background: rgba(13,13,16,0.8) !important;
+  }
+  .pfd-onb-pick:hover {
+    border-color: rgba(255, 222, 0, 0.35) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  /* ---- GAME CARDS (Liquidation Trail, Bigfoot Hunt, etc.) ---- */
+  .game-card, .game-tile, .game-hero {
+    background: linear-gradient(135deg, rgba(13,13,16,0.9) 0%, rgba(5,5,5,0.7) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 14px !important;
+    transition: all 250ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  .game-card:hover, .game-tile:hover, .game-hero:hover {
+    border-color: rgba(255, 222, 0, 0.3) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 24px rgba(255,222,0,0.06) !important;
+  }
+  .game-title {
+    font-family: var(--pfd-font-display) !important;
+    letter-spacing: 0.04em;
+  }
+
+  /* ---- RANK BADGE ---- */
+  .rank-badge {
+    font-family: var(--pfd-font-display) !important;
+    letter-spacing: 0.06em;
+  }
+
+  /* ---- HEATMAP ENHANCEMENT ---- */
+  .hm-micro, .hm-mini-head, [class*="hm-"] {
+    border-radius: 10px !important;
+  }
+  .hm-large-trades-note {
+    background: rgba(13,13,16,0.8) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.1)) !important;
+    border-radius: 8px !important;
+  }
+
+  /* ---- SUBTAB DROPDOWN ---- */
+  .subtab-dropdown-menu {
+    background: rgba(10, 10, 12, 0.92) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.2)) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+  }
+
+  /* ---- TOAST NOTIFICATIONS ---- */
+  .pfd-toast, [class*="toast"] {
+    background: rgba(13, 13, 16, 0.92) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.2)) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5) !important;
+    font-family: var(--pfd-font-body) !important;
+  }
+
+  /* ---- DASHBOARD SECTION HEADS ---- */
+  .pfd-dash-section-head {
+    font-family: var(--pfd-font-display) !important;
+    letter-spacing: 0.04em;
+  }
+  .pfd-dash-section {
+    animation: pfd-panel-enter 300ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  /* ---- BEST/WORST CARDS ---- */
+  .pfd-dash-bw-card {
+    background: linear-gradient(135deg, rgba(13,13,16,0.9) 0%, rgba(5,5,5,0.7) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.1)) !important;
+    border-radius: 12px !important;
+    transition: all 200ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  .pfd-dash-bw-best { border-left: 3px solid var(--pfd-green, #10B981) !important; }
+  .pfd-dash-bw-worst { border-left: 3px solid var(--pfd-red, #ef4444) !important; }
+
+  /* ---- DASHBOARD CTA BUTTONS ---- */
+  .pfd-dash-cta {
+    background: linear-gradient(135deg, rgba(255,222,0,0.08) 0%, rgba(255,222,0,0.02) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 8px !important;
+    transition: all 180ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  .pfd-dash-cta:hover {
+    border-color: rgba(255, 222, 0, 0.35) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* ---- FORM INPUTS IN COACH/PLAN ---- */
+  #panel-coach input[type="text"], #panel-coach select,
+  #panel-plan input[type="text"], #panel-plan select {
+    background: rgba(13, 13, 16, 0.8) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 8px !important;
+  }
+
+  /* ---- LEGACY BTN (used across panels) ---- */
+  .btn, button.btn {
+    background: linear-gradient(135deg, rgba(255,222,0,0.1) 0%, rgba(255,222,0,0.03) 100%) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.2)) !important;
+    border-radius: 8px !important;
+    color: var(--pfd-gold, #FFDE00) !important;
+    font-weight: 700 !important;
+    font-family: var(--pfd-font-display) !important;
+    letter-spacing: 0.04em;
+    transition: all 180ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+  .btn:hover {
+    border-color: rgba(255, 222, 0, 0.45) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 16px rgba(255,222,0,0.08) !important;
+  }
+  .btn:active {
+    transform: translateY(0) !important;
+  }
+
+  /* ---- COVER STICKER ---- */
+  .cover-sticker {
+    font-family: var(--pfd-font-display) !important;
+  }
+
+  /* ---- EMPTY STATES ---- */
+  .empty {
+    font-family: var(--pfd-font-body) !important;
+    color: var(--pfd-text-mute, rgba(244,244,245,0.35)) !important;
+  }
+
+  /* ---- PATTERN SELECTORS ---- */
+  .pfd-pattern-select, #pfd-crypto-pattern-select, #pfd-stock-pattern-select {
+    background: rgba(13, 13, 16, 0.8) !important;
+    border: 1px solid var(--pfd-gold-line, rgba(255,222,0,0.15)) !important;
+    border-radius: 8px !important;
+  }
+
+  /* ---- GLOSSARY ---- */
+  #learn-glossary > * {
+    animation: pfd-panel-enter 250ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  /* ---- CURRICULUM ---- */
+  #learn-curriculum > * {
+    animation: pfd-panel-enter 250ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  /* ---- MOBILE ENHANCEMENTS ---- */
+  @media (max-width: 768px) {
+    .coach-avatar { width: 80px; height: 80px; font-size: 42px !important; }
+    .coach-name { font-size: 22px !important; }
+    .book-title { font-size: 36px !important; }
+    .book-title .for { font-size: 20px !important; }
+    .game-card, .game-tile { border-radius: 12px !important; }
+    .vibe-mood-btn { padding: 12px 6px !important; }
+    .music-track-btn { padding: 12px !important; font-size: 11px !important; }
+  }
+
+  /* ---- SMOOTH SCROLL ---- */
+  html { scroll-behavior: smooth; }
+  body { -webkit-overflow-scrolling: touch; }
+
+  /* ---- SELECTION ---- */
+  ::selection { background: rgba(255,222,0,0.2); color: #fff; }
+  ::-moz-selection { background: rgba(255,222,0,0.2); color: #fff; }
+
 </style>
 </head>
 <body class="pfd-grid-bg">
