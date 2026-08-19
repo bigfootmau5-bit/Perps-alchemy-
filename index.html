@@ -46061,18 +46061,16 @@ if (st) st.textContent = '⚠ ' + e.message;
       // Close button is now wired inside the new music engine — no need to re-wire here
     }
     function toggleVoice(){
-      // Directly call the voice engine's start function (iOS won't dispatch to hidden button)
-      try {
-        if (typeof window._pfdVoiceStart === 'function') {
-          window._pfdVoiceStart();
-          return;
-        }
-      } catch(e){}
-      // Fallback — try toggling the voice wrap
+      // Toggle the voice chat panel (Professor) visibility
       var wrap = document.getElementById('voice-chat-wrap');
-      if (wrap) {
-        var cur = getComputedStyle(wrap).display;
-        wrap.style.setProperty('display', (cur === 'none' ? 'block' : 'none'), 'important');
+      if (!wrap) return;
+      var cur = getComputedStyle(wrap).display;
+      if (cur === 'none') {
+        wrap.style.setProperty('display', 'block', 'important');
+        // Auto-scroll to the panel
+        setTimeout(function(){ wrap.scrollIntoView({behavior:'smooth', block:'center'}); }, 100);
+      } else {
+        wrap.style.setProperty('display', 'none', 'important');
       }
     }
     function toggleTheme(){
@@ -46109,7 +46107,7 @@ if (st) st.textContent = '⚠ ' + e.message;
       'voice-fab':    toggleVoice,
       'theme-fab':    toggleTheme
     };
-    panel.addEventListener('click', function(e){
+    function handlePanelAction(e){
       var it = e.target.closest('.pfd-topmenu-item');
       if (!it) return;
       e.preventDefault();
@@ -46117,7 +46115,9 @@ if (st) st.textContent = '⚠ ' + e.message;
       closeMenu();
       var fn = ACTIONS[targetId];
       if (fn) { setTimeout(fn, 20); }
-    });
+    }
+    panel.addEventListener('click', handlePanelAction);
+    panel.addEventListener('touchend', function(e){ e.preventDefault(); handlePanelAction(e); }, { passive: false });
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeMenu(); });
   })();
   </script>
@@ -46378,7 +46378,9 @@ if (st) st.textContent = '⚠ ' + e.message;
     }
 
     // Track button delegation
-    panel.addEventListener('click', function(e){
+    panel.addEventListener("click", handlePanelAction);
+    panel.addEventListener("touchend", function(e){ handlePanelAction(e); }, { passive: false });
+    function handlePanelAction(e){
       var btn = e.target.closest('.music-track-btn');
       if (btn) {
         playTrack(btn.dataset.track);
