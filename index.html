@@ -49745,7 +49745,8 @@ html, body { max-width: 100vw; overflow-x: hidden; }
     document.getElementById('ripper-stat-signals').textContent = ripperStats.signals;
     const wr = ripperStats.signals > 0 ? (ripperStats.wins / ripperStats.signals * 100).toFixed(1) + '%' : '—';
     document.getElementById('ripper-stat-wr').textContent = wr;
-    const avgHold = ripperStats.holds.length > 0 ? (ripperStats.holds.reduce((a,b) => a+b, 0) / ripperStats.holds.length / 60).toFixed(1) + 'm') : '—';
+    const holdSum = ripperStats.holds.reduce(function(acc, val) { return acc + val; }, 0);
+      const avgHold = ripperStats.holds.length > 0 ? (holdSum / ripperStats.holds.length / 60).toFixed(1) + 'm' : '—';
     document.getElementById('ripper-stat-hold').textContent = avgHold;
     const pnl = ripperStats.pnl !== 0 ? (ripperStats.pnl > 0 ? '+' : '') + ripperStats.pnl.toFixed(1) + '%' : '—';
     document.getElementById('ripper-stat-pnl').textContent = pnl;
