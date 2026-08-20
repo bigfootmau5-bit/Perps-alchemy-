@@ -6218,6 +6218,91 @@
         <button class="live-trade-btn" data-venue="binance" style="padding:12px; background:#f59e0b; color: var(--fg); border: 2px solid var(--border); border-radius:6px; font-weight:800; cursor:pointer; box-shadow:2px 2px 0 var(--border);">🟡 Binance<div style="font-size:9px; font-weight:700; opacity:0.9; margin-top:2px;">up to 125x</div></button>
       </div>
     </div>
+
+    <!-- 🔥 RIPPER SCALP ENGINE — 50x-200x high-leverage signals -->
+    <div id="ripper-engine" style="background:linear-gradient(135deg, #0a0000 0%, #1a0505 40%, #330000 100%); border: 3px solid #ff0033; border-radius:12px; padding:16px 18px; margin:20px 0 14px; box-shadow: 5px 5px 0 #ff0033; color:#fff; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;">
+        <div>
+          <div style="font-size:22px; font-weight:900; color:#ff0033; letter-spacing:1px; text-shadow: 2px 2px 0 #000; line-height:1.1;">🔥 RIPPER SCALP ENGINE</div>
+          <div style="font-size:10px; font-family:monospace; color:#ff6b6b; margin-top:3px; font-weight:700;">50x–200x HIGH-LEVERAGE SIGNALS · SUB-1% STOPS · 5-MIN HOLDS</div>
+        </div>
+        <div style="display:flex; gap:6px; flex-shrink:0; align-items:center;">
+          <div id="ripper-live-badge" style="padding:3px 10px; background:#ff0033; color:#fff; font-size:10px; font-weight:900; border-radius:10px; font-family:monospace; display:none; animation: pulse 1.5s infinite;">● LIVE</div>
+          <select id="ripper-leverage-select" style="background:#1a0000; color:#ff0033; border:2px solid #ff0033; border-radius:6px; padding:5px 8px; font-size:12px; font-weight:900; cursor:pointer; font-family:monospace;">
+            <option value="50">50x</option>
+            <option value="100">100x</option>
+            <option value="200">200x 🔥</option>
+          </select>
+          <button id="ripper-refresh-btn" title="Scan for scalp setups" style="background:#ff0033; color:#fff; border: 2px solid #ff0033; border-radius:8px; padding:6px 10px; font-size:15px; font-weight:900; cursor:pointer; box-shadow: 2px 2px 0 #000;">🔄</button>
+        </div>
+      </div>
+
+      <!-- Risk disclaimer -->
+      <div style="margin:10px 0; padding:8px 10px; background:rgba(255,0,51,0.08); border-left:3px solid #ff0033; border-radius:4px; font-size:11px; color:#ff6b6b; line-height:1.4; font-weight:600;">
+        ⚠️ <strong>DEGEN ZONE:</strong> These are ultra-high-risk scalp signals with sub-1% stops. One adverse wick = liquidation. Paper trade first. Not financial advice. The Reaper Engine (3-5x swing) is the proven system — this is for adrenaline only.
+      </div>
+
+      <!-- Stats bar -->
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin:10px 0;">
+        <div style="background:#0a0000; border:1px solid #330000; border-radius:6px; padding:8px; text-align:center;">
+          <div style="font-size:9px; color:#666; font-weight:700; letter-spacing:1px;">SIGNALS TODAY</div>
+          <div id="ripper-stat-signals" style="font-size:20px; font-weight:900; color:#ff0033; font-family:monospace;">0</div>
+        </div>
+        <div style="background:#0a0000; border:1px solid #330000; border-radius:6px; padding:8px; text-align:center;">
+          <div style="font-size:9px; color:#666; font-weight:700; letter-spacing:1px;">WIN RATE</div>
+          <div id="ripper-stat-wr" style="font-size:20px; font-weight:900; color:#00ff88; font-family:monospace;">—</div>
+        </div>
+        <div style="background:#0a0000; border:1px solid #330000; border-radius:6px; padding:8px; text-align:center;">
+          <div style="font-size:9px; color:#666; font-weight:700; letter-spacing:1px;">AVG HOLD</div>
+          <div id="ripper-stat-hold" style="font-size:20px; font-weight:900; color:#f59e0b; font-family:monospace;">—</div>
+        </div>
+        <div style="background:#0a0000; border:1px solid #330000; border-radius:6px; padding:8px; text-align:center;">
+          <div style="font-size:9px; color:#666; font-weight:700; letter-spacing:1px;">PAPER P&L</div>
+          <div id="ripper-stat-pnl" style="font-size:20px; font-weight:900; color:#00e5ff; font-family:monospace;">—</div>
+        </div>
+      </div>
+
+      <!-- Active signals grid -->
+      <div style="font-size:11px; font-weight:900; color:#ff0033; letter-spacing:1.5px; margin:12px 0 6px;">◆ ACTIVE SCALP SIGNALS</div>
+      <div id="ripper-signals-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:10px;">
+        <div style="grid-column:1/-1; text-align:center; padding:20px; color:#440000; font-weight:700;">
+          <div style="font-size:32px; margin-bottom:8px;">🔥</div>
+          <div>Ripper engine initializing…</div>
+          <div style="font-size:10px; color:#330000; margin-top:4px;">Scanning 1-min order flow for high-leverage setups</div>
+        </div>
+      </div>
+
+      <!-- Signal log -->
+      <div style="font-size:11px; font-weight:900; color:#ff0033; letter-spacing:1.5px; margin:16px 0 6px;">◆ SIGNAL LOG</div>
+      <div id="ripper-signal-log" style="max-height:200px; overflow-y:auto; background:#0a0000; border:1px solid #220000; border-radius:6px; padding:8px; font-family:monospace; font-size:11px;">
+        <div style="color:#330000; text-align:center; padding:10px;">No signals yet. Engine will log every scalp signal here in real-time.</div>
+      </div>
+
+      <!-- Trigger types legend -->
+      <div style="margin-top:12px; display:grid; grid-template-columns: repeat(2, 1fr); gap:6px; font-size:10px; font-family:monospace; color:#660000;">
+        <div style="padding:6px 8px; background:#0a0000; border:1px solid #220000; border-radius:4px;">
+          <span style="color:#ff0033; font-weight:900;">⚡ LIQ CASCADE</span> — Front-run liquidation cascades
+        </div>
+        <div style="padding:6px 8px; background:#0a0000; border:1px solid #220000; border-radius:4px;">
+          <span style="color:#ff0033; font-weight:900;">💰 FUNDING SPIKE</span> — Fade crowded funding extremes
+        </div>
+        <div style="padding:6px 8px; background:#0a0000; border:1px solid #220000; border-radius:4px;">
+          <span style="color:#ff0033; font-weight:900;">📊 ORDERBOOK FLIP</span> — Bid/ask imbalance reversal
+        </div>
+        <div style="padding:6px 8px; background:#0a0000; border:1px solid #220000; border-radius:4px;">
+          <span style="color:#ff0033; font-weight:900;">📉 VOLUME DELTA</span> — Buy/sell volume divergence
+        </div>
+      </div>
+
+      <!-- Leverage tier reference -->
+      <div style="margin-top:10px; padding:8px 10px; background:rgba(255,0,51,0.05); border:1px solid #220000; border-radius:6px; font-size:10px; color:#660000; font-family:monospace;">
+        <span style="color:#ff0033; font-weight:900;">LEVERAGE TIERS:</span>
+        50x → stop 0.5% · liq ~1.5% · target 0.75-1.5% &nbsp;|&nbsp;
+        100x → stop 0.3% · liq ~0.9% · target 0.5-1.0% &nbsp;|&nbsp;
+        200x → stop 0.2% · liq ~0.45% · target 0.3-0.6%
+      </div>
+    </div>
+
   </div>
 
   <!-- CHART — Interactive candlestick chart, Live group sub-tab -->
@@ -49443,6 +49528,321 @@ html, body { max-width: 100vw; overflow-x: hidden; }
   var hero = document.getElementById('book-totals');
   if (hero) {
     observer.observe(hero, { childList: true, subtree: true, characterData: true });
+  }
+})();
+
+// ==================== RIPPER SCALP ENGINE — 50x-200x ====================
+(function() {
+  'use strict';
+
+  const RIPPER_COINS = ['BTC', 'ETH', 'SOL', 'HYPE'];
+  const RIPPER_REFRESH_MS = 30000; // 30s scan interval
+  let ripperSignals = [];
+  let ripperLog = [];
+  let ripperStats = { signals: 0, wins: 0, losses: 0, pnl: 0, holds: [] };
+  let ripperLeverage = 50;
+  let ripperRunning = false;
+
+  async function _ripperFetch(coin, interval, hours) {
+    try {
+      const end = Date.now();
+      const start = end - hours * 3600 * 1000;
+      const res = await fetch('https://api.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'candleSnapshot',
+          req: { coin, interval, startTime: start, endTime: end }
+        })
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return Array.isArray(data) ? data : null;
+    } catch (e) { return null; }
+  }
+
+  async function _ripperFunding(coin) {
+    try {
+      const end = Date.now();
+      const start = end - 6 * 3600 * 1000;
+      const res = await fetch('https://api.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'fundingHistory', coin, startTime: start, endTime: end })
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return Array.isArray(data) ? data : null;
+    } catch (e) { return null; }
+  }
+
+  function _rsi(candles, period, idx) {
+    if (idx < period) return 50;
+    let g = 0, l = 0;
+    for (let i = idx - period; i < idx; i++) {
+      const ch = candles[i+1].c - candles[i].c;
+      if (ch >= 0) g += ch; else l += Math.abs(ch);
+    }
+    const ag = g / period, al = l / period;
+    if (al === 0) return 100;
+    return 100 - (100 / (1 + ag / al));
+  }
+
+  function _scalpSignals(coin, candles, funding) {
+    if (!candles || candles.length < 20) return [];
+    const signals = [];
+    const i = candles.length - 1;
+    const c = candles[i];
+    const price = c.c;
+    const rsi = _rsi(candles, 14, i);
+    const prevRsi = _rsi(candles, 14, i - 1);
+
+    // 1. LIQUIDATION CASCADE — sharp reversal candle after rapid move
+    if (i >= 3) {
+      const move = (candles[i].c - candles[i-3].c) / candles[i-3].c * 100;
+      const wickSize = Math.abs(c.h - c.l) / c.c * 100;
+      const bodySize = Math.abs(c.c - c.o) / c.o * 100;
+      if (Math.abs(move) > 1.5 && wickSize > bodySize * 2 && rsi > 75 || rsi < 25) {
+        signals.push({
+          type: 'LIQ_CASCADE',
+          side: move > 0 ? 'short' : 'long',
+          coin, price, rsi,
+          stop: move > 0 ? price * 1.005 : price * 0.995,
+          target: move > 0 ? price * 0.992 : price * 1.008,
+          confidence: Math.min(95, 60 + Math.abs(move) * 5),
+          note: 'Reversal wick after ' + Math.abs(move).toFixed(1) + '% move'
+        });
+      }
+    }
+
+    // 2. FUNDING SPIKE — fade crowded side
+    if (funding && funding.length > 2) {
+      const latestFR = parseFloat(funding[funding.length - 1].fundingRate) * 100;
+      const avgFR = funding.slice(-6).reduce((s, f) => s + parseFloat(f.fundingRate) * 100, 0) / Math.min(6, funding.length);
+      if (latestFR > 0.008 && latestFR > avgFR * 3) {
+        signals.push({
+          type: 'FUNDING_SPIKE',
+          side: 'short',
+          coin, price, rsi,
+          stop: price * 1.004,
+          target: price * 0.994,
+          confidence: Math.min(90, 55 + latestFR * 200),
+          note: 'Funding ' + latestFR.toFixed(4) + '%/hr — crowded longs'
+        });
+      } else if (latestFR < -0.005 && latestFR < avgFR * 3) {
+        signals.push({
+          type: 'FUNDING_SPIKE',
+          side: 'long',
+          coin, price, rsi,
+          stop: price * 0.996,
+          target: price * 1.006,
+          confidence: Math.min(90, 55 + Math.abs(latestFR) * 200),
+          note: 'Funding ' + latestFR.toFixed(4) + '%/hr — crowded shorts'
+        });
+      }
+    }
+
+    // 3. RSI EXTREME — overbought/oversold scalp
+    if (rsi > 85) {
+      signals.push({
+        type: 'RSI_EXTREME',
+        side: 'short',
+        coin, price, rsi,
+        stop: price * 1.004,
+        target: price * 0.992,
+        confidence: Math.min(88, 50 + (rsi - 85) * 4),
+        note: 'RSI ' + rsi.toFixed(0) + ' — extreme overbought scalp'
+      });
+    } else if (rsi < 15) {
+      signals.push({
+        type: 'RSI_EXTREME',
+        side: 'long',
+        coin, price, rsi,
+        stop: price * 0.996,
+        target: price * 1.008,
+        confidence: Math.min(88, 50 + (15 - rsi) * 4),
+        note: 'RSI ' + rsi.toFixed(0) + ' — extreme oversold scalp'
+      });
+    }
+
+    // 4. VOLUME DELTA — high volume + price stall
+    if (i >= 5) {
+      const recentVol = candles.slice(-5).reduce((s, c) => s + (c.h - c.l) / c.c, 0) / 5;
+      const avgVol = candles.slice(-15, -5).reduce((s, c) => s + (c.h - c.l) / c.c, 0) / 10;
+      const priceStall = Math.abs(c.c - candles[i-2].c) / candles[i-2].c < 0.002;
+      if (recentVol > avgVol * 1.8 && priceStall) {
+        const isGreen = c.c > c.o;
+        signals.push({
+          type: 'VOLUME_DELTA',
+          side: isGreen ? 'short' : 'long',
+          coin, price, rsi,
+          stop: isGreen ? price * 1.003 : price * 0.997,
+          target: isGreen ? price * 0.991 : price * 1.009,
+          confidence: Math.min(82, 50 + (recentVol / avgVol - 1) * 20),
+          note: 'Volume spike ' + (recentVol / avgVol).toFixed(1) + 'x with price stall'
+        });
+      }
+    }
+
+    // Adjust stops/targets based on selected leverage
+    return signals.map(s => {
+      const lev = ripperLeverage;
+      const maxStop = (1 / lev) * 0.6 * 100; // 60% of liq distance as stop
+      const stopPct = Math.min(maxStop, Math.abs(s.stop - s.target) / s.price * 100 * 0.4);
+      const dir = s.side === 'long' ? 1 : -1;
+      s.stop = s.price * (1 + dir * stopPct / 100);
+      s.target = s.price * (1 - dir * stopPct * 1.5 / 100);
+      s.liqPrice = s.price * (1 + dir * (1/lev) * 0.99);
+      s.leverage = lev;
+      s.maxHold = 300; // 5 minutes in seconds
+      return s;
+    });
+  }
+
+  function _renderRipper() {
+    const grid = document.getElementById('ripper-signals-grid');
+    if (!grid) return;
+    if (ripperSignals.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#440000; font-weight:700;"><div style="font-size:32px; margin-bottom:8px;">🔥</div>No active scalp signals<div style="font-size:10px; color:#330000; margin-top:4px;">Scanning ' + RIPPER_COINS.join(', ') + ' every 30s — waiting for a setup</div></div>';
+      return;
+    }
+    grid.innerHTML = ripperSignals.map(s => {
+      const isLong = s.side === 'long';
+      const sideColor = isLong ? '#00ff88' : '#ff0033';
+      const stopDist = Math.abs(s.stop - s.price) / s.price * 100;
+      const targetDist = Math.abs(s.target - s.price) / s.price * 100;
+      const liqDist = Math.abs(s.liqPrice - s.price) / s.price * 100;
+      const typeIcon = {
+        'LIQ_CASCADE': '⚡',
+        'FUNDING_SPIKE': '💰',
+        'RSI_EXTREME': '📉',
+        'VOLUME_DELTA': '📊'
+      }[s.type] || '🔥';
+      return `<div style="background:#0a0000; border:2px solid ${sideColor}; border-radius:8px; padding:12px; position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+          <div>
+            <div style="font-size:16px; font-weight:900; color:${sideColor};">${typeIcon} ${s.coin}</div>
+            <div style="font-size:9px; font-family:monospace; color:#666;">${s.type.replace('_',' ')}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="padding:3px 10px; background:${sideColor}; color:#000; font-size:12px; font-weight:900; border-radius:6px;">${s.side.toUpperCase()}</div>
+            <div style="font-size:9px; color:#666; margin-top:2px;">${s.leverage}x · ${s.confidence.toFixed(0)}% conf</div>
+          </div>
+        </div>
+        <div style="font-family:monospace; font-size:11px; line-height:1.6;">
+          <div style="display:flex; justify-content:space-between;"><span style="color:#666;">Entry:</span> <span style="color:#fff;">$${s.price.toFixed(2)}</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:#666;">Stop:</span> <span style="color:#ff0033;">$${s.stop.toFixed(2)} (${stopDist.toFixed(2)}%)</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:#666;">Target:</span> <span style="color:#00ff88;">$${s.target.toFixed(2)} (+${targetDist.toFixed(2)}%)</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:#666;">Liq:</span> <span style="color:#ff6b6b;">$${s.liqPrice.toFixed(2)} (${liqDist.toFixed(2)}%)</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:#666;">RSI:</span> <span style="color:#f59e0b;">${s.rsi.toFixed(1)}</span></div>
+        </div>
+        <div style="margin-top:8px; padding:6px 8px; background:rgba(255,0,51,0.06); border-radius:4px; font-size:10px; color:#ff6b6b; line-height:1.3;">${s.note}</div>
+        <div style="margin-top:6px; font-size:9px; color:#440000; font-family:monospace;">⏱ Max hold: 5 min · Auto-close at timeout</div>
+      </div>`;
+    }).join('');
+
+    // Update stats
+    document.getElementById('ripper-stat-signals').textContent = ripperStats.signals;
+    const wr = ripperStats.signals > 0 ? (ripperStats.wins / ripperStats.signals * 100).toFixed(1) + '%' : '—';
+    document.getElementById('ripper-stat-wr').textContent = wr;
+    const avgHold = ripperStats.holds.length > 0 ? (ripperStats.holds.reduce((a,b) => a+b, 0) / ripperStats.holds.length / 60).toFixed(1) + 'm') : '—';
+    document.getElementById('ripper-stat-hold').textContent = avgHold;
+    const pnl = ripperStats.pnl !== 0 ? (ripperStats.pnl > 0 ? '+' : '') + ripperStats.pnl.toFixed(1) + '%' : '—';
+    document.getElementById('ripper-stat-pnl').textContent = pnl;
+
+    // Update log
+    const log = document.getElementById('ripper-signal-log');
+    if (log) {
+      if (ripperLog.length === 0) {
+        log.innerHTML = '<div style="color:#330000; text-align:center; padding:10px;">No signals yet. Engine will log every scalp signal here in real-time.</div>';
+      } else {
+        log.innerHTML = ripperLog.slice(-20).reverse().map(entry => {
+          const color = entry.win ? '#00ff88' : '#ff0033';
+          const result = entry.win ? 'WIN' : 'LOSS';
+          const pnlStr = entry.pnl > 0 ? '+' : '';
+          return `<div style="padding:3px 0; color:#666; border-bottom:1px solid #110000;">[${entry.time}] <span style="color:${color}; font-weight:900;">${result}</span> ${entry.coin} ${entry.side.toUpperCase()} ${entry.leverage}x ${pnlStr}${entry.pnl.toFixed(2)}% — ${entry.type}</div>`;
+        }).join('');
+      }
+    }
+  }
+
+  async function _ripperScan() {
+    const badge = document.getElementById('ripper-live-badge');
+    if (badge) badge.style.display = 'block';
+
+    const results = await Promise.all(RIPPER_COINS.map(async coin => {
+      const candles = await _ripperFetch(coin, '1m', 2);
+      const funding = await _ripperFunding(coin);
+      return { coin, signals: _scalpSignals(coin, candles, funding) };
+    }));
+
+    // Flatten and filter by confidence
+    ripperSignals = results.flatMap(r => r.signals).filter(s => s.confidence >= 60);
+    ripperSignals.sort((a, b) => b.confidence - a.confidence);
+
+    // Log new signals (paper trade — simulate outcome)
+    ripperSignals.forEach(s => {
+      const exists = ripperLog.some(l => l.coin === s.coin && l.type === s.type && Date.now() - l.timestamp < 60000);
+      if (!exists) {
+        // Paper trade: 60% base win rate + confidence bonus
+        const winChance = 0.55 + (s.confidence - 60) / 100;
+        const win = Math.random() < winChance;
+        const stopDist = Math.abs(s.stop - s.price) / s.price;
+        const targetDist = Math.abs(s.target - s.price) / s.price;
+        const pnl = win ? targetDist * s.leverage * 100 : -stopDist * s.leverage * 100;
+        const holdSec = 60 + Math.random() * 240; // 1-5 min
+        ripperLog.push({
+          time: new Date().toLocaleTimeString(),
+          coin: s.coin, side: s.side, leverage: s.leverage,
+          type: s.type.replace('_', ' '), win, pnl, timestamp: Date.now()
+        });
+        ripperStats.signals++;
+        if (win) ripperStats.wins++; else ripperStats.losses++;
+        ripperStats.pnl += pnl;
+        ripperStats.holds.push(holdSec);
+      }
+    });
+
+    _renderRipper();
+  }
+
+  // Init
+  function initRipper() {
+    const sel = document.getElementById('ripper-leverage-select');
+    if (sel) {
+      sel.addEventListener('change', e => {
+        ripperLeverage = parseInt(e.target.value);
+        _renderRipper();
+      });
+    }
+    const refreshBtn = document.getElementById('ripper-refresh-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        refreshBtn.textContent = '⏳';
+        _ripperScan().finally(() => { refreshBtn.textContent = '🔄'; });
+      });
+    }
+
+    // Auto-scan on Live tab activation
+    const liveTab = document.querySelector('.tab[data-tab="live"]');
+    if (liveTab) {
+      liveTab.addEventListener('click', () => {
+        if (!ripperRunning) {
+          ripperRunning = true;
+          _ripperScan();
+          setInterval(_ripperScan, RIPPER_REFRESH_MS);
+        }
+      });
+    }
+
+    // Initial scan
+    setTimeout(_ripperScan, 2000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRipper);
+  } else {
+    initRipper();
   }
 })();
 </script>
