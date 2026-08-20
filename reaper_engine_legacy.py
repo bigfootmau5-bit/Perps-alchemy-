@@ -256,23 +256,87 @@ def detect_death_cross(candles, i, rsi, vol_ratio, ma20):
     return {"side": "short", "setup": "Death Cross", "entry": entry, "stop": stop, "target": target,
             "rsi": round(rsi, 1), "vol_ratio": round(vol_ratio, 2), "confluence": confluence}
 
-def detect_stairway_to_hell(candles, i, rsi, vol_ratio, ma20):
-    """Stairway to Hell — SHORT (BigFootMau5 original). Sequential lower highs and lower lows."""
-    if i < 7: return None
+# Weekly candle cache for HTF volume confirmation
+_WEEKLY_CACHE = {}
+
+def get_weekly_candles(coin):
+    """Fetch and cache weekly candles for HTF volume confirmation."""
+    if coin not in _WEEKLY_CACHE:
+        _WEEKLY_CACHE[coin] = fetch_candles(coin, interval="1w", days=730)
+    return _WEEKLY_CACHE[coin]
+
+def check_htf_volume_confirmation(coin, daily_date_ms):
+    """Check that the weekly candle containing this daily candle has below-average volume.
+    Low volume on a breakout = fakeout, pattern still intact. Returns True if HTF confirms S2H."""
+    weekly = get_weekly_candles(coin)
+    if not weekly or len(weekly) < 12:
+        return True  # Not enough weekly data, don't block the signal
+    
+    # Find which weekly candle this daily candle falls in
+    daily_date = daily_date_ms / 1000
+    target_weekly_idx = None
+    for w_idx in range(len(weekly) - 1, -1, -1):
+        w_start = weekly[w_idx]["t"] / 1000
+        if daily_date >= w_start:
+            target_weekly_idx = w_idx
+            break
+    
+    if target_weekly_idx is None or target_weekly_idx < 4:
+        return True  # Can't confirm, don't block
+    
+    # Get volume of the current and recent weekly candles
+    def get_w_vol(idx):
+        c = weekly[idx]
+        if "v" in c and float(c["v"]) > 0:
+            return float(c["v"])
+        # Fallback: use range as volume proxy
+        return (float(c["h"]) - float(c["l"])) / float(c["o"]) * 100 if float(c["o"]) > 0 else 0
+    
+    # Average volume of prior 12 weeks (excluding current week)
+    prior_vols = [get_w_vol(w_idx) for w_idx in range(max(0, target_weekly_idx - 12), target_weekly_idx)]
+    if not prior_vols or sum(prior_vols) == 0:
+        return True
+    
+    avg_prior_vol = sum(prior_vols) / len(prior_vols)
+    current_vol = get_w_vol(target_weekly_idx)
+    
+    # HTF confirms S2H if current weekly volume is below average (low-volume bounce = fakeout)
+    vol_ratio_htf = current_vol / avg_prior_vol if avg_prior_vol > 0 else 1.0
+    
+    # Also check: is the weekly candle green (relief rally) or red (continuation)?
+    w = weekly[target_weekly_idx]
+    weekly_green = float(w["c"]) > float(w["o"])
+    
+    # If weekly is green AND volume is below average → low-volume relief rally, pattern intact
+    # If weekly is red → continuation, pattern intact
+    # If weekly is green AND volume is ABOVE average → real breakout, pattern broken → reject signal
+    if weekly_green and vol_ratio_htf > 1.0:
+        return False  # High-volume green weekly = real breakout, S2H is broken
+    
+    return True  # Low-volume bounce or red weekly → S2H intact
+
+def detect_stairway_to_hell(candles, i, rsi, vol_ratio, ma20, coin=None):
+    """Stairway to Hell — SHORT (BigFootMau5 original). Sequential lower highs and lower lows.
+    
+    HTF ENHANCEMENT (Aug 20 2026): Weekly volume confirmation added.
+    - Fetches weekly candles and checks if the breakout volume is below average.
+    - Low-volume relief rally on weekly = pattern intact, signal valid.
+    - High-volume green weekly = real breakout, signal rejected.
+    - Prevents false signals on low-volume bounces that look like pattern breaks on daily.
+    """
+    if i < 9: return None
     c = candles[i]
     is_red = float(c["c"]) < float(c["o"])
-    # Check 3+ stair steps: each recent high lower than previous, each recent low lower than previous
+    # Check 4 stair steps: each recent high lower than previous, each recent low lower than previous
     highs = [float(candles[j]["h"]) for j in range(i-8, i+1)]
     lows = [float(candles[j]["l"]) for j in range(i-8, i+1)]
     # Group into ~2-candle stair steps
-    step_highs = [max(highs[j], highs[j+1]) for j in range(0, 6, 2)]
-    step_lows = [min(lows[j], lows[j+1]) for j in range(0, 6, 2)]
-    # Need at least 4 descending steps (8 candles back)
-    if i < 9: return None
     step_highs4 = [max(highs[j], highs[j+1]) for j in range(0, 8, 2)]
     step_lows4 = [min(lows[j], lows[j+1]) for j in range(0, 8, 2)]
     descending_highs = all(step_highs4[j] < step_highs4[j-1] for j in range(1, len(step_highs4)))
     descending_lows = all(step_lows4[j] < step_lows4[j-1] for j in range(1, len(step_lows4)))
+    
+    # STRICT CHECK: All 4 stair steps must be descending (no relaxation)
     if not (descending_highs and descending_lows and is_red and 35 < rsi < 50):
         return None
     # Must be meaningfully below MA20
@@ -282,6 +346,10 @@ def detect_stairway_to_hell(candles, i, rsi, vol_ratio, ma20):
     if vol_ratio > 1.1: confluence += 1
     if float(c["c"]) < ma20 * 0.95: confluence += 1
     if rsi < 42: confluence += 1
+    # HTF volume gate: reject if weekly shows high-volume green breakout (pattern genuinely broken)
+    if coin and c.get("t"):
+        if not check_htf_volume_confirmation(coin, c["t"]):
+            return None  # High-volume green weekly = real breakout, S2H broken
     if confluence < 3: return None
     entry = float(c["c"]); stop = float(c["h"]) * 1.02
     target = entry - (stop - entry) * 2
@@ -331,7 +399,10 @@ def scan_coin(coin, days=365):
         ma20 = calc_ma(candles, i, 20)
         signal = None
         for detector in DETECTORS:
-            signal = detector(candles, i, rsi, vol_ratio, ma20)
+            if detector == detect_stairway_to_hell:
+                signal = detector(candles, i, rsi, vol_ratio, ma20, coin=coin)
+            else:
+                signal = detector(candles, i, rsi, vol_ratio, ma20)
             if signal:
                 break
         if not signal:
