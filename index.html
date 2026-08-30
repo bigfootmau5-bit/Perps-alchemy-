@@ -5032,6 +5032,29 @@
   #panel-learn .asset-btn {
     border-radius: 10px !important;
   }
+  /* Wrap Learn sub-nav to 2 rows on mobile so 6 buttons all fit */
+  @media (max-width: 640px) {
+    #panel-learn .asset-toggle {
+      flex-wrap: wrap !important;
+      gap: 6px !important;
+    }
+    #panel-learn .asset-toggle .asset-btn {
+      flex: 1 1 calc(33.333% - 6px) !important;
+      min-width: 0 !important;
+      padding: 8px 4px !important;
+      font-size: 11px !important;
+      letter-spacing: 0.02em !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+  }
+  @media (max-width: 400px) {
+    #panel-learn .asset-toggle .asset-btn {
+      font-size: 10px !important;
+      padding: 8px 2px !important;
+    }
+  }
   .learn-section {
     animation: pfd-panel-enter 300ms cubic-bezier(0.2, 0.9, 0.3, 1);
   }
@@ -5256,6 +5279,32 @@
   /* ---- CURRICULUM ---- */
   #learn-curriculum > * {
     animation: pfd-panel-enter 250ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  /* ---- ORDERBOOK LESSON ---- */
+  #learn-orderbook > * {
+    animation: pfd-panel-enter 250ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  #learn-orderbook .ob-glass {
+    transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  }
+  #learn-orderbook .ob-glass:hover {
+    border-color: rgba(255, 222, 0, 0.35);
+    box-shadow: 0 6px 22px rgba(255, 222, 0, 0.08);
+  }
+  #learn-orderbook #ob-lesson-view-live:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+  }
+  #learn-orderbook #ob-lesson-view-live:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+  }
+  /* 2-col grid ≥640px for the 6 concept cards */
+  @media (min-width: 640px) {
+    #learn-orderbook .ob-concept-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
   }
 
   /* ---- MOBILE ENHANCEMENTS ---- */
@@ -6571,6 +6620,7 @@
       <button class="asset-btn" data-learn="glossary">📚 Glossary</button>
       <button class="asset-btn" data-learn="daily">🎯 Daily</button>
       <button class="asset-btn" data-learn="calc">🧮 Calc</button>
+      <button class="asset-btn" data-learn="orderbook">📖 Orderbook</button>
     </div>
 
     <!-- TUTORIAL -->
@@ -6666,6 +6716,245 @@
           </select>
         </div>
         <div id="calc-result" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- ORDERBOOK LESSON — How to Read an Orderbook -->
+    <div class="learn-section" id="learn-orderbook" style="display:none;">
+      <!-- Hero -->
+      <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:16px 16px 18px; margin-bottom:14px;">
+        <div style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; margin-bottom:6px;">📖 How To Read An Orderbook</div>
+        <div style="font-size:20px; font-weight:800; color:#f5f5f5; line-height:1.2; margin-bottom:10px;">The Raw Truth of a Market</div>
+        <div style="font-size:13px; line-height:1.5; color:#d4d4d8;">
+          The orderbook is every buyer, every seller, every price they're willing to trade at — in real time. Learn to read it, and you see exactly what algos, whales, and market makers are actually doing. Not what they're tweeting. What they're <em style="color:#FFDE00; font-style:normal;">doing</em>.
+        </div>
+      </div>
+
+      <!-- SVG ANATOMY DIAGRAM -->
+      <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:14px 16px; margin-bottom:14px;">
+        <div style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; margin-bottom:10px;">Anatomy of an Orderbook</div>
+        <svg viewBox="0 0 500 380" preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto; display:block; background:#05070c; border-radius:8px; border:1px solid rgba(255,222,0,0.12);" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="obBidBar" x1="1" y1="0" x2="0" y2="0">
+              <stop offset="0%" stop-color="#22c55e" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#22c55e" stop-opacity="0.05"/>
+            </linearGradient>
+            <linearGradient id="obAskBar" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#ef4444" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#ef4444" stop-opacity="0.05"/>
+            </linearGradient>
+          </defs>
+          <!-- Column headers -->
+          <text x="120" y="20" text-anchor="middle" fill="#22c55e" font-family="monospace" font-size="12" font-weight="700" letter-spacing="1">BIDS · BUYERS</text>
+          <text x="380" y="20" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="12" font-weight="700" letter-spacing="1">ASKS · SELLERS</text>
+          <!-- Sub-headers PRICE / SIZE / TOTAL -->
+          <text x="55"  y="42" fill="#71717a" font-family="monospace" font-size="9" font-weight="700">PRICE</text>
+          <text x="135" y="42" fill="#71717a" font-family="monospace" font-size="9" font-weight="700">SIZE</text>
+          <text x="195" y="42" text-anchor="end" fill="#71717a" font-family="monospace" font-size="9" font-weight="700">TOTAL</text>
+          <text x="305" y="42" fill="#71717a" font-family="monospace" font-size="9" font-weight="700">PRICE</text>
+          <text x="385" y="42" fill="#71717a" font-family="monospace" font-size="9" font-weight="700">SIZE</text>
+          <text x="445" y="42" text-anchor="end" fill="#71717a" font-family="monospace" font-size="9" font-weight="700">TOTAL</text>
+
+          <!-- ASK ROWS (top-down, worst price at top, best at bottom) -->
+          <g font-family="monospace" font-size="11" font-weight="600">
+            <rect x="260" y="50"  width="180" height="18" fill="url(#obAskBar)"/>
+            <text x="270" y="63" fill="#fca5a5">62,455.10</text><text x="380" y="63" fill="#e4e4e7">1.42</text><text x="445" y="63" text-anchor="end" fill="#22D3EE">8.71</text>
+
+            <rect x="260" y="70"  width="150" height="18" fill="url(#obAskBar)"/>
+            <text x="270" y="83" fill="#fca5a5">62,454.60</text><text x="380" y="83" fill="#e4e4e7">1.08</text><text x="445" y="83" text-anchor="end" fill="#22D3EE">7.29</text>
+
+            <rect x="260" y="90"  width="205" height="18" fill="url(#obAskBar)"/>
+            <text x="270" y="103" fill="#fca5a5">62,453.90</text><text x="380" y="103" fill="#e4e4e7">2.15</text><text x="445" y="103" text-anchor="end" fill="#22D3EE">6.21</text>
+
+            <rect x="260" y="110" width="115" height="18" fill="url(#obAskBar)"/>
+            <text x="270" y="123" fill="#fca5a5">62,452.70</text><text x="380" y="123" fill="#e4e4e7">0.76</text><text x="445" y="123" text-anchor="end" fill="#22D3EE">4.06</text>
+
+            <rect x="260" y="130" width="140" height="18" fill="url(#obAskBar)"/>
+            <text x="270" y="143" fill="#fca5a5">62,451.20</text><text x="380" y="143" fill="#e4e4e7">1.05</text><text x="445" y="143" text-anchor="end" fill="#22D3EE">3.30</text>
+
+            <rect x="260" y="150" width="95"  height="18" fill="url(#obAskBar)"/>
+            <text x="270" y="163" fill="#ef4444" font-weight="800">62,450.55</text><text x="380" y="163" fill="#e4e4e7">2.25</text><text x="445" y="163" text-anchor="end" fill="#22D3EE">2.25</text>
+          </g>
+
+          <!-- SPREAD BAND -->
+          <rect x="20" y="172" width="460" height="30" fill="rgba(34,211,238,0.06)" stroke="rgba(34,211,238,0.35)" stroke-dasharray="3 3" rx="4"/>
+          <text x="250" y="187" text-anchor="middle" fill="#22D3EE" font-family="monospace" font-size="11" font-weight="700" letter-spacing="1">◄ SPREAD  $0.10 ►</text>
+          <text x="250" y="198" text-anchor="middle" fill="#71717a" font-family="monospace" font-size="8" letter-spacing="1">GAP BETWEEN BEST BID + BEST ASK</text>
+
+          <!-- BID ROWS -->
+          <g font-family="monospace" font-size="11" font-weight="600">
+            <rect x="60"  y="206" width="120" height="18" fill="url(#obBidBar)"/>
+            <text x="25" y="219" fill="#22c55e" font-weight="800">62,450.45</text><text x="135" y="219" fill="#e4e4e7">1.90</text><text x="195" y="219" text-anchor="end" fill="#22D3EE">1.90</text>
+
+            <rect x="55"  y="226" width="125" height="18" fill="url(#obBidBar)"/>
+            <text x="25" y="239" fill="#86efac">62,449.80</text><text x="135" y="239" fill="#e4e4e7">1.32</text><text x="195" y="239" text-anchor="end" fill="#22D3EE">3.22</text>
+
+            <rect x="20"  y="246" width="160" height="18" fill="url(#obBidBar)"/>
+            <text x="25" y="259" fill="#86efac">62,449.10</text><text x="135" y="259" fill="#e4e4e7">1.68</text><text x="195" y="259" text-anchor="end" fill="#22D3EE">4.90</text>
+
+            <rect x="35"  y="266" width="145" height="18" fill="url(#obBidBar)"/>
+            <text x="25" y="279" fill="#86efac">62,448.20</text><text x="135" y="279" fill="#e4e4e7">1.55</text><text x="195" y="279" text-anchor="end" fill="#22D3EE">6.45</text>
+
+            <rect x="0"   y="286" width="180" height="18" fill="url(#obBidBar)"/>
+            <text x="25" y="299" fill="#86efac">62,447.30</text><text x="135" y="299" fill="#e4e4e7">2.02</text><text x="195" y="299" text-anchor="end" fill="#22D3EE">8.47</text>
+
+            <rect x="45"  y="306" width="135" height="18" fill="url(#obBidBar)"/>
+            <text x="25" y="319" fill="#86efac">62,446.00</text><text x="135" y="319" fill="#e4e4e7">1.19</text><text x="195" y="319" text-anchor="end" fill="#22D3EE">9.66</text>
+          </g>
+
+          <!-- LAST TRADE FOOTER -->
+          <line x1="20" y1="340" x2="480" y2="340" stroke="rgba(255,222,0,0.15)" stroke-width="1"/>
+          <text x="30"  y="360" fill="#71717a" font-family="monospace" font-size="10" font-weight="700" letter-spacing="1">LAST TRADE</text>
+          <text x="250" y="360" text-anchor="middle" fill="#22D3EE" font-family="monospace" font-size="13" font-weight="800">$62,450.50</text>
+          <text x="470" y="360" text-anchor="end" fill="#22c55e" font-family="monospace" font-size="10" font-weight="700">▲ BUY</text>
+        </svg>
+
+        <!-- Column legend -->
+        <div style="display:grid; grid-template-columns:1fr; gap:8px; margin-top:14px;">
+          <div style="display:flex; gap:10px; align-items:flex-start; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,222,0,0.08); border-radius:8px;">
+            <span style="color:#FFDE00; font-family:monospace; font-size:11px; font-weight:800; min-width:52px;">PRICE</span>
+            <span style="font-size:12px; color:#d4d4d8; line-height:1.4;">The price level a buyer or seller has posted a resting order at.</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,222,0,0.08); border-radius:8px;">
+            <span style="color:#FFDE00; font-family:monospace; font-size:11px; font-weight:800; min-width:52px;">SIZE</span>
+            <span style="font-size:12px; color:#d4d4d8; line-height:1.4;">How much they want to trade at that specific price. In perps: contracts or base currency.</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,222,0,0.08); border-radius:8px;">
+            <span style="color:#FFDE00; font-family:monospace; font-size:11px; font-weight:800; min-width:52px;">TOTAL</span>
+            <span style="font-size:12px; color:#d4d4d8; line-height:1.4;">Cumulative size from top of book down — how much you'd fill if you swept every level from best price to here.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6 CONCEPT GLASS CARDS -->
+      <div style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; margin:6px 4px 10px;">Six Signals in Every Book</div>
+      <div class="ob-concept-grid" style="display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:16px;">
+
+        <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:14px 16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:18px;">📏</span>
+            <span style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:800;">Spread</span>
+          </div>
+          <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;">
+            The gap between the best bid and the best ask. Tight (e.g. <span style="color:#22D3EE;">$0.10 on BTC</span>) = deep liquidity, easy entries and exits. Wide spread = thin market — you'll slip on market orders. If it's wide, use <span style="color:#FFDE00;">LIMITS</span> or wait for it to compress.
+          </div>
+        </div>
+
+        <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:14px 16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:18px;">📊</span>
+            <span style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:800;">Bid / Ask Depth</span>
+          </div>
+          <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;">
+            Total resting size on each side within a range (usually 1–2%). If <span style="color:#22c55e;">bids &gt;&gt; asks</span> near price, buyers are stacked supporting the level. If <span style="color:#ef4444;">asks dominate</span>, there's a ceiling. Depth is the market's <em style="color:#FFDE00; font-style:normal;">skeleton</em>.
+          </div>
+        </div>
+
+        <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:14px 16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:18px;">🧱</span>
+            <span style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:800;">Liquidity Walls</span>
+          </div>
+          <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;">
+            A single massive order 5–20 ticks off the top is a <span style="color:#FFDE00;">wall</span>. Buy walls support price; sell walls cap it. But watch: walls often <span style="color:#ef4444;">get pulled</span> seconds before price hits them — they're bait to trick you into positioning wrong.
+          </div>
+        </div>
+
+        <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:14px 16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:18px;">👻</span>
+            <span style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:800;">Spoofing</span>
+          </div>
+          <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;">
+            Fake orders posted then cancelled to fake demand/supply. If a giant order <span style="color:#22D3EE;">appears then vanishes</span> in seconds, it was a spoof. Real institutional flow doesn't flash — it either fills or sits patiently. Illegal on regulated venues, rampant in crypto.
+          </div>
+        </div>
+
+        <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:14px 16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:18px;">🛡️</span>
+            <span style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:800;">Absorption</span>
+          </div>
+          <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;">
+            Aggressive market orders slam a resting wall and price <span style="color:#22D3EE;">doesn't move</span> — the wall is real and someone with size is absorbing the flow. This often marks a <span style="color:#FFDE00;">reversal point</span>. Big money accumulating while retail panics.
+          </div>
+        </div>
+
+        <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:14px 16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:18px;">🧊</span>
+            <span style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:800;">Iceberg Orders</span>
+          </div>
+          <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;">
+            Only a small slice of the true order is visible; when it fills, another slice appears at the <span style="color:#FFDE00;">same price</span>. Repeated fills at one level = iceberg. Signals a serious buyer/seller working large size <em style="color:#22D3EE; font-style:normal;">without spooking the tape</em>.
+          </div>
+        </div>
+      </div>
+
+      <!-- DECISION FLOW CHECKLIST -->
+      <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:16px; margin-bottom:14px;">
+        <div style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; margin-bottom:12px;">Before You Click Buy — The 5 Questions</div>
+        <ol style="list-style:none; padding:0; margin:0; counter-reset: obq;">
+          <li style="counter-increment: obq; display:flex; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,222,0,0.08);">
+            <span style="min-width:26px; height:26px; background:rgba(255,222,0,0.12); border:1px solid rgba(255,222,0,0.35); border-radius:50%; color:#FFDE00; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:monospace;">1</span>
+            <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;"><strong style="color:#f5f5f5;">Is the spread reasonable?</strong> If wide → use a <span style="color:#22D3EE;">LIMIT</span>, never market.</div>
+          </li>
+          <li style="counter-increment: obq; display:flex; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,222,0,0.08);">
+            <span style="min-width:26px; height:26px; background:rgba(255,222,0,0.12); border:1px solid rgba(255,222,0,0.35); border-radius:50%; color:#FFDE00; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:monospace;">2</span>
+            <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;"><strong style="color:#f5f5f5;">Which side is heavier?</strong> Bias <span style="color:#22c55e;">with</span> the depth, not against.</div>
+          </li>
+          <li style="counter-increment: obq; display:flex; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,222,0,0.08);">
+            <span style="min-width:26px; height:26px; background:rgba(255,222,0,0.12); border:1px solid rgba(255,222,0,0.35); border-radius:50%; color:#FFDE00; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:monospace;">3</span>
+            <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;"><strong style="color:#f5f5f5;">Any walls near your stop or target?</strong> They become magnets — or brick walls.</div>
+          </li>
+          <li style="counter-increment: obq; display:flex; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,222,0,0.08);">
+            <span style="min-width:26px; height:26px; background:rgba(255,222,0,0.12); border:1px solid rgba(255,222,0,0.35); border-radius:50%; color:#FFDE00; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:monospace;">4</span>
+            <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;"><strong style="color:#f5f5f5;">Any spoofs pulled recently?</strong> Someone's trying to move you — <span style="color:#ef4444;">step back</span>.</div>
+          </li>
+          <li style="counter-increment: obq; display:flex; gap:12px; padding:10px 0;">
+            <span style="min-width:26px; height:26px; background:rgba(255,222,0,0.12); border:1px solid rgba(255,222,0,0.35); border-radius:50%; color:#FFDE00; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:monospace;">5</span>
+            <div style="font-size:12.5px; line-height:1.5; color:#d4d4d8;"><strong style="color:#f5f5f5;">Is the last trade eating bids or lifting offers?</strong> That's the aggression direction — trade with it.</div>
+          </li>
+        </ol>
+      </div>
+
+      <!-- PATTERN CHIPS -->
+      <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.2); border-radius:12px; padding:16px; margin-bottom:14px;">
+        <div style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; margin-bottom:12px;">Common Book Patterns</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <span style="background:rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.4); color:#22D3EE; font-size:10.5px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; padding:4px 10px; border-radius:999px; font-family:monospace; white-space:nowrap;">Stack</span>
+            <span style="font-size:12px; color:#d4d4d8; line-height:1.5;">Layered orders at close prices creating a wall zone.</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <span style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.4); color:#ef4444; font-size:10.5px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; padding:4px 10px; border-radius:999px; font-family:monospace; white-space:nowrap;">Sweep</span>
+            <span style="font-size:12px; color:#d4d4d8; line-height:1.5;">A market order that eats multiple price levels instantly.</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <span style="background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.4); color:#22c55e; font-size:10.5px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; padding:4px 10px; border-radius:999px; font-family:monospace; white-space:nowrap;">Refill</span>
+            <span style="font-size:12px; color:#d4d4d8; line-height:1.5;">Depth restored immediately after being taken — a strong directional signal.</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <span style="background:rgba(161,161,170,0.12); border:1px solid rgba(161,161,170,0.4); color:#a1a1aa; font-size:10.5px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; padding:4px 10px; border-radius:999px; font-family:monospace; white-space:nowrap;">Vacuum</span>
+            <span style="font-size:12px; color:#d4d4d8; line-height:1.5;">Orders pulled just before price arrives — support / resistance was a lie.</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <span style="background:rgba(255,222,0,0.12); border:1px solid rgba(255,222,0,0.4); color:#FFDE00; font-size:10.5px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; padding:4px 10px; border-radius:999px; font-family:monospace; white-space:nowrap;">Skew</span>
+            <span style="font-size:12px; color:#d4d4d8; line-height:1.5;">Persistent imbalance between bid and ask depth over time — regime bias.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE CTA -->
+      <div class="ob-glass" style="background:rgba(10,12,18,0.75); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); border:1px solid rgba(255,222,0,0.35); border-radius:12px; padding:16px; margin-bottom:14px; text-align:center;">
+        <div style="font-size:12px; color:#FFDE00; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; margin-bottom:6px;">Try It Live</div>
+        <div style="font-size:13px; color:#d4d4d8; line-height:1.5; margin-bottom:12px;">See a real Hyperliquid orderbook right now. Watch depth, spread, and walls move in real time.</div>
+        <button id="ob-lesson-view-live" type="button" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(135deg, #FFDE00 0%, #f59e0b 100%); color:#0a0c12; border:none; border-radius:10px; padding:12px 20px; font-size:13px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; box-shadow:0 4px 14px rgba(255,222,0,0.35); font-family:inherit;">📊 View Live Orderbook</button>
+      </div>
+
+      <!-- SMALL PRINT -->
+      <div style="text-align:center; font-size:11px; color:#71717a; font-style:italic; line-height:1.5; padding:8px 16px 20px; letter-spacing:0.02em;">
+        Orderbooks lie. They're a signal, not scripture. Combine with price action, funding, and open interest.
       </div>
     </div>
   </div>
@@ -26657,6 +26946,22 @@ document.querySelectorAll('#panel-learn .asset-btn').forEach(b => {
     renderLearn();
   });
 });
+
+// Orderbook lesson: "View Live Orderbook" CTA → Live tab → Chart sub (which hosts the live Hyperliquid orderbook combo)
+(function(){
+  var btn = document.getElementById('ob-lesson-view-live');
+  if (!btn) return;
+  btn.addEventListener('click', function(){
+    try {
+      var liveTab = document.querySelector('.tab[data-group="live"]') || document.querySelector('[data-group="live"]');
+      if (liveTab) liveTab.click();
+      setTimeout(function(){
+        var chartSub = document.querySelector('[data-sub="chart"]');
+        if (chartSub) chartSub.click();
+      }, 200);
+    } catch(e) {}
+  });
+})();
 document.getElementById('glossary-search').addEventListener('input', renderGlossary);
 ['calc-account','calc-risk-pct','calc-entry','calc-stop','calc-lev'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderRiskCalc);
@@ -49847,6 +50152,250 @@ html, body { max-width: 100vw; overflow-x: hidden; }
   }
 })();
 </script>
+
+<!-- ==================== 🩶 WAVE 7 · STABILITY PATCHES ==================== -->
+<script id="pfd-wave7-stability">
+(function(){
+  "use strict";
+
+  // ---------- FIX 1: Debounce startLiveFeed to kill Live-tab fetch storm ----------
+  // Rapid tapping the Live tab used to fire 8 concurrent HL fetches each time.
+  // Now: 3-second cooldown between full startLiveFeed cycles.
+  var _liveFeedLastRun = 0;
+  var _liveFeedCooldownMs = 3000;
+  function wrapStartLiveFeed(){
+    if (typeof window.startLiveFeed !== 'function') return false;
+    if (window.startLiveFeed.__pfdDebounced) return true;
+    var orig = window.startLiveFeed;
+    var wrapped = function(){
+      var now = Date.now();
+      if (now - _liveFeedLastRun < _liveFeedCooldownMs) {
+        // Skip — another kick happened within the last 3s
+        return Promise.resolve();
+      }
+      _liveFeedLastRun = now;
+      try { return orig.apply(this, arguments); } catch(e){ return Promise.resolve(); }
+    };
+    wrapped.__pfdDebounced = true;
+    window.startLiveFeed = wrapped;
+    return true;
+  }
+  // startLiveFeed is a top-level function declaration → hoisted to window in non-strict scripts.
+  // Try immediately, then poll briefly in case script order matters.
+  if (!wrapStartLiveFeed()) {
+    var tries = 0;
+    var iv = setInterval(function(){
+      tries++;
+      if (wrapStartLiveFeed() || tries > 40) clearInterval(iv);
+    }, 250);
+  }
+
+  // ---------- FIX 2: Pause Vibe particle rAF when leaving Vibe tab ----------
+  // The 60fps particle overlay used to keep running forever once started,
+  // draining CPU/battery in the background. Now it pauses when you nav away.
+  //
+  // hideVisual/showVisual are IIFE-scoped in the Vibe module, but we can
+  // reach them via the DOM: hideVisual just clears the canvas + cancels rAF.
+  // Simpler approach: wrap _pfdActivateSub — when leaving 'vibe' sub, dispatch
+  // a custom event; Vibe's own module listens and pauses itself.
+  //
+  // But since we can't add a listener inside the IIFE from here, use a
+  // stopgap: cancel ALL active animation frames when leaving vibe by
+  // canceling every frame ID up to a reasonable count. Cheap and effective.
+
+  function pauseAllRAF(){
+    // Cancel any pending rAF IDs. On modern browsers rAF IDs are small
+    // monotonic integers; cancelling non-existent IDs is a safe no-op.
+    var maxId = window.__pfdMaxRafId || 4096;
+    for (var i = 1; i <= maxId; i++) {
+      try { cancelAnimationFrame(i); } catch(e){}
+    }
+    // Also clear the vibe canvas visually
+    var canvas = document.getElementById('vibe-visual-canvas') || document.querySelector('#vibe-visual canvas');
+    if (canvas && canvas.getContext) {
+      try { canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); } catch(e){}
+    }
+    var overlay = document.getElementById('vibe-visual');
+    if (overlay) overlay.style.opacity = '0';
+  }
+
+  // Track max rAF ID so pauseAllRAF has a bounded loop
+  var _origRAF = window.requestAnimationFrame;
+  if (_origRAF && !_origRAF.__pfdTracked) {
+    var tracked = function(cb){
+      var id = _origRAF.call(window, cb);
+      if (!window.__pfdMaxRafId || id > window.__pfdMaxRafId) window.__pfdMaxRafId = id;
+      return id;
+    };
+    tracked.__pfdTracked = true;
+    window.requestAnimationFrame = tracked;
+  }
+
+  // Wrap _pfdActivateSub to detect vibe→other transitions
+  function wrapActivateSub(){
+    if (typeof window._pfdActivateSub !== 'function') return false;
+    if (window._pfdActivateSub.__pfdVibePauseWrap) return true;
+    var orig = window._pfdActivateSub;
+    var wrapped = function(groupId, subId){
+      var prevSub = window._pfdCurrentSub || null;
+      var prevGroup = window._pfdCurrentGroup || null;
+      var result = orig.apply(this, arguments);
+      try {
+        // Was on vibe, now not on vibe → pause
+        var wasOnVibe = (prevSub === 'vibe' || prevGroup === 'vibe');
+        var nowOnVibe = (subId === 'vibe' || groupId === 'vibe');
+        if (wasOnVibe && !nowOnVibe) {
+          pauseAllRAF();
+        }
+      } catch(e){}
+      return result;
+    };
+    wrapped.__pfdVibePauseWrap = true;
+    window._pfdActivateSub = wrapped;
+    return true;
+  }
+  if (!wrapActivateSub()) {
+    var tries2 = 0;
+    var iv2 = setInterval(function(){
+      tries2++;
+      if (wrapActivateSub() || tries2 > 40) clearInterval(iv2);
+    }, 250);
+  }
+
+  // Also pause if user navigates away via the top group tabs
+  document.addEventListener('click', function(e){
+    var groupBtn = e.target && e.target.closest && e.target.closest('[data-group]');
+    if (!groupBtn) return;
+    var newGroup = groupBtn.getAttribute('data-group');
+    if (window._pfdCurrentSub === 'vibe' && newGroup !== 'vibe') {
+      setTimeout(pauseAllRAF, 100);
+    }
+  }, { passive: true });
+
+})();
+</script>
+
+<style id="pfd-wave7-depth-book-fix">
+/* ============================================================
+   FULL DEPTH BOOK — mobile stacking + microstructure fit
+   Additive-only. Targets: #panel-heatmap .hm-depth-cols
+   and #panel-heatmap .hm-micro. No JS/data changes.
+   ============================================================ */
+
+/* Ensure the depth cols container never forces horizontal scroll */
+#panel-heatmap .hm-depth-body { min-width: 0; }
+#panel-heatmap .hm-depth-cols { min-width: 0; }
+#panel-heatmap .hm-depth-col  { min-width: 0; }
+
+/* Each table gets its own horizontal-scroll fallback (in case a
+   single row's monospace numbers still exceed the narrow column),
+   but the grid itself stacks — user no longer has to swipe to
+   discover the SHORT side exists. */
+#panel-heatmap .hm-depth-col > div[id^="hm-depth-"] {
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#panel-heatmap .hm-depth-table {
+  table-layout: fixed;
+  width: 100%;
+}
+#panel-heatmap .hm-depth-table th,
+#panel-heatmap .hm-depth-table td {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* MOBILE: stack the two liquidation tables vertically.
+   Higher specificity (#panel-heatmap prefix) beats the base
+   `.hm-depth-cols { grid-template-columns: 1fr 1fr }` rule. */
+@media (max-width: 639px) {
+  #panel-heatmap .hm-depth-cols {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  /* Add a subtle divider between stacked sides so it's obvious
+     they belong to the same "both sides" concept. */
+  #panel-heatmap .hm-depth-col.short {
+    border-top: 2px dashed var(--border, #000);
+    padding-top: 10px;
+    position: relative;
+  }
+  #panel-heatmap .hm-depth-col.short::before {
+    content: "↕ BOTH SIDES";
+    position: absolute;
+    top: -9px; left: 50%;
+    transform: translateX(-50%);
+    background: #FFDE00;
+    color: #000;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    padding: 1px 8px;
+    border: 2px solid var(--border, #000);
+    border-radius: 3px;
+  }
+  #panel-heatmap .hm-depth-col h3 {
+    font-size: 12px;
+  }
+  #panel-heatmap .hm-depth-table {
+    font-size: 11px;
+  }
+  #panel-heatmap .hm-depth-table th,
+  #panel-heatmap .hm-depth-table td {
+    padding: 4px 4px;
+    font-size: clamp(10px, 2.8vw, 12px);
+  }
+  #panel-heatmap .hm-depth-table th {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+}
+
+/* ---- MARKET MICROSTRUCTURE mobile fit ----
+   Base is 3 cols; on narrow screens "Longs paying (contrarian: short)"
+   clips inside the FUNDING BIAS cell. Switch to 2 cols × 3 rows and
+   allow wrapping. */
+#panel-heatmap .hm-micro { min-width: 0; }
+#panel-heatmap .hm-micro .m { min-width: 0; }
+#panel-heatmap .hm-micro .m .v {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.15;
+}
+#panel-heatmap .hm-micro .m .l {
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+@media (max-width: 639px) {
+  #panel-heatmap .hm-micro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px 8px;
+  }
+  #panel-heatmap .hm-micro .m .l { font-size: 10px; }
+  #panel-heatmap .hm-micro .m .v {
+    font-size: clamp(10px, 3vw, 13px);
+  }
+}
+
+/* Extra-narrow safety (≤380px iPhone SE-ish): shrink a touch more */
+@media (max-width: 380px) {
+  #panel-heatmap .hm-depth-table th,
+  #panel-heatmap .hm-depth-table td {
+    padding: 3px 3px;
+    font-size: 10px;
+  }
+  #panel-heatmap .hm-micro .m .v {
+    font-size: 11px;
+  }
+}
+</style>
 
 </body>
 </html>
