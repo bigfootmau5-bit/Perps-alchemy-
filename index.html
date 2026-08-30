@@ -7,52 +7,58 @@
 <style>
   /* ============ DESIGN SYSTEM TOKENS (Phase 1) ============ */
   :root {
-    /* BLACK & GOLD — clean minimalist. Black bg, WHITE text (readable), gold accents. */
-    --bg: #000;
-    --bg-card: #0a0a0a;
-    --bg-inset: #141414;
-    --bg-dark: #000;
-    --fg: #ffffff;
-    --fg-muted: #a0a0a0;
-    --fg-inverse: #000;
-    --accent-primary: #FFDE00;
-    --accent-success: #22c55e;
-    --accent-warn: #f59e0b;
-    --accent-danger: #ef4444;
-    --accent-info: #3b82f6;
-    --accent-magenta: #ec4899;
-    --accent-purple: #8b5cf6;
-    --border: #2a2a2a;
+    /* FUTURISTIC — deep space navy base, electric cyan + neon purple accents, glass panels */
+    --bg: #06080F;
+    --bg-card: #0B0E1A;
+    --bg-inset: #121627;
+    --bg-dark: #04050A;
+    --fg: #E8ECF4;
+    --fg-muted: #7A8599;
+    --fg-inverse: #06080F;
+    --accent-primary: #00F0FF;
+    --accent-success: #00FF9D;
+    --accent-warn: #FFB800;
+    --accent-danger: #FF3860;
+    --accent-info: #00F0FF;
+    --accent-magenta: #FF00E5;
+    --accent-purple: #9D4EDD;
+    --border: rgba(0, 240, 255, 0.15);
     --border-w: 1px;
     --border-w-sm: 1px;
-    --shadow-sm: none;
-    --shadow: none;
-    --shadow-lg: none;
-    --r-sm: 6px;
-    --r: 10px;
-    --r-lg: 14px;
+    --shadow-sm: 0 0 8px rgba(0, 240, 255, 0.05);
+    --shadow: 0 0 16px rgba(0, 240, 255, 0.08);
+    --shadow-lg: 0 0 24px rgba(0, 240, 255, 0.12);
+    --r-sm: 8px;
+    --r: 12px;
+    --r-lg: 16px;
     --sp-1: 4px;
     --sp-2: 8px;
     --sp-3: 12px;
     --sp-4: 16px;
     --sp-6: 24px;
-    /* Card fallback that inline `var(--panel-alt-bg, #f9fafb)` reads → force dark */
-    --panel-alt-bg: #0a0a0a;
+    --panel-alt-bg: #0B0E1A;
+    --glass-bg: rgba(11, 14, 26, 0.7);
+    --glass-border: rgba(0, 240, 255, 0.12);
+    --glow-primary: 0 0 20px rgba(0, 240, 255, 0.25);
+    --glow-purple: 0 0 20px rgba(157, 78, 221, 0.25);
   }
   [data-theme="dark"] {
-    --bg: #0a0a0a;
-    --bg-card: #1a1a1a;
-    --bg-inset: #2a2a2a;
-    --bg-dark: #000;
-    --fg: #e5e5e5;
-    --fg-muted: #94a3b8;
-    --fg-inverse: #0a0a0a;
-    --border: #2a2a2a;
-    --shadow-sm: 2px 2px 0 rgba(0,0,0,0.3);
-    --shadow: 4px 4px 0 rgba(0,0,0,0.4);
-    --shadow-lg: 5px 5px 0 rgba(0,0,0,0.5);
-    --accent-info: #22d3ee;
-    --accent-magenta: #f472b6;
+    --bg: #06080F;
+    --bg-card: #0B0E1A;
+    --bg-inset: #121627;
+    --bg-dark: #04050A;
+    --fg: #E8ECF4;
+    --fg-muted: #7A8599;
+    --fg-inverse: #06080F;
+    --border: rgba(0, 240, 255, 0.15);
+    --shadow-sm: 0 0 8px rgba(0, 240, 255, 0.05);
+    --shadow: 0 0 16px rgba(0, 240, 255, 0.08);
+    --shadow-lg: 0 0 24px rgba(0, 240, 255, 0.12);
+    --accent-primary: #00F0FF;
+    --accent-success: #00FF9D;
+    --accent-info: #00F0FF;
+    --accent-magenta: #FF00E5;
+    --accent-purple: #9D4EDD;
   }
   /* ==================== REAPER POINTS — UNLOCKABLE THEMES ==================== */
   [data-theme="midnight"] {
@@ -112,30 +118,28 @@
     --shadow: 4px 4px 0 #e11d48;
     --shadow-lg: 5px 5px 0 #e11d48;
   }
-  /* ==================== SIMPLE BLACK + GOLD + WHITE — UNIVERSAL SWEEP ====================
-     Rule of the app: everything is BLACK bg, WHITE text, GOLD accents. No exceptions.
-     This block flattens all inline rainbow gradients, purple/blue/pink cards, colored panels. */
+  /* ==================== FUTURISTIC THEME — UNIVERSAL SWEEP ====================
+     Deep space navy bg, electric cyan + neon purple accents, glassmorphism panels.
+     Flattens inline rainbow gradients into sleek futuristic surfaces. */
   body {
-    background: #000 !important;
-    background-image: none !important;
-    color: #ffffff !important;
+    background: #06080F !important;
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(0, 240, 255, 0.04) 0%, transparent 60%),
+                        radial-gradient(ellipse at 50% 100%, rgba(157, 78, 221, 0.03) 0%, transparent 60%) !important;
+    color: #E8ECF4 !important;
   }
-  /* Kill any inline text-shadows app-wide — they made everything blurry */
+  /* Subtle glow text shadows for futuristic accent */
   [style*="text-shadow"] {
     text-shadow: none !important;
   }
-  /* Kill chunky black drop-shadows */
   [style*="box-shadow"] {
     box-shadow: none !important;
   }
-  /* UNIVERSAL: any element with an inline background (color, gradient, whatever) → force flat black card */
   [style*="background:"],
   [style*="background-image:"] {
-    background: #0a0a0a !important;
+    background: #0B0E1A !important;
     background-image: none !important;
-    color: #ffffff !important;
+    color: #E8ECF4 !important;
   }
-  /* Explicit exceptions: elements meant to be transparent stay so */
   [style*="background:transparent"],
   [style*="background: transparent"],
   [style*="background:none"],
@@ -5728,15 +5732,15 @@
   max-width: 92vw;
 }
 .pa-toast {
-  background: rgba(13, 13, 16, 0.95);
-  border: 1px solid rgba(255, 222, 0, 0.3);
-  border-radius: 10px;
+  background: rgba(11, 14, 26, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 12px;
   padding: 12px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
   font-size: 14px;
   font-weight: 600;
-  color: #F4F4F5;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  color: #E8ECF4;
+  box-shadow: 0 4px 24px rgba(0, 240, 255, 0.1), 0 0 16px rgba(0, 240, 255, 0.05);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   animation: pa-toast-slide 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
@@ -5746,8 +5750,8 @@
   gap: 8px;
 }
 .pa-toast.pa-toast-success {
-  border-color: #10B981;
-  box-shadow: 0 4px 24px rgba(16, 185, 129, 0.3);
+  border-color: #00FF9D;
+  box-shadow: 0 4px 24px rgba(0, 255, 157, 0.3);
 }
 .pa-toast.pa-toast-error {
   border-color: #ef4444;
@@ -5758,8 +5762,8 @@
   box-shadow: 0 4px 24px rgba(245, 158, 11, 0.3);
 }
 .pa-toast.pa-toast-info {
-  border-color: #22D3EE;
-  box-shadow: 0 4px 24px rgba(34, 211, 238, 0.2);
+  border-color: #00F0FF;
+  box-shadow: 0 4px 24px rgba(0, 240, 255, 0.2);
 }
 .pa-toast.pa-toast-out {
   animation: pa-toast-out 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
@@ -5779,10 +5783,10 @@
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: rgba(34, 211, 238, 0.08);
-  border: 1px solid rgba(34, 211, 238, 0.25);
+  background: rgba(157, 78, 221, 0.08);
+  border: 1px solid rgba(157, 78, 221, 0.25);
   border-radius: 10px;
-  color: #22D3EE;
+  color: #9D4EDD;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -5791,15 +5795,15 @@
   user-select: none;
 }
 #beginner-mode-btn:hover {
-  background: rgba(34, 211, 238, 0.15);
-  border-color: #22D3EE;
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.3);
+  background: rgba(157, 78, 221, 0.15);
+  border-color: #9D4EDD;
+  box-shadow: 0 0 12px rgba(157, 78, 221, 0.3);
 }
 #beginner-mode-btn.active {
-  background: rgba(34, 211, 238, 0.2);
-  border-color: #22D3EE;
-  color: #22D3EE;
-  box-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+  background: rgba(157, 78, 221, 0.2);
+  border-color: #9D4EDD;
+  color: #9D4EDD;
+  box-shadow: 0 0 16px rgba(157, 78, 221, 0.4);
 }
 
 /* Beginner Mode UI changes — simplified, larger, clearer */
@@ -5837,85 +5841,128 @@ body.beginner-mode .beginner-tip {
 .beginner-tip {
   display: none;
   font-size: 12px;
-  color: #22D3EE;
+  color: #9D4EDD;
   padding: 8px 12px;
   margin: 4px 0;
-  background: rgba(34, 211, 238, 0.08);
+  background: rgba(157, 78, 221, 0.08);
   border-radius: 8px;
-  border-left: 3px solid #22D3EE;
+  border-left: 3px solid #9D4EDD;
   font-weight: 500;
   line-height: 1.5;
 }
 
-/* ===== COLOR IMPROVEMENTS ===== */
-/* Better contrast on dark theme */
+/* ===== FUTURISTIC COLOR SYSTEM ===== */
+/* Deep space navy with electric cyan + neon purple accents */
 [data-theme="dark"] {
-  --bg-card: #161618 !important;
-  --bg-inset: #1e1e22 !important;
-  --border: #333335 !important;
-  --fg-muted: #b0b8c4 !important;
-  --accent-primary: #FFDE00 !important;
-  --accent-success: #10B981 !important;
-  --accent-danger: #ef4444 !important;
-  --accent-info: #22D3EE !important;
-  --accent-warn: #f59e0b !important;
-  --accent-magenta: #ec4899 !important;
-  --accent-purple: #8b5cf6 !important;
+  --bg-card: #0B0E1A !important;
+  --bg-inset: #121627 !important;
+  --border: rgba(0, 240, 255, 0.15) !important;
+  --fg-muted: #7A8599 !important;
+  --accent-primary: #00F0FF !important;
+  --accent-success: #00FF9D !important;
+  --accent-danger: #FF3860 !important;
+  --accent-info: #00F0FF !important;
+  --accent-warn: #FFB800 !important;
+  --accent-magenta: #FF00E5 !important;
+  --accent-purple: #9D4EDD !important;
 }
-/* Slightly lighter card backgrounds for better depth */
+/* Glassmorphism panels with cyan glow borders */
 [data-theme="dark"] .panel,
 [data-theme="dark"] .card,
 [data-theme="dark"] [class*="panel-"] {
-  background: #161618 !important;
-  border-color: rgba(255, 222, 0, 0.12) !important;
+  background: rgba(11, 14, 26, 0.85) !important;
+  border: 1px solid rgba(0, 240, 255, 0.12) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
-/* Gold accent improvements — more readable */
+/* Electric cyan active tabs with glow */
 [data-theme="dark"] .tab.active {
-  color: #FFDE00 !important;
-  border-bottom-color: #FFDE00 !important;
+  color: #00F0FF !important;
+  border-bottom-color: #00F0FF !important;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.4) !important;
 }
+/* Futuristic buttons — dark glass with cyan glow on hover */
 [data-theme="dark"] button:not(.tab):not(.no-anim) {
-  background: #1e1e22 !important;
-  border: 1px solid #333335 !important;
-  color: #e5e5e5 !important;
+  background: #121627 !important;
+  border: 1px solid rgba(0, 240, 255, 0.15) !important;
+  color: #E8ECF4 !important;
+  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
 }
 [data-theme="dark"] button:not(.tab):not(.no-anim):hover {
-  background: #252528 !important;
-  border-color: rgba(255, 222, 0, 0.3) !important;
+  background: rgba(0, 240, 255, 0.08) !important;
+  border-color: rgba(0, 240, 255, 0.4) !important;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.2) !important;
 }
-/* Success/danger colors more vibrant */
+/* Neon green/red for profit/loss */
 [data-theme="dark"] .text-green,
 [data-theme="dark"] [style*="color: #22c55e"],
-[data-theme="dark"] [style*="color:#22c55e"] {
-  color: #10B981 !important;
+[data-theme="dark"] [style*="color:#22c55e"],
+[data-theme="dark"] [style*="color: #10B981"],
+[data-theme="dark"] [style*="color:#10B981"] {
+  color: #00FF9D !important;
+  text-shadow: 0 0 8px rgba(0, 255, 157, 0.3) !important;
 }
 [data-theme="dark"] .text-red,
 [data-theme="dark"] [style*="color: #ef4444"],
-[data-theme="dark"] [style*="color:#ef4444"] {
-  color: #ef4444 !important;
+[data-theme="dark"] [style*="color:#ef4444"],
+[data-theme="dark"] [style*="color: #FF3860"],
+[data-theme="dark"] [style*="color:#FF3860"] {
+  color: #FF3860 !important;
+  text-shadow: 0 0 8px rgba(255, 56, 96, 0.3) !important;
 }
-/* Light theme improvements */
+/* Futuristic light theme */
 [data-theme="light"] {
-  --bg: #f8f9fa !important;
-  --bg-card: #ffffff !important;
-  --bg-inset: #f1f3f5 !important;
-  --border: #dee2e6 !important;
-  --fg-muted: #6c757d !important;
+  --bg: #F0F2F8 !important;
+  --bg-card: #FFFFFF !important;
+  --bg-inset: #EAEDF5 !important;
+  --border: rgba(0, 180, 200, 0.2) !important;
+  --fg-muted: #6B7280 !important;
+  --accent-primary: #00B8D4 !important;
 }
 [data-theme="light"] .tab.active {
-  color: #FFDE00 !important;
-  border-bottom-color: #FFDE00 !important;
-  background: rgba(255, 222, 0, 0.08) !important;
+  color: #00B8D4 !important;
+  border-bottom-color: #00B8D4 !important;
+  background: rgba(0, 184, 212, 0.06) !important;
 }
-/* PFD theme color refresh */
+/* PFD futuristic theme */
 :root {
-  --pfd-bg-deep: #08080a !important;
-  --pfd-bg-elev: #111114 !important;
-  --pfd-gold: #FFDE00 !important;
-  --pfd-cyan: #22D3EE !important;
-  --pfd-green: #10B981 !important;
-  --pfd-red: #ef4444 !important;
-  --pfd-text: #F4F4F5 !important;
+  --pfd-bg-deep: #06080F !important;
+  --pfd-bg-elev: #0B0E1A !important;
+  --pfd-gold: #00F0FF !important;
+  --pfd-cyan: #00F0FF !important;
+  --pfd-green: #00FF9D !important;
+  --pfd-red: #FF3860 !important;
+  --pfd-text: #E8ECF4 !important;
+  --pfd-purple: #9D4EDD !important;
+  --pfd-magenta: #FF00E5 !important;
+}
+/* Inputs — futuristic glass style */
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] select {
+  background: #0B0E1A !important;
+  border: 1px solid rgba(0, 240, 255, 0.12) !important;
+  color: #E8ECF4 !important;
+}
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus {
+  border-color: rgba(0, 240, 255, 0.4) !important;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.15) !important;
+  outline: none !important;
+}
+/* Scrollbar — futuristic */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 6px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #06080F;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.2);
+  border-radius: 3px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.4);
 }
 </style>
 
@@ -6018,7 +6065,7 @@ body.beginner-mode .beginner-tip {
     var btn = document.createElement('div');
     btn.id = 'beginner-mode-btn';
     btn.className = 'no-anim';
-    btn.style.cssText = 'flex-shrink:0;padding:8px 14px;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);border-radius:10px;color:#22D3EE;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;user-select:none;display:flex;align-items:center;gap:6px;margin-left:auto;';
+    btn.style.cssText = 'flex-shrink:0;padding:8px 14px;background:rgba(157,78,221,0.08);border:1px solid rgba(157,78,221,0.25);border-radius:10px;color:#9D4EDD;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;user-select:none;display:flex;align-items:center;gap:6px;margin-left:auto;';
     btn.textContent = beginnerEnabled ? '🎓 Beginner: ON' : '🎓 Beginner Mode';
     if (beginnerEnabled) btn.classList.add('active');
     btn.onclick = function(e) {
