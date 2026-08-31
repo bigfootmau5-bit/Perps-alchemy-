@@ -5774,38 +5774,39 @@
 
 /* ===== BEGINNER MODE ===== */
 #beginner-mode-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: rgba(157, 78, 221, 0.08);
-  border: 1px solid rgba(157, 78, 221, 0.25);
-  border-radius: 10px;
-  color: #9D4EDD;
-  font-size: 13px;
-  font-weight: 700;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg-muted);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+  transition: all 0.15s ease;
   white-space: nowrap;
   user-select: none;
+  flex-shrink: 0;
 }
 #beginner-mode-btn:hover {
-  background: rgba(157, 78, 221, 0.15);
-  border-color: #9D4EDD;
-  box-shadow:none;
+  background: var(--bg-inset);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 #beginner-mode-btn.active {
-  background: rgba(157, 78, 221, 0.2);
-  border-color: #9D4EDD;
-  color: #9D4EDD;
-  box-shadow:none;
+  background: var(--bg-inset);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 /* Beginner Mode UI changes — simplified, larger, clearer */
+/* Keep tabs compact in beginner mode — just hide advanced ones */
 body.beginner-mode .tab {
-  font-size: 14px ;
-  font-weight: 700 ;
-  padding: 10px 14px ;
+  font-size: 13px ;
+  font-weight: 600 ;
+  padding: 8px 10px ;
 }
 body.beginner-mode .tab .tab-badge {
   display: none !important;
@@ -5825,7 +5826,9 @@ body.beginner-mode select {
   font-size: 15px ;
   padding: 10px 12px ;
 }
-body.beginner-mode button {
+/* Don't globally resize all buttons — only enlarge key action buttons */
+body.beginner-mode .panel > button,
+body.beginner-mode .pfd-dash-cta {
   font-size: 14px ;
   padding: 10px 16px ;
 }
@@ -5835,15 +5838,15 @@ body.beginner-mode .beginner-tip {
 }
 .beginner-tip {
   display: none;
-  font-size: 12px;
-  color: #9D4EDD;
-  padding: 8px 12px;
-  margin: 4px 0;
-  background: rgba(157, 78, 221, 0.08);
+  font-size: 13px;
+  color: var(--fg);
+  padding: 10px 14px;
+  margin: 8px 0;
+  background: var(--bg-inset);
   border-radius: 8px;
-  border-left: 3px solid #9D4EDD;
+  border-left: 3px solid var(--accent-primary);
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* ===== FUTURISTIC COLOR SYSTEM ===== */
@@ -6041,9 +6044,15 @@ body.beginner-mode .beginner-tip {
     if (btn) {
       if (enabled) {
         btn.classList.add('active');
+        btn.style.background = 'var(--bg-inset)';
+        btn.style.borderColor = 'var(--accent-primary)';
+        btn.style.color = 'var(--accent-primary)';
         btn.textContent = '🎓 Beginner: ON';
       } else {
         btn.classList.remove('active');
+        btn.style.background = 'var(--bg-card)';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--fg-muted)';
         btn.textContent = '🎓 Beginner Mode';
       }
     }
@@ -6051,24 +6060,35 @@ body.beginner-mode .beginner-tip {
     _paShowToast(enabled ? '🎓 Beginner Mode ON — simplified UI, larger text, tips visible' : '🎓 Beginner Mode OFF — full interface restored', 3000, 'info');
   }
 
-  // Inject the beginner mode button into the tab bar
+  // Inject the beginner mode button ABOVE the tab bar (not inside it)
   function injectBeginnerButton() {
-    var tabBar = document.querySelector('.tabs');
-    if (!tabBar) return;
+    var contentDiv = document.querySelector('.content');
+    if (!contentDiv) return;
     if (document.getElementById('beginner-mode-btn')) return;
 
     var btn = document.createElement('div');
     btn.id = 'beginner-mode-btn';
     btn.className = 'no-anim';
-    btn.style.cssText = 'flex-shrink:0;padding:8px 14px;background:rgba(157,78,221,0.08);border:1px solid rgba(157,78,221,0.25);border-radius:10px;color:#9D4EDD;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;user-select:none;display:flex;align-items:center;gap:6px;margin-left:auto;';
+    btn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--fg-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s ease;white-space:nowrap;user-select:none;flex-shrink:0;margin:8px 0 0 8px;';
     btn.textContent = beginnerEnabled ? '🎓 Beginner: ON' : '🎓 Beginner Mode';
-    if (beginnerEnabled) btn.classList.add('active');
+    if (beginnerEnabled) {
+      btn.classList.add('active');
+      btn.style.background = 'var(--bg-inset)';
+      btn.style.borderColor = 'var(--accent-primary)';
+      btn.style.color = 'var(--accent-primary)';
+    }
     btn.onclick = function(e) {
       e.stopPropagation();
       beginnerEnabled = !beginnerEnabled;
       applyBeginnerMode(beginnerEnabled);
     };
-    tabBar.appendChild(btn);
+    // Insert BEFORE the tabs, not inside them
+    var tabBar = contentDiv.querySelector('.tabs');
+    if (tabBar) {
+      contentDiv.insertBefore(btn, tabBar);
+    } else {
+      contentDiv.insertBefore(btn, contentDiv.firstChild);
+    }
 
     if (beginnerEnabled) {
       document.body.classList.add('beginner-mode');
