@@ -5819,6 +5819,27 @@ body.beginner-mode .tab[data-tab="book"] {
 body.beginner-mode .tabs {
   justify-content: center;
 }
+/* Hide the SHOW COVER bar in beginner mode — less clutter */
+body.beginner-mode .book-cover-collapsed-bar {
+  display: none !important;
+}
+body.beginner-mode .book-cover {
+  display: none !important;
+}
+/* Move beginner button inline — make it a small floating badge instead of a full row */
+body.beginner-mode #beginner-mode-btn {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 200;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+body.beginner-mode #beginner-mode-btn:hover {
+  opacity: 1;
+}
 /* Slightly larger inputs for readability — but not enough to break layout */
 body.beginner-mode input[type="number"],
 body.beginner-mode select {
