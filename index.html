@@ -19023,9 +19023,46 @@ async function _pfdBacktestRun(coin, setupName) {
   var results = document.getElementById('bt-results');
   if (!results) return;
   results.innerHTML = '<div style="padding:20px; text-align:center;">Running backtest for ' + coin + ' - ' + setupName + '…</div>';
+
+  // ---- Helpers ----
+  function calcEMA(candles, idx, period) {
+    if (idx < period) return parseFloat(candles[idx].c);
+    var k = 2 / (period + 1);
+    var ema = parseFloat(candles[period - 1].c);
+    for (var i = period; i <= idx; i++) ema = parseFloat(candles[i].c) * k + ema * (1 - k);
+    return ema;
+  }
+  function calcRSI(candles, period, idx) {
+    if (idx < period) return 50;
+    var g = 0, l = 0;
+    for (var i = idx - period; i < idx; i++) {
+      var ch = parseFloat(candles[i+1].c) - parseFloat(candles[i].c);
+      if (ch >= 0) g += ch; else l += Math.abs(ch);
+    }
+    var ag = g / period, al = l / period;
+    return al === 0 ? 100 : 100 - (100 / (1 + ag / al));
+  }
+  function calcMA(candles, idx, period) {
+    if (idx < period) return parseFloat(candles[idx].c);
+    var s = 0; for (var i = idx - period; i < idx; i++) s += parseFloat(candles[i].c); return s / period;
+  }
+  function calcVolRatio(candles, idx, lb) {
+    lb = lb || 10;
+    if (idx < lb) return 1;
+    var r = parseFloat(candles[idx].h) - parseFloat(candles[idx].l);
+    var s = 0; for (var i = idx - lb; i < idx; i++) s += parseFloat(candles[i].h) - parseFloat(candles[i].l);
+    var a = s / lb; return a > 0 ? r / a : 1;
+  }
+
+  var TAKER_FEE = 0.07;
+  var STOP_PCT = 0.03;
+  var TARGET_MULT = 2.0;
+  var MAX_HOLD = 12;
+
   try {
+    // Fix 3: 365-day backtest (was 90 days)
     var endMs = Date.now();
-    var startMs = endMs - 90 * 86400 * 1000;
+    var startMs = endMs - 365 * 86400 * 1000;
     var r = await fetch('https://api.hyperliquid.xyz/info', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -19034,59 +19071,158 @@ async function _pfdBacktestRun(coin, setupName) {
     if (!r.ok) throw new Error('http ' + r.status);
     var candles = await r.json();
     if (!Array.isArray(candles) || candles.length === 0) { results.innerHTML = '<div style="padding:20px; color:#ef4444;">No historical data for ' + coin + '.</div>'; return; }
+
     var name = setupName.toLowerCase();
     var signals = [];
-    for (var i = 3; i < candles.length - 1; i++) {
+    var longCount = 0, shortCount = 0;
+
+    for (var i = 50; i < candles.length - 1; i++) {
       var c = candles[i], prev = candles[i-1], prev2 = candles[i-2], prev3 = candles[i-3];
       var o = parseFloat(c.o), h = parseFloat(c.h), l = parseFloat(c.l), cl = parseFloat(c.c);
       var po = parseFloat(prev.o), pc = parseFloat(prev.c), ph = parseFloat(prev.h), pl2 = parseFloat(prev.l);
       var isGreen = cl > o, isRed = cl < o;
-      var prevGreen = pc > po, prevRed = pc < po;
+
+      // Fix 3: L:S ratio enforcement — skip longs if > 65%
+      var tot = longCount + shortCount;
+      var longPct = tot > 10 ? longCount / tot : 0;
+      var skipLong = longPct > 0.65;
+
       var signal = null;
-      if (name.indexOf('golden cross') >= 0 && i >= 10) {
-        var last5 = candles.slice(i-5, i);
-        var prev5 = candles.slice(i-10, i-5);
-        var last5Green = last5.every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
-        var prev5Red = prev5.every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
-        if (last5Green && prev5Red) signal = 'long';
+
+      // ---- Fix 1: Golden Cross (proper EMA50/EMA200 crossover) ----
+      if (name.indexOf('golden cross') >= 0 && i >= 200) {
+        var e50n = calcEMA(candles, i, 50), e200n = calcEMA(candles, i, 200);
+        var e50p = calcEMA(candles, i-1, 50), e200p = calcEMA(candles, i-1, 200);
+        if (e50p < e200p && e50n > e200n && !skipLong) {
+          var rsiGC = calcRSI(candles, 14, i);
+          if (rsiGC >= 30 && rsiGC <= 75) signal = 'long';
+        }
       }
-      if (name.indexOf('death cross') >= 0 && i >= 10) {
-        var last5r = candles.slice(i-5, i);
-        var prev5g = candles.slice(i-10, i-5);
-        var last5Red = last5r.every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
-        var prev5Green = prev5g.every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
-        if (last5Red && prev5Green) signal = 'short';
+
+      // ---- Fix 5: Death Cross (proper EMA50/EMA200 crossunder) ----
+      if (!signal && name.indexOf('death cross') >= 0 && i >= 200) {
+        var e50nD = calcEMA(candles, i, 50), e200nD = calcEMA(candles, i, 200);
+        var e50pD = calcEMA(candles, i-1, 50), e200pD = calcEMA(candles, i-1, 200);
+        if (e50pD > e200pD && e50nD < e200nD) {
+          var rsiDC = calcRSI(candles, 14, i);
+          if (rsiDC >= 25 && rsiDC <= 70) signal = 'short';
+        }
       }
-      if (name.indexOf('bull flag') >= 0 && i >= 4) {
-        var strong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.05;
-        var pullback = prevRed && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
-        if (strong && pullback) signal = 'long';
+
+      // ---- Bull Flag ----
+      if (!signal && name.indexOf('bull flag') >= 0 && i >= 4 && !skipLong) {
+        var strong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.03;
+        var pullback = pc < po && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
+        if (strong && pullback) {
+          var e20bf = calcEMA(candles, i, 20), e50bf = calcEMA(candles, i, 50);
+          if (e20bf > e50bf) signal = 'long'; // trend filter
+        }
       }
-      if (name.indexOf('bear flag') >= 0 && i >= 4) {
-        var strongDown = (parseFloat(prev3.o) - parseFloat(prev3.c)) / parseFloat(prev3.o) > 0.05;
-        var pullbackUp = prevGreen && parseFloat(prev2.c) > parseFloat(prev2.o) && isRed;
-        if (strongDown && pullbackUp) signal = 'short';
+
+      // ---- Bear Flag ----
+      if (!signal && name.indexOf('bear flag') >= 0 && i >= 4) {
+        var strongDown = (parseFloat(prev3.o) - parseFloat(prev3.c)) / parseFloat(prev3.o) > 0.03;
+        var pullbackUp = pc > po && parseFloat(prev2.c) > parseFloat(prev2.o) && isRed;
+        if (strongDown && pullbackUp) {
+          var e20bfD = calcEMA(candles, i, 20), e50bfD = calcEMA(candles, i, 50);
+          if (e20bfD < e50bfD) signal = 'short'; // trend filter
+        }
       }
-      if (name.indexOf('double top') >= 0 && i >= 5) {
-        var peak1 = Math.max(parseFloat(prev3.h), parseFloat(prev2.h));
-        var peak2 = h;
-        var valley = parseFloat(prev.l);
-        if (Math.abs(peak2 - peak1) / peak1 < 0.02 && valley < peak1 * 0.97 && isRed) signal = 'short';
+
+      // ---- Double Top (widened: 2.5% peaks, RSI > 60) ----
+      if (!signal && name.indexOf('double top') >= 0 && i >= 15) {
+        var p1i = -1, p2i = -1, p1v = 0, p2v = 0;
+        for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
+        for (var j2 = p1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
+        if (p1i !== -1 && p2i !== -1) {
+          var peakDiff = Math.abs(p1v - p2v) / Math.max(p1v, p2v) * 100;
+          var valley = parseFloat(candles[Math.floor((p1i + p2i) / 2)].l);
+          var rsiDT = calcRSI(candles, 14, i);
+          var ma20DT = calcMA(candles, i, 20);
+          if (peakDiff <= 2.5 && valley < Math.min(p1v, p2v) * 0.98 && rsiDT >= 60 && cl <= ma20DT * 1.02 && isRed) signal = 'short';
+        }
       }
-      if (name.indexOf('stairway') >= 0 && i >= 5) {
+
+      // ---- Double Bottom (NEW LONG setup) ----
+      if (!signal && name.indexOf('double bottom') >= 0 && i >= 15 && !skipLong) {
+        var t1i = -1, t2i = -1, t1v = 999999, t2v = 999999;
+        for (var j = i - 15; j < i - 2; j++) { var ll = parseFloat(candles[j].l); if (ll < t1v) { t1v = ll; t1i = j; } }
+        for (var j2 = t1i + 2; j2 < i; j2++) { var ll2 = parseFloat(candles[j2].l); if (ll2 < t2v) { t2v = ll2; t2i = j2; } }
+        if (t1i !== -1 && t2i !== -1) {
+          var troughDiff = Math.abs(t1v - t2v) / Math.min(t1v, t2v) * 100;
+          var bounce = parseFloat(candles[Math.floor((t1i + t2i) / 2)].h);
+          var rsiDB = calcRSI(candles, 14, i);
+          var ma20DB = calcMA(candles, i, 20);
+          if (troughDiff <= 2.5 && bounce > Math.min(t1v, t2v) * 1.02 && rsiDB <= 40 && cl >= ma20DB * 0.98 && isGreen) signal = 'long';
+        }
+      }
+
+      // ---- Stairway to Hell ----
+      if (!signal && name.indexOf('stairway') >= 0 && i >= 5) {
         var lh1 = parseFloat(prev3.h), lh2 = parseFloat(prev2.h), lh3 = parseFloat(prev.h);
         if (lh1 > lh2 && lh2 > lh3 && h < lh3 && isRed) signal = 'short';
       }
-      if (!signal) {
-        if (isRed && candles.slice(i-3, i).every(function(x){return parseFloat(x.c) > parseFloat(x.o);}) && (o - cl) / o > 0.03) signal = 'short';
-        if (isGreen && candles.slice(i-3, i).every(function(x){return parseFloat(x.c) < parseFloat(x.o);}) && (cl - o) / o > 0.03) signal = 'long';
+
+      // ---- Head & Shoulders (short) ----
+      if (!signal && name.indexOf('head & shoulders') >= 0 && i >= 10) {
+        var hsLookback = 10;
+        var hsHigh = 0, hsHighIdx = 0;
+        for (var j = i - hsLookback; j < i; j++) { if (parseFloat(candles[j].h) > hsHigh) { hsHigh = parseFloat(candles[j].h); hsHighIdx = j; } }
+        if (hsHighIdx > i - hsLookback + 1 && hsHighIdx < i - 1) {
+          var lsH = parseFloat(candles[hsHighIdx - 1].h), rsH = parseFloat(candles[hsHighIdx + 1].h);
+          if (Math.abs(lsH - rsH) / Math.max(lsH, rsH) * 100 < 5 && hsHigh > lsH && hsHigh > rsH && isRed) signal = 'short';
+        }
       }
+
+      // ---- Inverse Head & Shoulders (long) ----
+      if (!signal && name.indexOf('inverse head') >= 0 && i >= 10 && !skipLong) {
+        var ihsLookback = 10;
+        var ihsLow = 999999, ihsLowIdx = 0;
+        for (var j = i - ihsLookback; j < i; j++) { if (parseFloat(candles[j].l) < ihsLow) { ihsLow = parseFloat(candles[j].l); ihsLowIdx = j; } }
+        if (ihsLowIdx > i - ihsLookback + 1 && ihsLowIdx < i - 1) {
+          var lsL = parseFloat(candles[ihsLowIdx - 1].l), rsL = parseFloat(candles[ihsLowIdx + 1].l);
+          if (Math.abs(lsL - rsL) / Math.min(lsL, rsL) * 100 < 5 && ihsLow < lsL && ihsLow < rsL && isGreen) signal = 'long';
+        }
+      }
+
+      // ---- Falling Wedge (long) ----
+      if (!signal && name.indexOf('falling wedge') >= 0 && i >= 10 && !skipLong) {
+        var fwH1 = parseFloat(candles[i-10].h), fwH2 = parseFloat(candles[i-5].h);
+        var fwL1 = parseFloat(candles[i-10].l), fwL2 = parseFloat(candles[i-5].l);
+        if (fwH1 > fwH2 && fwL1 > fwL2 && isGreen) {
+          var fwRange1 = fwH1 - fwL1, fwRange2 = fwH2 - fwL2;
+          if (fwRange2 < fwRange1 * 0.8) signal = 'long';
+        }
+      }
+
+      // ---- Rising Wedge (short) ----
+      if (!signal && name.indexOf('rising wedge') >= 0 && i >= 10) {
+        var rwH1 = parseFloat(candles[i-10].h), rwH2 = parseFloat(candles[i-5].h);
+        var rwL1 = parseFloat(candles[i-10].l), rwL2 = parseFloat(candles[i-5].l);
+        if (rwH1 < rwH2 && rwL1 < rwL2 && isRed) {
+          var rwRange1 = rwH1 - rwL1, rwRange2 = rwH2 - rwL2;
+          if (rwRange2 < rwRange1 * 0.8) signal = 'short';
+        }
+      }
+
+      // ---- Balanced fallback (no short bias — checks both equally) ----
+      if (!signal) {
+        var prev3Red = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
+        var prev3Green = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
+        if (!skipLong && isGreen && prev3Red && (cl - o) / o > 0.03) signal = 'long';
+        if (isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
+      }
+
       if (signal) {
+        if (signal === 'long') longCount++; else shortCount++;
         var entry = cl;
-        var stop = signal === 'long' ? Math.min(pl2, l) * 0.99 : Math.max(ph, h) * 1.01;
-        var target = signal === 'long' ? entry + (entry - stop) * 2 : entry - (stop - entry) * 2;
+        // Fix: 3% stop loss (was 1%)
+        var stopDist = entry * STOP_PCT;
+        var stop = signal === 'long' ? entry - stopDist : entry + stopDist;
+        var risk = Math.abs(entry - stop);
+        var target = signal === 'long' ? entry + TARGET_MULT * risk : entry - TARGET_MULT * risk;
         var exit = null, exitReason = null;
-        for (var j = i+1; j < Math.min(candles.length, i+11); j++) {
+        for (var j = i+1; j < Math.min(candles.length, i + MAX_HOLD + 1); j++) {
           var fh = parseFloat(candles[j].h), fl = parseFloat(candles[j].l);
           if (signal === 'long') {
             if (fl <= stop) { exit = stop; exitReason = 'stop'; break; }
@@ -19096,25 +19232,34 @@ async function _pfdBacktestRun(coin, setupName) {
             if (fl <= target) { exit = target; exitReason = 'target'; break; }
           }
         }
-        if (!exit) { exit = parseFloat(candles[Math.min(candles.length-1, i+10)].c); exitReason = 'timeout'; }
+        if (!exit) { exit = parseFloat(candles[Math.min(candles.length-1, i + MAX_HOLD)].c); exitReason = 'timeout'; }
+        // Fix 4: Subtract taker fees (0.07% round-trip)
         var pnlPct = signal === 'long' ? (exit - entry) / entry * 100 : (entry - exit) / entry * 100;
+        pnlPct -= TAKER_FEE;
         signals.push({ i: i, date: new Date(c.t).toISOString().slice(0,10), side: signal, entry: entry, stop: stop, target: target, exit: exit, exitReason: exitReason, pnlPct: pnlPct });
       }
     }
-    if (signals.length === 0) { results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for this setup in the last 90 days.</div>'; return; }
+
+    if (signals.length === 0) { results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for this setup in the last 365 days.</div>'; return; }
+
     var wins = signals.filter(function(s){return s.pnlPct > 0;}).length;
     var wr = wins / signals.length * 100;
     var avgPnl = signals.reduce(function(s,x){return s + x.pnlPct;}, 0) / signals.length;
     var totalPnl = signals.reduce(function(s,x){return s + x.pnlPct;}, 0);
+    var longs = signals.filter(function(s){return s.side === 'long';}).length;
+    var shorts = signals.filter(function(s){return s.side === 'short';}).length;
     var bestTrade = signals.reduce(function(b,x){return x.pnlPct > b.pnlPct ? x : b;}, signals[0]);
     var worstTrade = signals.reduce(function(w,x){return x.pnlPct < w.pnlPct ? x : w;}, signals[0]);
+
     results.innerHTML = '<div style="background:#fef9c3; border: 3px solid var(--border); padding:14px; border-radius:8px; margin-bottom:12px;">' +
       '<div style="font-weight:700; font-size:16px; margin-bottom:8px;">' + coin + ' · ' + setupName + '</div>' +
       '<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; font-size:13px;">' +
-      '<div><strong>' + signals.length + ' signals</strong> in 90d</div>' +
+      '<div><strong>' + signals.length + ' signals</strong> in 365d</div>' +
       '<div><strong>Win rate: ' + wr.toFixed(0) + '%</strong> (' + wins + '/' + signals.length + ')</div>' +
       '<div><strong>Avg PnL: <span style="color:' + (avgPnl >= 0 ? '#22c55e' : '#ef4444') + ';">' + (avgPnl >= 0 ? '+' : '') + avgPnl.toFixed(2) + '%</span></strong></div>' +
       '<div><strong>Total PnL: <span style="color:' + (totalPnl >= 0 ? '#22c55e' : '#ef4444') + ';">' + (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(1) + '%</span></strong></div>' +
+      '<div>L/S: ' + longs + 'L / ' + shorts + 'S</div>' +
+      '<div>Fees: 0.07% per trade</div>' +
       '<div>Best: +' + bestTrade.pnlPct.toFixed(1) + '% on ' + bestTrade.date + '</div>' +
       '<div>Worst: ' + worstTrade.pnlPct.toFixed(1) + '% on ' + worstTrade.date + '</div>' +
       '</div></div>' +
