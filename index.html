@@ -5850,9 +5850,41 @@ body.beginner-mode select {
 body.beginner-mode .beginner-tip {
   display: block !important;
 }
+/* Larger, more readable beginner tips on mobile */
+@media (max-width: 640px) {
+  body.beginner-mode .beginner-tip {
+    font-size: 15px !important;
+    padding: 14px 18px !important;
+    line-height: 1.6 !important;
+  }
+  /* Boost card text in beginner mode for readability */
+  body.beginner-mode .pfd-onb-card,
+  body.beginner-mode .panel {
+    font-size: 14px !important;
+  }
+  body.beginner-mode .pfd-onb-title {
+    font-size: 18px !important;
+  }
+}
 /* Show beginner helper tooltips */
 body.beginner-mode .beginner-tip {
   display: block !important;
+}
+/* Larger, more readable beginner tips on mobile */
+@media (max-width: 640px) {
+  body.beginner-mode .beginner-tip {
+    font-size: 15px !important;
+    padding: 14px 18px !important;
+    line-height: 1.6 !important;
+  }
+  /* Boost card text in beginner mode for readability */
+  body.beginner-mode .pfd-onb-card,
+  body.beginner-mode .panel {
+    font-size: 14px !important;
+  }
+  body.beginner-mode .pfd-onb-title {
+    font-size: 18px !important;
+  }
 }
 .beginner-tip {
   display: none;
