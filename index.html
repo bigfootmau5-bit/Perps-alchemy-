@@ -5806,6 +5806,35 @@
   color: var(--accent-primary);
 }
 
+
+  /* === FIX: Live charts visibility in dark theme === */
+  #chart-canvas {
+    background: #0a0a0a !important;
+    min-height: 400px !important;
+  }
+  .chart-canvas-wrap {
+    min-height: 400px !important;
+  }
+  /* Don't let the loading shimmer hide the loading text */
+  #chart-loading {
+    background: rgba(10,10,10,0.9) !important;
+    color: #f59e0b !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    z-index: 10 !important;
+  }
+  #chart-err {
+    background: rgba(10,10,10,0.9) !important;
+    color: #ef4444 !important;
+    font-size: 14px !important;
+    z-index: 10 !important;
+  }
+  /* Ensure live perp grid is visible */
+  #live-perp-grid {
+    display: grid !important;
+    visibility: visible !important;
+  }
+
 /* Beginner Mode UI changes — simplify without breaking layout */
 /* Keep tab styling identical — just hide advanced ones */
 body.beginner-mode .tab .tab-badge {
@@ -50653,6 +50682,25 @@ html, body { max-width: 100vw; overflow-x: hidden; }
     initRipper();
   }
 })();
+
+  /* === FIX: Prevent dropdown change from scrolling to top === */
+  (function() {
+    var savedScrollY = 0;
+    document.addEventListener('change', function(e) {
+      if (e.target && e.target.tagName === 'SELECT') {
+        savedScrollY = window.scrollY;
+        // Restore scroll position after the change handler chain completes
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            if (Math.abs(window.scrollY - savedScrollY) > 50) {
+              window.scrollTo(0, savedScrollY);
+            }
+          });
+        });
+      }
+    }, true); // capture phase — runs BEFORE other handlers
+  })();
+
 </script>
 
 <!-- ==================== 🩶 WAVE 7 · STABILITY PATCHES ==================== -->
