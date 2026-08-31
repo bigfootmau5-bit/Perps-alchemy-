@@ -5804,13 +5804,8 @@
   color: var(--accent-primary);
 }
 
-/* Beginner Mode UI changes — simplified, larger, clearer */
-/* Keep tabs compact in beginner mode — just hide advanced ones */
-body.beginner-mode .tab {
-  font-size: 13px ;
-  font-weight: 600 ;
-  padding: 8px 10px ;
-}
+/* Beginner Mode UI changes — simplify without breaking layout */
+/* Keep tab styling identical — just hide advanced ones */
 body.beginner-mode .tab .tab-badge {
   display: none !important;
 }
@@ -5820,20 +5815,19 @@ body.beginner-mode .tab[data-tab="community"],
 body.beginner-mode .tab[data-tab="book"] {
   display: none !important;
 }
-/* Simplify panels */
-body.beginner-mode .pfd-dash-section-head {
-  font-size: 16px ;
+/* Center remaining tabs when 3 are hidden */
+body.beginner-mode .tabs {
+  justify-content: center;
 }
+/* Slightly larger inputs for readability — but not enough to break layout */
 body.beginner-mode input[type="number"],
 body.beginner-mode select {
-  font-size: 15px ;
-  padding: 10px 12px ;
+  font-size: 14px;
 }
-/* Don't globally resize all buttons — only enlarge key action buttons */
-body.beginner-mode .panel > button,
-body.beginner-mode .pfd-dash-cta {
-  font-size: 14px ;
-  padding: 10px 16px ;
+/* Keep buttons same size — don't resize */
+/* Show beginner helper tooltips */
+body.beginner-mode .beginner-tip {
+  display: block !important;
 }
 /* Show beginner helper tooltips */
 body.beginner-mode .beginner-tip {
@@ -5843,13 +5837,15 @@ body.beginner-mode .beginner-tip {
   display: none;
   font-size: 13px;
   color: var(--fg);
-  padding: 10px 14px;
-  margin: 8px 0;
+  padding: 12px 16px;
+  margin: 0 0 12px 0;
   background: var(--bg-inset);
   border-radius: 8px;
   border-left: 3px solid var(--accent-primary);
   font-weight: 500;
-  line-height: 1.6;
+  line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ===== FUTURISTIC COLOR SYSTEM ===== */
