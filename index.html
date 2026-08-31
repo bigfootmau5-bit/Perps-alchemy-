@@ -507,7 +507,8 @@
   [data-theme="blackout"] [style*="color: var(--fg)"] { color: #f59e0b ; }
   [data-theme="blackout"] [style*="color:black"] { color: #f59e0b ; }
   /* Text-shadows drop out — no more 2px shadow-on-white look */
-  [data-theme="blackout"] [style*="
+  [data-theme="blackout"] [style*="text-shadow"] {
+    text-shadow: none !important;
   }
   /* Yellow box-shadows keep the "neon on black" vibe */
   [data-theme="blackout"] [style*="box-shadow: 5px 5px 0 #000"],
@@ -800,9 +801,6 @@
   }
 
   /* ============ ANIMATIONS ============ */
-  
-    50% { box-shadow: 6px 6px 0 #FF00A8, 0 0 25px rgba(255,0,168,0.5); }
-  }
   @keyframes shine {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
@@ -820,9 +818,6 @@
     0% { transform: scale(0.9); opacity: 0.6; }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); opacity: 1; }
-  }
-  
-    50% { transform: translateY(-4px); }
   }
   @keyframes sunburst-rotate {
     from { transform: translateX(-50%) rotate(0deg); }
@@ -27275,7 +27270,7 @@ function renderTutorial() {
           <div style="font-size:12px; color: var(--fg); font-weight:600; margin-bottom:10px;">${step.quiz.q}</div>
           <div id="quiz-${step.id}" style="display:flex; flex-direction:column; gap:6px;">
             ${step.quiz.options.map((opt, oi) => `
-              <button data-quiz-step="${step.id}" data-quiz-answer="${oi}" style="text-align:left; padding:10px; border:1px solid var(--border); var(--bg-card); border-radius:6px; cursor:pointer; font-weight:700; font-size:12px;">
+              <button data-quiz-step="${step.id}" data-quiz-answer="${oi}" style="text-align:left; padding:10px; border:1px solid var(--border); background: var(--bg-card); color: var(--fg); border-radius:6px; cursor:pointer; font-weight:700; font-size:12px;">
                 ${String.fromCharCode(65+oi)}. ${opt}
               </button>
             `).join('')}
@@ -49816,6 +49811,19 @@ html, body { max-width: 100vw; overflow-x: hidden; }
     box-shadow:none;
   }
   .pfd-prof-avatar svg { display: block; width: 100%; height: 100%; }
+  .pfd-prof-avatar-emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 40%, rgba(45,55,50,0.9) 0%, rgba(8,12,10,0.95) 100%);
+    border: 1px solid rgba(255,222,0,0.35);
+    overflow: hidden;
+  }
+  .pfd-prof-avatar-emoji svg {
+    width: 92%;
+    height: 92%;
+    display: block;
+  }
   .pfd-prof-meta {
     flex: 1 1 auto;
     min-width: 0;
@@ -49853,39 +49861,34 @@ html, body { max-width: 100vw; overflow-x: hidden; }
 <script>
 (function(){
   var PROF_HEADER = '<div class="pfd-prof-header">' +
-    '<div class="pfd-prof-avatar">' +
-      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="72" height="72" role="img" aria-label="Professor BigFoot">' +
+    '<div class="pfd-prof-avatar pfd-prof-avatar-emoji">' +
+      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Professor BigFoot">' +
         '<defs>' +
-          '<radialGradient id="pfBg" cx="50%" cy="45%" r="55%">' +
-            '<stop offset="0%" stop-color="#3a2a10"/>' +
-            '<stop offset="100%" stop-color="#0a0806"/>' +
-          '</radialGradient>' +
-          '<linearGradient id="pfFur" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%" stop-color="#8b5a2b"/>' +
+          '<linearGradient id="pfBrown" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#6b4423"/>' +
             '<stop offset="100%" stop-color="#3d2611"/>' +
           '</linearGradient>' +
-          '<linearGradient id="pfCap" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%" stop-color="#1a1a1a"/>' +
-            '<stop offset="100%" stop-color="#000"/>' +
+          '<linearGradient id="pfChest" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#8b6035"/>' +
+            '<stop offset="100%" stop-color="#5c3818"/>' +
           '</linearGradient>' +
         '</defs>' +
-        '<circle cx="50" cy="50" r="48" fill="url(#pfBg)" stroke="var(--accent-warn)" stroke-width="1.5" opacity="0.9"/>' +
-        '<path d="M20 92 Q30 68 50 68 Q70 68 80 92 Z" fill="url(#pfFur)"/>' +
-        '<ellipse cx="50" cy="52" rx="22" ry="24" fill="url(#pfFur)"/>' +
-        '<path d="M28 42 Q26 50 30 58 Q26 60 24 56 M72 42 Q74 50 70 58 Q74 60 76 56" stroke="#5c3818" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
-        '<path d="M36 46 Q42 42 46 47 M54 47 Q58 42 64 46" stroke="#1a0e04" stroke-width="2" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="42" cy="52" r="2.8" fill="var(--accent-warn)"/>' +
-        '<circle cx="58" cy="52" r="2.8" fill="var(--accent-warn)"/>' +
-        '<circle cx="42" cy="52" r="1.2" fill="#000"/>' +
-        '<circle cx="58" cy="52" r="1.2" fill="#000"/>' +
-        '<ellipse cx="50" cy="60" rx="7" ry="5" fill="#2a1a08"/>' +
-        '<ellipse cx="50" cy="58" rx="2.5" ry="1.8" fill="#0a0503"/>' +
-        '<g>' +
-          '<polygon points="20,30 80,30 68,22 32,22" fill="url(#pfCap)" stroke="var(--accent-warn)" stroke-width="0.8"/>' +
-          '<rect x="34" y="30" width="32" height="6" fill="#000" stroke="var(--accent-warn)" stroke-width="0.5"/>' +
-          '<line x1="72" y1="30" x2="80" y2="42" stroke="var(--accent-warn)" stroke-width="1"/>' +
-          '<circle cx="80" cy="43" r="2.5" fill="var(--accent-warn)"/>' +
-        '</g>' +
+        '<path d="M56 75 Q58 82 55 92 L60 92 Q64 82 62 75 Z" fill="#3d2611"/>' +
+        '<path d="M42 75 Q40 84 44 93 L52 93 Q52 84 48 75 Z" fill="url(#pfBrown)"/>' +
+        '<path d="M38 42 Q35 55 38 72 Q42 78 55 78 Q65 78 62 72 Q65 55 62 42 Z" fill="url(#pfBrown)"/>' +
+        '<path d="M43 48 Q42 60 46 70 Q50 72 54 70 Q58 60 57 48 Q50 46 43 48 Z" fill="url(#pfChest)"/>' +
+        '<path d="M60 44 Q68 52 70 65 Q68 68 66 65 Q64 52 60 44 Z" fill="#3d2611"/>' +
+        '<path d="M38 44 Q32 54 30 66 Q28 68 26 65 Q28 52 34 44 Z" fill="url(#pfBrown)"/>' +
+        '<ellipse cx="50" cy="32" rx="13" ry="14" fill="url(#pfBrown)"/>' +
+        '<ellipse cx="50" cy="35" rx="8" ry="9" fill="#c9a37a"/>' +
+        '<path d="M42 30 Q46 27 50 30 M50 30 Q54 27 58 30" stroke="#3d2611" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
+        '<ellipse cx="46" cy="33" rx="1.4" ry="1.6" fill="#1a0e04"/>' +
+        '<ellipse cx="54" cy="33" rx="1.4" ry="1.6" fill="#1a0e04"/>' +
+        '<ellipse cx="50" cy="37" rx="1.5" ry="1.2" fill="#0a0503"/>' +
+        '<path d="M47 40 Q50 41 53 40" stroke="#2a1a08" stroke-width="0.8" fill="none" stroke-linecap="round"/>' +
+        '<ellipse cx="46" cy="94" rx="6" ry="2" fill="#c9a37a"/>' +
+        '<ellipse cx="58" cy="93" rx="6" ry="2" fill="#c9a37a"/>' +
+        '<path d="M35 44 Q33 47 34 50 M65 44 Q67 47 66 50" stroke="#3d2611" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
       '</svg>' +
     '</div>' +
     '<div class="pfd-prof-meta">' +
