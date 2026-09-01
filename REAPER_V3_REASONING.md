@@ -1,128 +1,138 @@
-# Reaper V3 — Tiered Engine Reasoning & Justification
+# Reaper V3 — Parameter Sweep Results & Engine Configuration
 
 ## Date: September 1, 2026
-## Author: BIGagent404 (Per Reaper's recommendations + Mau5's direction)
+## Author: BIGagent404 (Per Mau5's direction — "go back to the original 8, tighter for the rest")
 
 ---
 
 ## Background
 
-The R11-V2 engine achieved **75.0% hit rate** and **+213.5% PnL** on 8 liquidity coins (BTC, ETH, SOL, HYPE, XRP, DOGE, AVAX, ARB) using Bull Flag (long) + Double Top (short) patterns with dynamic 2% stops and 2x risk-reward targets.
+The R11-V2 engine achieved **73.1% hit rate** and **+156.8% PnL** on 8 liquidity coins using Bull Flag (long) + Double Top (short) patterns with dynamic 2% stops and 2x risk-reward targets.
 
-When the same V2 parameters were applied to an expanded 20-coin universe (acid test), the hit rate degraded to **44.1%** on high-volatility small caps (RUNE, ADA, DOT, NEAR, INJ, TIA, SEI). The patterns resolve differently on coins with 4-8% daily ATR vs BTC's 2% ATR.
-
-## Solution: Two-Tier Parameter System
-
-### Tier 1 — Liquidity Coins (Original 8)
-**Coins:** BTC, ETH, SOL, HYPE, XRP, DOGE, AVAX, ARB
-
-These coins have deep order books, tight spreads, and high open interest. The V2 parameters work reliably here because:
-- Pattern signals resolve cleanly (enough liquidity for stops to fill at expected levels)
-- Daily ATR is 2-4% (patterns are meaningful, not noise)
-- Double Top shorts work because price respects resistance levels
-
-**Parameters (V2 + Reaper Enhancements):**
-- Bull Flag RSI: 20-55 (loosened from 25-50 per Reaper)
-- Double Top RSI: 65-82
-- Stop: 2% beyond candle structure (dynamic)
-- Target: 2x risk
-- Max hold: 15 days
-- Confluence: 2+
-- Volume ratio: 1.0x minimum
-- Regime: suppress shorts when SMA20 > SMA50 by >5%
-- **Reaper additions:** Partial exit at 1R (50% profit), trailing stop after 1R hit
-
-**Backtest Result:** 30 signals | **80.0% WR** | +105.6% PnL
-
-### Tier 2 — Expanded Coins (Tighter Parameters)
-**Coins:** LINK, RUNE, ADA, DOT, NEAR, INJ, TIA, SEI
-
-These coins have less liquidity, wider spreads, and higher volatility. The same V2 parameters fail because:
-- Double Top "resistance" breaks easily (not enough buyers to hold the level)
-- Stops get wicked through (thin books = slippage)
-- Daily ATR of 4-8% makes 2% stops too tight OR too loose depending on context
-- Patterns fire more often but resolve less reliably
-
-**Tighter Parameters:**
-- Bull Flag RSI: 25-50 (standard, not loosened)
-- Double Top RSI: 68-80 (tighter band)
-- Stop: 2.5% beyond candle structure (wider to absorb volatility)
-- Target: 2x risk
-- Max hold: 8 days (shorter exposure = less risk)
-- Confluence: 3+ (stricter confirmation required)
-- Volume ratio: 1.2x minimum (higher threshold)
-- **Reaper additions:** Partial exit at 1R, trailing stop
-
-**Backtest Result:** 12 signals | **50.0% WR** | variable PnL
-
-**Note:** Tier 2 WR is lower (50%), but with 2:1 R:R and partial exits, even 50% WR is profitable. The tighter parameters reduce signal count from the acid test's 254 (V3c) to just 12 — quality over quantity.
-
-## Reaper Enhancements Applied to Both Tiers
-
-Per the Reaper's analysis and Mau5's testing direction:
-
-1. **Partial Exit at 1R:** Take 50% profit when price hits 1x risk. This locks in gains and reduces the impact of losing trades that reverse after hitting 1R.
-2. **Trailing Stop after 1R:** After partial exit, move stop to breakeven. Trail the remaining position at 0.5x risk distance. This captures extended moves while protecting against reversals.
-3. **Loosened Bull Flag (Tier 1 only):** RSI range widened from 25-50 to 20-55, volume threshold lowered from 1.2x to 1.0x. Per Reaper: the original V2 was too restrictive and missed valid Bull Flag setups.
-
-## Blacklisted Coins
-- **OP:** Insufficient price history on Hyperliquid for reliable backtesting
-- **SUI:** Consistently underperforms across all parameter combinations
-
-## Removed Setups (from V2 testing rounds)
-- **Golden Cross / Death Cross:** 35.5% WR in backtest — trend-following on daily candles is too slow for this strategy
-- **Stairway to Hell:** 42% WR — not enough edge vs random
-- **Falling Wedge:** 30% WR — fires too easily, catches falling knives
-
-## Current Backtest Summary
-
-| Metric | Tier 1 (Liquidity) | Tier 2 (Expanded) | Overall |
-|--------|-------------------|-------------------|--------|
-| Signals | 30 | 12 | 42 |
-| Hit Rate | 80.0% | 50.0% | 71.4% |
-| PnL | +105.6% | +variable | +100.7% |
-| Longs | 7 | 1 | 8 |
-| Shorts | 23 | 11 | 34 |
-
-## Per-Coin Breakdown
-
-### Tier 1
-| Coin | Signals | WR | PnL |
-|------|---------|-----|-----|
-| BTC | 3 | 100% | +11.6% |
-| ETH | 4 | 50% | -1.6% |
-| SOL | 7 | 85.7% | +27.0% |
-| HYPE | 3 | 33.3% | -8.5% |
-| XRP | 2 | 100% | +8.3% |
-| DOGE | 3 | 100% | +20.6% |
-| AVAX | 4 | 100% | +31.9% |
-| ARB | 4 | 75% | +16.5% |
-
-### Tier 2
-| Coin | Signals | WR | PnL |
-|------|---------|-----|-----|
-| LINK | 2 | 100% | +7.5% |
-| RUNE | 2 | 50% | +8.4% |
-| ADA | 1 | 0% | -10.1% |
-| DOT | 2 | 50% | +0.3% |
-| NEAR | 4 | 25% | -11.9% |
-| TIA | 1 | 100% | +0.7% |
-
-## Decision Rationale
-
-Mau5's directive: "Go back to the original 8 because it was hitting 75, with tighter for the rest."
-
-The tiered approach preserves the proven V2 edge on liquidity coins while allowing controlled exposure to expanded coins with tighter risk management. The Reaper enhancements (partial exits + trailing stops) improve risk-adjusted returns across both tiers.
-
-**Key insight from acid testing:** No single parameter set works across all coins. The solution is not to find "better" universal parameters, but to match parameter strictness to coin liquidity profile.
-
-## Next Steps
-- Monitor live performance vs backtest expectations
-- If Tier 2 WR remains below 55% over 30+ signals, consider blacklisting underperformers
-- Consider adding new Tier 1 coins as Hyperliquid liquidity deepens
-- Monthly parameter review based on live fill quality and slippage
+Mau5 directed a full parameter sweep to find the optimal configuration. This document records the results and reasoning behind the final configuration.
 
 ---
-**Status:** READY FOR LIVE TESTING
-**Engine Version:** reaper_v3.0_R11-V2+reaper
-**Last Updated:** September 1, 2026
+
+## Parameter Sweep — 11 Configs Tested
+
+All tests run on 365 days of Hyperliquid daily candle data.
+
+### Results (Ranked by Win Rate)
+
+| Config | Win Rate | PnL | Signals | Longs | Shorts |
+|--------|----------|-----|---------|-------|--------|
+| Pure DT (no BF) | 78.3% | +145.7% | 23 | 0 | 23 |
+| Stop 3% | 76.9% | +162.8% | 26 | 3 | 23 |
+| V2 Baseline | 73.1% | +156.8% | 26 | 3 | 23 |
+| Stop 1% | 73.1% | +141.3% | 26 | 3 | 23 |
+| RR 1.5x | 73.1% | +118.5% | 26 | 3 | 23 |
+| RR 3x | 73.1% | +148.3% | 26 | 3 | 23 |
+| V3g3 Reaper | 69.0% | +215.2% | 42 | 20 | 22 |
+| Tiered V2+Tight | 63.6% | +142.1% | 33 | — | — |
+| V2 on 18 coins | 61.4% | +161.0% | 44 | 5 | 39 |
+| Loose BF | 61.1% | +201.8% | 54 | 31 | 23 |
+| DT Strict | 44.4% | +20.5% | 9 | 3 | 6 |
+| T2-Tight | 28.6% | -14.7% | 7 | 1 | 6 |
+
+---
+
+## Key Findings
+
+### 1. Bull Flag is Dead Weight
+- Longs consistently hit only 33% WR across all configs
+- Dropping Bull Flag entirely (Pure DT) → **78.3% WR** (best hit rate)
+- The edge is entirely in Double Top shorts
+- Bull Flag revival attempts (loose BF) increased signal count to 54 but dropped WR to 61.1%
+
+### 2. Stop 3% Beats Stop 2%
+- Looser stops let winners breathe: 76.9% vs 73.1% WR
+- Also higher PnL: +162.8% vs +156.8%
+- Same signal count (26) — stops aren't being hit more, just better placement
+
+### 3. T2 Small Caps Are Toxic
+- WIF: 0% WR, -39.7% PnL
+- TIA: 0% WR, -22.0% PnL
+- JUP: 0% WR, -20.2% PnL
+- These coins are too volatile for Double Top — they blow through stops
+- T2-Tight params (conf3, RSI 68-80) are too restrictive — only 7 signals, 28.6% WR
+- Recommendation: exclude small caps from the engine
+
+### 4. V3g3 (Reaper) Has Highest PnL But Lower WR
+- V3g3 = loosened BF (RSI 20-55, conf>=1) + 3% trailing + partial exits at 1R
+- Generated 42 signals (vs 26 baseline) and +215.2% PnL
+- But WR dropped to 69% — more trades = more PnL but lower accuracy
+- Tradeoff: volume vs precision
+
+### 5. ETH is the Weakest T1 Coin
+- ETH: 33% WR, -3.4% PnL across all configs
+- ETH Double Top signals consistently fail — likely due to ETH's tendency to have extended tops that don't resolve cleanly
+- Watch list for potential removal or per-coin tuning
+
+---
+
+## Per-Coin Breakdown (V2 Baseline, T1)
+
+| Coin | Signals | Win Rate | PnL | Longs | Shorts | Status |
+|------|----------|----------|------|-------|--------|--------|
+| BTC | 3 | 100% | +21.7% | 0 | 3 | 🟢 Elite |
+| ETH | 3 | 33% | -3.4% | 0 | 3 | 🔴 Watch |
+| SOL | 7 | 71% | +36.5% | 1 | 6 | 🟢 Strong |
+| HYPE | 4 | 50% | +26.1% | 2 | 2 | 🟡 Mixed |
+| XRP | 1 | 100% | +3.0% | 0 | 1 | 🟢 Small sample |
+| DOGE | 2 | 100% | +30.1% | 0 | 2 | 🟢 Elite |
+| AVAX | 3 | 100% | +29.9% | 0 | 3 | 🟢 Elite |
+| ARB | 3 | 67% | +12.9% | 0 | 3 | 🟢 Solid |
+
+---
+
+## Final Configuration
+
+### Recommended: Pure Double Top + 3% Stops on T1 (8 coins)
+
+```
+Patterns: Double Top only (Bull Flag disabled)
+Coins: BTC, ETH, SOL, HYPE, XRP, DOGE, AVAX, ARB
+Stop Loss: 3% beyond candle structure
+Risk:Reward: 2x
+RSI Range: 65-82
+Min Confluence: 2
+Volume Ratio: >1.2
+Regime Filter: Suppress shorts when SMA20 > SMA50 by >5%
+Max Hold: 15 days
+Fees: 0.07% per trade
+```
+
+**Expected Performance:** ~76-78% WR, +145-163% PnL over 365 days
+
+### Alternative: V2 Baseline (if keeping Bull Flag)
+- 73.1% WR, +156.8% PnL
+- Same 8 coins, 2% stops, both patterns active
+
+### Alternative: V3g3 (if maximizing PnL over WR)
+- 69.0% WR, +215.2% PnL
+- Loosened BF + trailing stops + partial exits
+- More signals, more PnL, but lower hit rate
+
+---
+
+## Reasoning for the Update
+
+1. **Back to original 8 coins** — Mau5 confirmed V2's 73% WR is the baseline to beat. The 20-coin acid test proved small caps degrade performance.
+
+2. **Tighter params for T2** — Tested but T2-Tight params (conf3, RSI 68-80) generated only 7 signals at 28.6% WR. Small caps don't have enough clean Double Top setups. Exclude from the engine.
+
+3. **Bull Flag removal** — The sweep proved longs are consistently 33% WR. Pure Double Top = 78.3% WR. The edge is entirely in shorts. Keeping BF adds noise without adding edge.
+
+4. **Stop 3% over 2%** — Wider stops let winners develop. Same signal count, higher WR, higher PnL.
+
+5. **V3g3 is optional** — If Mau5 wants max PnL over max WR, V3g3's +215% is the best. But the Reaper's loosened BF entries increase false signals.
+
+---
+
+## Engine Classification
+
+**Short-heavy regime-aware strategy.**
+- 100% shorts (Pure DT) or ~90% shorts (V2 with BF)
+- Edge comes from Double Top pattern detection in overextended markets
+- Regime filter (SMA20/50) suppresses counter-trend shorts in strong bull markets
+- Not a "both sides win" strategy — longs are structural, not a core edge
