@@ -9128,7 +9128,8 @@ var _pfdGroups = {
   coach:  { subs: ['rewards','coach','mind'],                subs_default: 'coach', labels: ['🎟️ Rewards','🎓 Professor','🧘 Mind'] },
   learn:  { subs: ['learn','games','pattern-trainer','scenarios','risk-sim','what-if','cosmic'],     labels: ['📚 Learn','🎮 Games','🎴 Pattern Cards','⏮️ Replay','🎲 Risk Sim','⏳ What If','🌌 Cosmic'] },
   community: { subs: ['community'], labels: ['🌐 Community'] },
-  vibe:    { subs: ['vibe'], subs_default: 'vibe', labels: ['🎵 Vibe'] }
+  vibe:    { subs: ['vibe'], subs_default: 'vibe', labels: ['🎵 Vibe'] },
+  pro:     { subs: ['pro'], subs_default: 'pro', labels: ['⚡ Pro Tools'] }
 };
 // Reverse index: sub -> group (built once, at parse time)
 var _pfdSubToGroup = (function(){
@@ -51094,6 +51095,619 @@ html, body { max-width: 100vw; overflow-x: hidden; }
   }
 }
 </style>
+
+<!-- ==================== PRO TOOLS PANEL ==================== -->
+<div class="panel" id="panel-pro">
+  <!-- Sub-tab navigation -->
+  <div class="pro-subtabs" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">
+    <button class="pro-subtab active" data-pro-tab="funding" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer;">💰 Funding Rates</button>
+    <button class="pro-subtab" data-pro-tab="liq" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#aaa; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">🔥 Liquidations</button>
+    <button class="pro-subtab" data-pro-tab="fng" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#aaa; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">😰 Fear & Greed</button>
+    <button class="pro-subtab" data-pro-tab="positions" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#aaa; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">📊 Positions</button>
+    <button class="pro-subtab" data-pro-tab="badges" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#aaa; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">🏆 Badges</button>
+  </div>
+
+  <!-- FUNDING RATES -->
+  <div class="pro-section" id="pro-funding" style="display:block;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">💰 Funding Rates (Hyperliquid + Binance)</h2>
+      <button id="pro-funding-refresh" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
+    </div>
+    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Real-time funding rates for top perpetual contracts. Negative = shorts pay longs (bearish). Positive = longs pay shorts (bullish).</div>
+    <div id="pro-funding-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;">
+      <div style="grid-column:1/-1; text-align:center; padding:20px; color:#7D8590; font-size:13px;">Loading funding rates...</div>
+    </div>
+    <div id="pro-funding-summary" style="margin-top:12px; padding:10px; border-radius:8px; background:rgba(79,209,229,0.05); border:1px solid rgba(79,209,229,0.15); font-size:12px; color:#7D8590;">
+      <span id="pro-funding-text">Fetching data...</span>
+    </div>
+  </div>
+
+  <!-- LIQUIDATIONS -->
+  <div class="pro-section" id="pro-liq" style="display:none;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">🔥 Liquidation Watch</h2>
+      <button id="pro-liq-refresh" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
+    </div>
+    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Recent large liquidations across Binance Futures. Updated every 30 seconds.</div>
+    <div id="pro-liq-stats" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
+      <div style="padding:10px; border-radius:8px; background:rgba(248,81,73,0.1); border:1px solid rgba(248,81,73,0.2); text-align:center;">
+        <div style="font-size:11px; color:#7D8590;">Long Liqs (1h)</div>
+        <div id="pro-liq-long" style="font-size:18px; font-weight:800; color:#F85149;">—</div>
+      </div>
+      <div style="padding:10px; border-radius:8px; background:rgba(63,185,80,0.1); border:1px solid rgba(63,185,80,0.2); text-align:center;">
+        <div style="font-size:11px; color:#7D8590;">Short Liqs (1h)</div>
+        <div id="pro-liq-short" style="font-size:18px; font-weight:800; color:#3FB950;">—</div>
+      </div>
+      <div style="padding:10px; border-radius:8px; background:rgba(210,153,34,0.1); border:1px solid rgba(210,153,34,0.2); text-align:center;">
+        <div style="font-size:11px; color:#7D8590;">Total (1h)</div>
+        <div id="pro-liq-total" style="font-size:18px; font-weight:800; color:#D29922;">—</div>
+      </div>
+    </div>
+    <div id="pro-liq-list" style="display:flex; flex-direction:column; gap:4px; max-height:400px; overflow-y:auto;">
+      <div style="text-align:center; padding:20px; color:#7D8590; font-size:13px;">Loading liquidation data...</div>
+    </div>
+  </div>
+
+  <!-- FEAR & GREED -->
+  <div class="pro-section" id="pro-fng" style="display:none;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">😰 Crypto Fear & Greed Index</h2>
+      <button id="pro-fng-refresh" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
+    </div>
+    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Market sentiment from alternative.me. 0 = Extreme Fear, 100 = Extreme Greed.</div>
+    <div id="pro-fng-display" style="text-align:center; padding:20px;">
+      <div id="pro-fng-gauge" style="font-size:64px; font-weight:900; margin-bottom:8px;">—</div>
+      <div id="pro-fng-label" style="font-size:18px; font-weight:700; margin-bottom:12px;">Loading...</div>
+      <div id="pro-fng-bar-container" style="width:100%; max-width:300px; height:12px; border-radius:6px; background:linear-gradient(90deg, #F85149 0%, #D29922 50%, #3FB950 100%); margin:0 auto; position:relative; overflow:hidden;">
+        <div id="pro-fng-bar-marker" style="position:absolute; top:-2px; width:4px; height:16px; background:#fff; border-radius:2px; left:50%; transition:left 0.5s ease;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; max-width:300px; margin:4px auto 0; font-size:10px; color:#7D8590;">
+        <span>Extreme Fear</span><span>Neutral</span><span>Extreme Greed</span>
+      </div>
+      <div id="pro-fng-history" style="margin-top:16px; display:flex; gap:4px; justify-content:center; flex-wrap:wrap;"></div>
+      <div style="margin-top:12px; font-size:11px; color:#7D8590;">
+        <span id="pro-fng-updated">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSITIONS -->
+  <div class="pro-section" id="pro-positions" style="display:none;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">📊 Position Tracker (Hyperliquid)</h2>
+      <button id="pro-pos-refresh" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
+    </div>
+    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Enter your Hyperliquid wallet address to track open positions with live PnL.</div>
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
+      <input id="pro-pos-address" type="text" placeholder="0x... Hyperliquid address" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid rgba(79,209,229,0.3); color:#E6EDF3; padding:10px 14px; border-radius:8px; font-size:13px; outline:none; -webkit-appearance:none;" />
+      <button id="pro-pos-load" style="background:rgba(79,209,229,0.2); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:10px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">Load</button>
+    </div>
+    <div id="pro-pos-summary" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; display:none;">
+      <div style="padding:12px; border-radius:8px; background:rgba(79,209,229,0.05); border:1px solid rgba(79,209,229,0.15);">
+        <div style="font-size:11px; color:#7D8590;">Total Unrealized PnL</div>
+        <div id="pro-pos-pnl" style="font-size:20px; font-weight:800; color:#3FB950;">—</div>
+      </div>
+      <div style="padding:12px; border-radius:8px; background:rgba(79,209,229,0.05); border:1px solid rgba(79,209,229,0.15);">
+        <div style="font-size:11px; color:#7D8590;">Margin Used</div>
+        <div id="pro-pos-margin" style="font-size:20px; font-weight:800; color:#4FD1E5;">—</div>
+      </div>
+    </div>
+    <div id="pro-pos-list" style="display:flex; flex-direction:column; gap:6px;">
+      <div style="text-align:center; padding:20px; color:#7D8590; font-size:13px;">Enter your wallet address above to load positions.</div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENT BADGES -->
+  <div class="pro-section" id="pro-badges" style="display:none;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">🏆 Achievement Badges</h2>
+      <div style="font-size:12px; color:#7D8590;">
+        <span id="pro-badge-count">0</span> / 12 unlocked
+      </div>
+    </div>
+    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Earn badges by trading, journaling, and mastering the markets. Badges persist on your device.</div>
+    <div id="pro-badge-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;"></div>
+    <div style="margin-top:14px; padding:10px; border-radius:8px; background:rgba(79,209,229,0.05); border:1px solid rgba(79,209,229,0.15);">
+      <div style="font-size:12px; font-weight:700; color:#4FD1E5; margin-bottom:4px;">📊 Your Stats</div>
+      <div id="pro-badge-stats" style="font-size:12px; color:#7D8590;">Loading stats...</div>
+    </div>
+  </div>
+</div>
+
+<style>
+.pro-subtab.active { background:rgba(79,209,229,0.2) !important; border-color:#4FD1E5 !important; color:#4FD1E5 !important; }
+.funding-card { padding:10px; border-radius:8px; background:rgba(22,27,34,0.8); border:1px solid rgba(79,209,229,0.12); transition:border-color 0.2s; }
+.funding-card:hover { border-color:rgba(79,209,229,0.3); }
+.funding-card .sym { font-size:14px; font-weight:800; color:#E6EDF3; }
+.funding-card .rate { font-size:16px; font-weight:700; margin-top:4px; }
+.funding-card .rate.pos { color:#3FB950; }
+.funding-card .rate.neg { color:#F85149; }
+.funding-card .apr { font-size:11px; color:#7D8590; margin-top:2px; }
+.liq-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px; background:rgba(22,27,34,0.6); border:1px solid rgba(79,209,229,0.08); font-size:12px; }
+.liq-row.long { border-left:3px solid #F85149; }
+.liq-row.short { border-left:3px solid #3FB950; }
+.liq-row .sym { font-weight:800; color:#E6EDF3; width:60px; }
+.liq-row .side { font-size:11px; width:40px; }
+.liq-row .price { color:#7D8590; flex:1; text-align:right; }
+.liq-row .size { font-weight:700; text-align:right; width:80px; }
+.pos-card { padding:12px; border-radius:8px; background:rgba(22,27,34,0.8); border:1px solid rgba(79,209,229,0.12); }
+.pos-card .sym { font-size:14px; font-weight:800; color:#E6EDF3; }
+.pos-card .row { display:flex; justify-content:space-between; margin-top:4px; font-size:12px; }
+.pos-card .pnl-pos { color:#3FB950; font-weight:700; }
+.pos-card .pnl-neg { color:#F85149; font-weight:700; }
+.badge-card { padding:14px; border-radius:10px; background:rgba(22,27,34,0.8); border:1px solid rgba(79,209,229,0.08); text-align:center; transition:all 0.2s; }
+.badge-card.unlocked { border-color:rgba(79,209,229,0.3); background:rgba(79,209,229,0.05); }
+.badge-card.locked { opacity:0.4; filter:grayscale(1); }
+.badge-card .icon { font-size:28px; margin-bottom:4px; }
+.badge-card .name { font-size:12px; font-weight:700; color:#E6EDF3; }
+.badge-card .desc { font-size:10px; color:#7D8590; margin-top:2px; }
+</style>
+
+<script id="pro-tools-module">
+(function(){
+  'use strict';
+
+  // ===== SUB-TAB SWITCHING =====
+  document.querySelectorAll('.pro-subtab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.pro-subtab').forEach(function(b){
+        b.style.background = 'rgba(255,255,255,0.05)';
+        b.style.borderColor = 'rgba(255,255,255,0.1)';
+        b.style.color = '#aaa';
+        b.classList.remove('active');
+      });
+      btn.style.background = 'rgba(79,209,229,0.2)';
+      btn.style.borderColor = '#4FD1E5';
+      btn.style.color = '#4FD1E5';
+      btn.classList.add('active');
+      var tab = btn.getAttribute('data-pro-tab');
+      document.querySelectorAll('.pro-section').forEach(function(s){ s.style.display = 'none'; });
+      var section = document.getElementById('pro-' + tab);
+      if (section) section.style.display = 'block';
+      // Trigger data fetch on first view
+      if (tab === 'funding' && !window._proFundingLoaded) fetchFundingRates();
+      if (tab === 'liq' && !window._proLiqLoaded) fetchLiquidations();
+      if (tab === 'fng' && !window._proFnGLoaded) fetchFearGreed();
+      if (tab === 'badges' && !window._proBadgesLoaded) renderBadges();
+    });
+  });
+
+  // ===== 1. FUNDING RATES =====
+  function fetchFundingRates(){
+    window._proFundingLoaded = true;
+    var grid = document.getElementById('pro-funding-grid');
+    var summary = document.getElementById('pro-funding-text');
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#7D8590;">Fetching funding rates from Hyperliquid...</div>';
+
+    // Fetch all asset contexts from Hyperliquid (works globally, no geo-block)
+    fetch('https://api.hyperliquid.xyz/info', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({type: 'metaAndAssetCtxs'})
+    })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){
+      if (!data || !data[0] || !data[1]) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#F85149;">Failed to load funding data.</div>';
+        return;
+      }
+      var meta = data[0].universe;
+      var ctxs = data[1];
+      var assets = [];
+      for (var i = 0; i < meta.length; i++) {
+        var name = meta[i].name;
+        var funding = parseFloat(ctxs[i].funding);
+        var oi = parseFloat(ctxs[i].openInterest);
+        var markPx = parseFloat(ctxs[i].markPx);
+        // Only show assets with meaningful OI
+        if (oi > 0 && markPx > 0) {
+          var oiUsd = oi * markPx;
+          if (oiUsd > 100000) { // Min $100K OI
+            assets.push({name: name, funding: funding, oi: oiUsd, markPx: markPx});
+          }
+        }
+      }
+      // Sort by absolute funding rate (most extreme first)
+      assets.sort(function(a, b){ return Math.abs(b.funding) - Math.abs(a.funding); });
+
+      // Show top 30
+      var cards = '';
+      var posCount = 0, negCount = 0, totalApr = 0;
+      var shown = assets.slice(0, 30);
+      shown.forEach(function(a){
+        var rate = a.funding;
+        // Hyperliquid funding is per-period (every 8h), so APR = rate * 3 * 365 * 100
+        var apr = rate * 3 * 365 * 100;
+        var isPos = rate >= 0;
+        if (isPos) posCount++; else negCount++;
+        totalApr += Math.abs(apr);
+        var ratePct = (rate * 100).toFixed(4);
+        var aprPct = apr.toFixed(1);
+        var cls = isPos ? 'pos' : 'neg';
+        var arrow = isPos ? '↗' : '↘';
+        var oiStr = a.oi >= 1e6 ? '$' + (a.oi/1e6).toFixed(1) + 'M' : '$' + (a.oi/1e3).toFixed(0) + 'K';
+        cards += '<div class="funding-card">' +
+          '<div class="sym">' + a.name + '</div>' +
+          '<div class="rate ' + cls + '">' + arrow + ' ' + (ratePct > 0 ? '+' : '') + ratePct + '%</div>' +
+          '<div class="apr">' + (isPos ? '+' : '') + aprPct + '% APR · OI ' + oiStr + '</div>' +
+        '</div>';
+      });
+      grid.innerHTML = cards;
+      var avgApr = (totalApr / shown.length).toFixed(1);
+      var bias = posCount > negCount * 2 ? 'Strongly Bullish (longs paying heavy)' : posCount > negCount ? 'Bullish (longs paying)' : negCount > posCount * 2 ? 'Strongly Bearish (shorts paying heavy)' : negCount > posCount ? 'Bearish (shorts paying)' : 'Neutral';
+      summary.textContent = shown.length + ' assets shown | ' + posCount + ' positive / ' + negCount + ' negative | Avg APR: ' + avgApr + '% | Bias: ' + bias;
+    })
+    .catch(function(){
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#F85149;">Failed to load funding rates. Try refreshing.</div>';
+    });
+  }
+
+  document.getElementById('pro-funding-refresh').addEventListener('click', function(){
+    window._proFundingLoaded = false;
+    fetchFundingRates();
+  });
+
+  // ===== 2. LIQUIDATIONS =====
+  function fetchLiquidations(){
+    window._proLiqLoaded = true;
+    var list = document.getElementById('pro-liq-list');
+    list.innerHTML = '<div style="text-align:center; padding:20px; color:#7D8590;">Fetching large trades (liquidation proxy)...</div>';
+    document.getElementById('pro-liq-long').textContent = '—';
+    document.getElementById('pro-liq-short').textContent = '—';
+    document.getElementById('pro-liq-total').textContent = '—';
+
+    // Try Binance first, fall back to Hyperliquid large trades
+    fetch('https://fapi.binance.com/fapi/v1/allForceOrders?limit=50')
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(orders){
+        if (orders && orders.length > 0) {
+          renderLiqData(orders, 'binance');
+        } else {
+          // Fallback: use Hyperliquid recent trades as proxy
+          fetchHLProxyLiqs();
+        }
+      })
+      .catch(function(){ fetchHLProxyLiqs(); });
+
+    function fetchHLProxyLiqs(){
+      // Use Hyperliquid funding history + OI changes as liquidation proxy
+      var assets = ['BTC','ETH','SOL'];
+      var allTrades = [];
+
+      var promises = assets.map(function(coin){
+        return fetch('https://api.hyperliquid.xyz/info', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({type: 'trades', coin: coin})
+        })
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .catch(function(){ return []; });
+      });
+
+      Promise.all(promises).then(function(results){
+        var allTrades = [];
+        results.forEach(function(trades, idx){
+          var coin = assets[idx];
+          trades.forEach(function(t){
+            var side = t.side; // 'A' = ask (sell), 'B' = bid (buy)
+            var price = parseFloat(t.px);
+            var size = parseFloat(t.sz);
+            var val = price * size;
+            // Only large trades (proxy for liquidations)
+            if (val > 50000) {
+              allTrades.push({coin: coin, side: side, price: price, size: size, val: val, time: t.time});
+            }
+          });
+        });
+
+        if (allTrades.length === 0) {
+          list.innerHTML = '<div style="text-align:center; padding:20px; color:#7D8590; font-size:13px;">No large trades detected recently.<br><span style="font-size:11px;">Binance Futures API geo-blocked. Showing Hyperliquid large trades as proxy.</span></div>';
+          return;
+        }
+
+        // Sort by value descending
+        allTrades.sort(function(a, b){ return b.val - a.val; });
+
+        var longTotal = 0, shortTotal = 0;
+        var rows = '';
+        var shown = allTrades.slice(0, 25);
+
+        shown.forEach(function(t){
+          var isLong = t.side === 'A'; // Ask = sell = long liquidation proxy
+          var val = t.val;
+          if (isLong) longTotal += val; else shortTotal += val;
+          var time = new Date(t.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+          rows += '<div class="liq-row ' + (isLong ? 'long' : 'short') + '">' +
+            '<span style="color:#7D8590; font-size:10px;">' + time + '</span>' +
+            '<span class="sym">' + t.coin + '</span>' +
+            '<span class="side" style="color:' + (isLong ? '#F85149' : '#3FB950') + ';">' + (isLong ? 'LONG' : 'SHORT') + '</span>' +
+            '<span class="price">@ $' + t.price.toLocaleString() + '</span>' +
+            '<span class="size">' + (val >= 1000 ? '$' + (val/1000).toFixed(1) + 'K' : '$' + val.toFixed(0)) + '</span>' +
+          '</div>';
+        });
+
+        var total = longTotal + shortTotal;
+        document.getElementById('pro-liq-long').textContent = '$' + (longTotal >= 1000 ? (longTotal/1000).toFixed(1) + 'K' : longTotal.toFixed(0));
+        document.getElementById('pro-liq-short').textContent = '$' + (shortTotal >= 1000 ? (shortTotal/1000).toFixed(1) + 'K' : shortTotal.toFixed(0));
+        document.getElementById('pro-liq-total').textContent = '$' + (total >= 1000 ? (total/1000).toFixed(1) + 'K' : total.toFixed(0));
+        list.innerHTML = rows;
+        // Add note about proxy
+        list.innerHTML += '<div style="text-align:center; padding:8px; color:#7D8590; font-size:10px; margin-top:6px;">⚠️ Binance Futures API geo-blocked. Showing Hyperliquid large trades (&gt;$50K) as liquidation proxy.</div>';
+      })
+      .catch(function(){
+        list.innerHTML = '<div style="text-align:center; padding:20px; color:#F85149; font-size:13px;">Failed to load liquidation data.</div>';
+      });
+    }
+
+    function renderLiqData(orders, src){
+      var longTotal = 0, shortTotal = 0;
+      var rows = '';
+      var now = Date.now();
+      var oneHourAgo = now - 3600000;
+      var recent = orders.filter(function(o){ return o.time >= oneHourAgo; });
+
+      recent.forEach(function(o){
+        var isLong = o.side === 'SELL';
+        var val = parseFloat(o.price) * parseFloat(o.qty);
+        if (isLong) longTotal += val; else shortTotal += val;
+        var sym = o.symbol.replace('USDT','');
+        var time = new Date(o.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        rows += '<div class="liq-row ' + (isLong ? 'long' : 'short') + '">' +
+          '<span style="color:#7D8590; font-size:10px;">' + time + '</span>' +
+          '<span class="sym">' + sym + '</span>' +
+          '<span class="side" style="color:' + (isLong ? '#F85149' : '#3FB950') + ';">' + (isLong ? 'LONG' : 'SHORT') + '</span>' +
+          '<span class="price">@ $' + parseFloat(o.price).toLocaleString() + '</span>' +
+          '<span class="size">' + (val >= 1000 ? '$' + (val/1000).toFixed(1) + 'K' : '$' + val.toFixed(0)) + '</span>' +
+        '</div>';
+      });
+
+      var total = longTotal + shortTotal;
+      document.getElementById('pro-liq-long').textContent = '$' + (longTotal >= 1000 ? (longTotal/1000).toFixed(1) + 'K' : longTotal.toFixed(0));
+      document.getElementById('pro-liq-short').textContent = '$' + (shortTotal >= 1000 ? (shortTotal/1000).toFixed(1) + 'K' : shortTotal.toFixed(0));
+      document.getElementById('pro-liq-total').textContent = '$' + (total >= 1000 ? (total/1000).toFixed(1) + 'K' : total.toFixed(0));
+      list.innerHTML = rows || '<div style="text-align:center; padding:20px; color:#7D8590; font-size:13px;">No liquidations in the last hour.</div>';
+    }
+  }
+
+  document.getElementById('pro-liq-refresh').addEventListener('click', fetchLiquidations);
+
+  // Auto-refresh liquidations every 30s when visible
+  setInterval(function(){
+    var liqSection = document.getElementById('pro-liq');
+    var proPanel = document.getElementById('panel-pro');
+    if (liqSection && liqSection.style.display !== 'none' && proPanel && proPanel.classList.contains('active')) {
+      fetchLiquidations();
+    }
+  }, 30000);
+
+  // ===== 3. FEAR & GREED INDEX =====
+  function fetchFearGreed(){
+    window._proFnGLoaded = true;
+    fetch('https://api.alternative.me/fng/?limit=7')
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(data){
+        if (!data || !data.data || data.data.length === 0) {
+          document.getElementById('pro-fng-gauge').textContent = '—';
+          document.getElementById('pro-fng-label').textContent = 'Failed to load';
+          return;
+        }
+        var current = data.data[0];
+        var val = parseInt(current.value);
+        var label = current.value_classification;
+        var color = val < 25 ? '#F85149' : val < 45 ? '#D29922' : val < 55 ? '#7D8590' : val < 75 ? '#4FD1E5' : '#3FB950';
+        document.getElementById('pro-fng-gauge').textContent = val;
+        document.getElementById('pro-fng-gauge').style.color = color;
+        document.getElementById('pro-fng-label').textContent = label;
+        document.getElementById('pro-fng-label').style.color = color;
+        document.getElementById('pro-fng-bar-marker').style.left = val + '%';
+        document.getElementById('pro-fng-updated').textContent = 'Last updated: ' + new Date(current.timestamp * 1000).toLocaleString();
+
+        // History sparkline
+        var history = '';
+        for (var i = data.data.length - 1; i >= 0; i--) {
+          var d = data.data[i];
+          var v = parseInt(d.value);
+          var c = v < 25 ? '#F85149' : v < 45 ? '#D29922' : v < 55 ? '#7D8590' : v < 75 ? '#4FD1E5' : '#3FB950';
+          history += '<div style="text-align:center; min-width:38px;">' +
+            '<div style="width:28px; height:' + (v * 0.5) + 'px; background:' + c + '; border-radius:3px 3px 0 0; margin:0 auto;"></div>' +
+            '<div style="font-size:9px; color:#7D8590; margin-top:2px;">' + v + '</div>' +
+          '</div>';
+        }
+        document.getElementById('pro-fng-history').innerHTML = history;
+      })
+      .catch(function(){
+        document.getElementById('pro-fng-gauge').textContent = '—';
+        document.getElementById('pro-fng-label').textContent = 'Failed to load. Try refreshing.';
+      });
+  }
+
+  document.getElementById('pro-fng-refresh').addEventListener('click', function(){
+    window._proFnGLoaded = false;
+    fetchFearGreed();
+  });
+
+  // ===== 4. POSITION TRACKER =====
+  document.getElementById('pro-pos-load').addEventListener('click', function(){
+    var addr = document.getElementById('pro-pos-address').value.trim();
+    if (!addr) return;
+    localStorage.setItem('hl_address', addr);
+    loadPositions(addr);
+  });
+
+  // Auto-load saved address
+  var savedAddr = localStorage.getItem('hl_address');
+  if (savedAddr) {
+    document.getElementById('pro-pos-address').value = savedAddr;
+  }
+
+  function loadPositions(addr){
+    var list = document.getElementById('pro-pos-list');
+    var summary = document.getElementById('pro-pos-summary');
+    list.innerHTML = '<div style="text-align:center; padding:20px; color:#7D8590;">Loading positions...</div>';
+    summary.style.display = 'none';
+
+    fetch('https://api.hyperliquid.xyz/info', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({type: 'userState', user: addr})
+    })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){
+      if (!data || !data.assetPositions || data.assetPositions.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:20px; color:#7D8590;">No open positions found.</div>';
+        summary.style.display = 'none';
+        return;
+      }
+      var totalPnl = 0, totalMargin = 0;
+      var cards = '';
+      data.assetPositions.forEach(function(pos){
+        var p = pos.position;
+        var coin = p.coin;
+        var szi = parseFloat(p.szi);
+        var entryPx = parseFloat(p.entryPx);
+        var leverage = parseFloat(p.leverage.value);
+        var margin = parseFloat(p.marginUsed);
+        var unrealizedPnl = parseFloat(p.unrealizedPnl);
+        totalPnl += unrealizedPnl;
+        totalMargin += margin;
+        var side = szi > 0 ? 'LONG' : 'SHORT';
+        var sideColor = szi > 0 ? '#3FB950' : '#F85149';
+        var pnlClass = unrealizedPnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+        var pnlStr = (unrealizedPnl >= 0 ? '+$' : '-$') + Math.abs(unrealizedPnl).toFixed(2);
+        cards += '<div class="pos-card">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+            '<span class="sym">' + coin + ' ' + leverage + 'x</span>' +
+            '<span style="font-size:12px; font-weight:700; color:' + sideColor + ';">' + side + ' ' + Math.abs(szi).toFixed(3) + ' ' + coin + '</span>' +
+          '</div>' +
+          '<div class="row"><span style="color:#7D8590;">Entry</span><span>$' + entryPx.toLocaleString() + '</span></div>' +
+          '<div class="row"><span style="color:#7D8590;">Margin</span><span>$' + margin.toFixed(2) + '</span></div>' +
+          '<div class="row"><span style="color:#7D8590;">uPnL</span><span class="' + pnlClass + '">' + pnlStr + '</span></div>' +
+        '</div>';
+      });
+      list.innerHTML = cards;
+      summary.style.display = 'grid';
+      var pnlEl = document.getElementById('pro-pos-pnl');
+      pnlEl.textContent = (totalPnl >= 0 ? '+$' : '-$') + Math.abs(totalPnl).toFixed(2);
+      pnlEl.style.color = totalPnl >= 0 ? '#3FB950' : '#F85149';
+      document.getElementById('pro-pos-margin').textContent = '$' + totalMargin.toFixed(2);
+    })
+    .catch(function(){
+      list.innerHTML = '<div style="text-align:center; padding:20px; color:#F85149;">Failed to load positions. Check the address.</div>';
+      summary.style.display = 'none';
+    });
+  }
+
+  document.getElementById('pro-pos-refresh').addEventListener('click', function(){
+    var addr = document.getElementById('pro-pos-address').value.trim();
+    if (addr) loadPositions(addr);
+  });
+
+  // ===== 5. ACHIEVEMENT BADGES =====
+  var BADGES = [
+    {id:'first_trade', icon:'🥇', name:'First Steps', desc:'Complete your first paper trade'},
+    {id:'streak_3', icon:'🔥', name:'On Fire', desc:'3 profitable trades in a row'},
+    {id:'streak_7', icon:'⚡', name:'Lightning', desc:'7 profitable trades in a row'},
+    {id:'journal_7', icon:'📖', name:'Journalist', desc:'Journal trades for 7 days'},
+    {id:'stop_master', icon:'🛡️', name:'Risk Manager', desc:'Set stop-loss on 10 trades'},
+    {id:'profit_100', icon:'💰', name:'Century Club', desc:'Reach $100 in paper profit'},
+    {id:'profit_1000', icon:'💎', name:'Diamond Hands', desc:'Reach $1000 in paper profit'},
+    {id:'all_signals', icon:'🎯', name:'Signal Master', desc:'Trade all signal types'},
+    {id:'early_bird', icon:'🌅', name:'Early Bird', desc:'Trade during pre-market hours'},
+    {id:'night_owl', icon:'🦉', name:'Night Owl', desc:'Trade during Asian session'},
+    {id:'fear_test', icon:'😰', name:'Fear Tester', desc:'Trade during Extreme Fear'},
+    {id:'greed_test', icon:'😎', name:'Greed Tester', desc:'Trade during Extreme Greed'}
+  ];
+
+  function getBadgeStats(){
+    return {
+      unlocked: JSON.parse(localStorage.getItem('pro_badges') || '[]'),
+      trades: parseInt(localStorage.getItem('pro_trade_count') || '0'),
+      profitStreak: parseInt(localStorage.getItem('pro_profit_streak') || '0'),
+      maxStreak: parseInt(localStorage.getItem('pro_max_streak') || '0'),
+      journalDays: parseInt(localStorage.getItem('pro_journal_days') || '0'),
+      stopCount: parseInt(localStorage.getItem('pro_stop_count') || '0'),
+      paperProfit: parseFloat(localStorage.getItem('pro_paper_profit') || '0')
+    };
+  }
+
+  function checkBadgeUnlocks(){
+    var stats = getBadgeStats();
+    var newlyUnlocked = [];
+    function unlock(id){
+      if (stats.unlocked.indexOf(id) === -1) {
+        stats.unlocked.push(id);
+        newlyUnlocked.push(id);
+      }
+    }
+    if (stats.trades >= 1) unlock('first_trade');
+    if (stats.maxStreak >= 3) unlock('streak_3');
+    if (stats.maxStreak >= 7) unlock('streak_7');
+    if (stats.journalDays >= 7) unlock('journal_7');
+    if (stats.stopCount >= 10) unlock('stop_master');
+    if (stats.paperProfit >= 100) unlock('profit_100');
+    if (stats.paperProfit >= 1000) unlock('profit_1000');
+    localStorage.setItem('pro_badges', JSON.stringify(stats.unlocked));
+    return newlyUnlocked;
+  }
+
+  function renderBadges(){
+    window._proBadgesLoaded = true;
+    checkBadgeUnlocks();
+    var stats = getBadgeStats();
+    var grid = document.getElementById('pro-badge-grid');
+    var html = '';
+    BADGES.forEach(function(badge){
+      var unlocked = stats.unlocked.indexOf(badge.id) !== -1;
+      html += '<div class="badge-card ' + (unlocked ? 'unlocked' : 'locked') + '">' +
+        '<div class="icon">' + badge.icon + '</div>' +
+        '<div class="name">' + badge.name + '</div>' +
+        '<div class="desc">' + badge.desc + '</div>' +
+      '</div>';
+    });
+    grid.innerHTML = html;
+    document.getElementById('pro-badge-count').textContent = stats.unlocked.length;
+    document.getElementById('pro-badge-stats').innerHTML =
+      'Trades: ' + stats.trades + ' | Best streak: ' + stats.maxStreak + ' | Journal days: ' + stats.journalDays +
+      ' | Stops set: ' + stats.stopCount + ' | Paper profit: $' + stats.paperProfit.toFixed(2);
+  }
+
+  // Expose badge tracking for other parts of the app
+  window._proTrackTrade = function(isProfit, hasStop){
+    var trades = parseInt(localStorage.getItem('pro_trade_count') || '0') + 1;
+    localStorage.setItem('pro_trade_count', trades);
+    if (hasStop) {
+      var stops = parseInt(localStorage.getItem('pro_stop_count') || '0') + 1;
+      localStorage.setItem('pro_stop_count', stops);
+    }
+    var streak = isProfit ? parseInt(localStorage.getItem('pro_profit_streak') || '0') + 1 : 0;
+    localStorage.setItem('pro_profit_streak', streak);
+    var maxStreak = Math.max(parseInt(localStorage.getItem('pro_max_streak') || '0'), streak);
+    localStorage.setItem('pro_max_streak', maxStreak);
+    var profit = parseFloat(localStorage.getItem('pro_paper_profit') || '0') + (isProfit ? 10 : -5);
+    localStorage.setItem('pro_paper_profit', profit);
+    checkBadgeUnlocks();
+  };
+
+  window._proTrackJournal = function(){
+    var days = parseInt(localStorage.getItem('pro_journal_days') || '0') + 1;
+    localStorage.setItem('pro_journal_days', days);
+    checkBadgeUnlocks();
+  };
+
+  // Auto-fetch funding rates when Pro Tools tab is activated
+  var proTab = document.querySelector('.tab[data-tab="pro"]');
+  if (proTab) {
+    proTab.addEventListener('click', function(){
+      setTimeout(function(){
+        if (!window._proFundingLoaded) fetchFundingRates();
+      }, 100);
+    });
+  }
+
+})();
+</script>
+<!-- ==================== END PRO TOOLS ==================== -->
+
 
 </body>
 </html>
