@@ -507,7 +507,8 @@
   [data-theme="blackout"] [style*="color: var(--fg)"] { color: #f59e0b ; }
   [data-theme="blackout"] [style*="color:black"] { color: #f59e0b ; }
   /* Text-shadows drop out — no more 2px shadow-on-white look */
-  [data-theme="blackout"] [style*="
+  [data-theme="blackout"] [style*="text-shadow"] {
+    text-shadow: none !important;
   }
   /* Yellow box-shadows keep the "neon on black" vibe */
   [data-theme="blackout"] [style*="box-shadow: 5px 5px 0 #000"],
@@ -599,7 +600,7 @@
   }
   @keyframes rp-fade-in { from { opacity: 0; } to { opacity: 1; } }
   .rp-modal-card {
-    background: var(--accent-warn); color: var(--fg);
+    background: var(--pfd-gold, var(--accent-warn)); color: var(--fg);
     border: 4px solid var(--border); border-radius: 18px;
     padding: 30px 34px; text-align: center;
     box-shadow: 8px 8px 0 var(--border);
@@ -800,9 +801,6 @@
   }
 
   /* ============ ANIMATIONS ============ */
-  
-    50% { box-shadow: 6px 6px 0 #FF00A8, 0 0 25px rgba(255,0,168,0.5); }
-  }
   @keyframes shine {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
@@ -821,9 +819,6 @@
     50% { transform: scale(1.05); }
     100% { transform: scale(1); opacity: 1; }
   }
-  
-    50% { transform: translateY(-4px); }
-  }
   @keyframes sunburst-rotate {
     from { transform: translateX(-50%) rotate(0deg); }
     to { transform: translateX(-50%) rotate(360deg); }
@@ -837,7 +832,10 @@
     margin-bottom: 16px;
     border-bottom: 5px solid var(--border);
     position: relative;
+    z-index: 100;
     overflow: hidden;
+    transition: max-height 300ms ease;
+    max-height: 600px;
   }
   /* Collapsed cover — shrinks to a tiny 44px title bar with a re-expand button */
   .book-cover.collapsed {
@@ -866,7 +864,7 @@
   }
   .book-cover.collapsed .book-cover-collapsed-bar { display: flex; }
   .book-cover-expand-btn {
-    background: var(--accent-warn); color: var(--fg); border:1px solid var(--border);
+    background: var(--pfd-gold, var(--accent-warn)); color: var(--fg); border:1px solid var(--border);
     padding: 3px 10px; border-radius: 8px;
     font-size: 11px; font-weight: 800; text-transform: uppercase;
     cursor: pointer; letter-spacing: 0.5px;
@@ -877,7 +875,7 @@
     position: absolute;
     top: 12px; left: 50%; transform: translateX(-50%);
     z-index: 20;
-    background: var(--accent-warn); color: var(--fg);
+    background: var(--pfd-gold, var(--accent-warn)); color: var(--fg);
     border: 3px solid var(--border);
     padding: 8px 18px;
     border-radius: 22px;
@@ -917,7 +915,7 @@
   .book-band .stripe-red {
     position: absolute; top: 0; left: 0; right: 0;
     height: 6px;
-    background: linear-gradient(90deg, #ef4444 0%, #FF00A8 50%, #ef4444 100%);
+    background: var(--accent-primary);
     background-size: 200% 100%;
     animation: shine 3s linear infinite;
   }
@@ -943,7 +941,7 @@
   }
   .book-band-text strong { color: #f59e0b; font-weight: 700; }
   .badge {
-    background: linear-gradient(135deg, #ef4444 0%, #FF00A8 100%);
+    background: var(--accent-primary);
     color: #fff;
     font-size: 13px; padding: 4px 8px; border-radius:6px;
     font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
@@ -1077,7 +1075,7 @@
   /* ============ TABS — bright chapter tabs ============ */
   .tabs {
     display: flex; gap: 0; margin-bottom: 16px;
-    background: var(--bg-cream, #FFFBF0); padding: 6px 0 0 0;
+    background: var(--pfd-bg-deep, #0a0a0f); padding: 6px 0 0 0;
     overflow-x: auto; scrollbar-width: none;
     border-bottom: 4px solid var(--border);
     position: sticky; top: 0; z-index: 95;
@@ -1087,16 +1085,16 @@
     flex: 1; min-width: 70px; padding: 10px 8px; text-align: center;
     font-size: 13px; font-weight:700;
     cursor: pointer; color: var(--fg);
-    background: linear-gradient(180deg, #FFF3B0 0%, var(--accent-warn) 100%);
-    border: 3px solid var(--border);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-bottom: none;
-    border-radius: 12px 12px 0 0;
+    border-radius: 8px 8px 0 0;
     margin-right: 3px;
     transition: all 0.15s;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+    text-transform: none;
+    letter-spacing: 0;
     white-space: nowrap;
-    transform: translateY(3px);
+    transform: translateY(0);
     position: relative;
   }
   .tab .tab-badge {
@@ -1116,14 +1114,13 @@
     50% { transform: scale(1.3); opacity: 0.7; }
   }
   .tab.active {
-    background: linear-gradient(180deg, #ef4444 0%, #FF00A8 100%);
-    color: #fff;
+    background: var(--bg-inset); color: var(--accent-primary); border-color: var(--accent-primary);
     transform: translateY(0);
-    box-shadow: 0 -3px 0 #000, 0 0 15px rgba(255,0,168,0.4);
+    box-shadow: 0 0 0 1px var(--accent-primary);
   }
   .tab:hover:not(.active) {
-    background: linear-gradient(180deg, #FFEB80 0%, #FFF17A 100%);
-    transform: translateY(1px);
+    background: var(--bg-inset);
+    transform: translateY(0);
   }
   .panel { display: none; }
   .panel.active { display: block; animation: bounce-in 0.3s ease-out; }
@@ -1157,7 +1154,7 @@
   }
   .setup-card::before {
     content: '💡 TIP'; position: absolute; top: -10px; left: 12px;
-    background: var(--accent-warn); color: var(--fg); font-size: 12px; font-weight:700;
+    background: var(--pfd-gold, var(--accent-warn)); color: var(--fg); font-size: 12px; font-weight:700;
     padding: 2px 8px; border:1px solid var(--border); border-radius: 10px;
     letter-spacing: 0.5px;
   }
@@ -1178,8 +1175,8 @@
     text-transform: uppercase;
   }
   .tag.tf-1m { background: #ef4444; color: #fff; }
-  .tag.tf-5m { background: var(--accent-warn); color: #fff; }
-  .tag.tf-15m { background: var(--accent-warn); color: #fff; }
+  .tag.tf-5m { background: var(--pfd-gold, var(--accent-warn)); color: #fff; }
+  .tag.tf-15m { background: var(--pfd-gold, var(--accent-warn)); color: #fff; }
   .tag.tf-1h { background: #22c55e; color: #fff; }
   .tag.tf-4h { background: #1565C0; color: #fff; }
   .tag.tf-1D { background: #6A1B9A; color: #fff; }
@@ -1279,7 +1276,7 @@
   .hm-magnet .side-short { background: #ef4444; color: #fff; }
   .hm-magnet .row2 { font-size: 12px; font-weight: 700; color: #444; }
   .hm-magnet .microbar { width: 90px; height: 10px; background: #eee; border:1px solid var(--border); position: relative; }
-  .hm-magnet .microbar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent-warn); }
+  .hm-magnet .microbar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--pfd-gold, var(--accent-warn)); }
   /* ---- Depth book table (collapsible) ---- */
   .hm-depth-toggle {
     margin-top: 14px; var(--bg-card); border:1px solid var(--border); border-radius: 6px;
@@ -1304,7 +1301,7 @@
     padding: 5px 6px; border-bottom: 1px solid #ccc; text-align: right;
     font-family: monospace;
   }
-  .hm-depth-table th { background: var(--accent-warn); text-transform: uppercase; font-size: 12px; }
+  .hm-depth-table th { background: var(--pfd-gold, var(--accent-warn)); text-transform: uppercase; font-size: 12px; }
   .hm-depth-table td:first-child, .hm-depth-table th:first-child { text-align: left; }
   /* ---- Microstructure stats ---- */
   .hm-micro {
@@ -1478,7 +1475,7 @@
     font-family: inherit; resize: vertical; min-height: 60px; font-weight: 500;
   }
   .btn {
-    background: linear-gradient(135deg, #ef4444 0%, #FF00A8 100%);
+    background: var(--accent-primary);
     color: #fff; border: 3px solid var(--border);
     padding: 12px 16px; border-radius: 8px; font-size: 15px;
     font-weight:600; cursor: pointer; width: 100%;
@@ -1533,7 +1530,7 @@
     border:1px solid var(--border); var(--bg-inset); color: var(--fg);
     cursor: pointer; font-weight: 800; text-transform: uppercase;
   }
-  .je-actions button:hover { background: var(--accent-warn); }
+  .je-actions button:hover { background: var(--pfd-gold, var(--accent-warn)); }
 
   .empty {
     text-align: center; padding: 30px 16px; color: var(--fg); font-size: 14px; font-weight: 500;
@@ -1541,10 +1538,10 @@
     font-weight: 600;
   }
   .disclaimer {
-    var(--bg-card); border:1px solid var(--border); border-left: 8px solid var(--accent-warn);
+    background: var(--bg-card, #0B0E1A); border:1px solid var(--border); border-left: 8px solid var(--accent-warn);
     border-radius: 6px;
-    padding: 12px; font-size: 14px; font-weight: 500; color: var(--fg); margin-bottom: 14px;
-    line-height: 1.5; font-weight: 500;
+    padding: 12px; font-size: 15px; font-weight: 600; color: #ffffff; margin-bottom: 14px;
+    line-height: 1.55; font-weight: 600;
     box-shadow: 3px 3px 0 var(--border);
   }
   .stats-row {
@@ -1659,7 +1656,7 @@
   }
   .coach-style {
     display: inline-block;
-    background: linear-gradient(135deg, #ef4444 0%, #FF00A8 100%);
+    background: var(--accent-primary);
     color: #fff;
     padding: 4px 12px; border-radius: 14px; font-size: 13px; font-weight: 600;
     font-weight:700; text-transform: uppercase; margin-top: 6px;
@@ -1752,7 +1749,7 @@
   }
   .style-option:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--border); }
   .style-option.selected {
-    background: linear-gradient(135deg, #ef4444 0%, #FF00A8 100%);
+    background: var(--accent-primary);
     color: #fff;
     box-shadow: 3px 3px 0 var(--border), 0 0 15px rgba(255,0,168,0.5);
   }
@@ -1776,7 +1773,7 @@
   }
   .level-xp {
     font-size: 14px; font-weight: 500;
-    background: linear-gradient(90deg, #ef4444, #FF00A8);
+    background: var(--accent-primary);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1788,7 +1785,7 @@
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
   }
   .progress-fill {
-    background: linear-gradient(90deg, #22c55e 0%, #00E5FF 50%, #FF00A8 100%);
+    background: var(--accent-success);
     background-size: 200% 100%;
     animation: shine 3s linear infinite;
     height: 100%; transition: width 0.6s ease;
@@ -1837,7 +1834,7 @@
     transform: translate(-1px, -1px);
   }
   .rank-badge.current {
-    background: linear-gradient(135deg, #ef4444 0%, #FF00A8 100%);
+    background: var(--accent-primary);
     color: #fff;
     box-shadow: 3px 3px 0 var(--border), 0 0 15px rgba(255,0,168,0.5);
     opacity: 1;
@@ -1888,7 +1885,7 @@
     width: 8px; height: 8px; border-radius: 50%;
     background: rgba(255,215,0,0.25); border: 1px solid #2a2a2a;
   }
-  .pfd-onb-dot.active { background: var(--accent-warn); }
+  .pfd-onb-dot.active { background: var(--pfd-gold, var(--accent-warn)); }
   .pfd-onb-title {
     font-size: 22px; font-weight: 800; text-transform: uppercase;
     letter-spacing: 0.5px; margin-bottom: 6px; line-height: 1.2;
@@ -1952,7 +1949,7 @@
     font-weight:700; text-transform: uppercase; letter-spacing: 0.5px;
     font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer;
     border: 3px solid var(--accent-warn);
-    background: var(--accent-warn);
+    background: var(--pfd-gold, var(--accent-warn));
     color: var(--fg); box-shadow: 4px 4px 0 rgba(255,215,0,0.5);
     transition: transform 0.08s;
   }
@@ -1971,7 +1968,7 @@
 
   /* ============ RESPONSIVE / MOBILE-FIRST SWEEP (Phase 1) ============ */
   @media (max-width: 640px) {
-    .tabs { flex-wrap: wrap !important; gap: 4px !important; padding: 6px ; }
+    .tabs { flex-wrap: nowrap !important; gap: 2px !important; padding: 4px 4px 0 4px; overflow-x: auto; }
     .tab { font-size: 13px ; font-weight: 600 ; padding: 6px 8px ; min-width: 60px !important; }
     .panel { padding: 10px ; }
     h1, h2 { font-size: 20px ; }
@@ -2101,7 +2098,7 @@
   }
   /* ==================== END PHASE 3 ==================== */
   .pfd-empty-state .pfd-empty-cta {
-    background: var(--accent-warn); color: var(--fg); border:1px solid var(--border); border-radius: 6px;
+    background: var(--pfd-gold, var(--accent-warn)); color: var(--fg); border:1px solid var(--border); border-radius: 6px;
     padding: 8px 16px; font-weight:700; font-size: 13px; cursor: pointer;
     box-shadow: 2px 2px 0 var(--border);
   }
@@ -2138,7 +2135,7 @@
   }
   .subtab:hover { background: rgba(0,0,0,0.05); }
   .subtab.active {
-    background: var(--accent-warn);
+    background: var(--pfd-gold, var(--accent-warn));
     border-color: var(--border);
     box-shadow: 2px 2px 0 var(--border);
   }
@@ -2152,7 +2149,7 @@
     gap: 10px;
     width: 100%;
     padding: 10px 14px;
-    background: var(--accent-warn);
+    background: var(--pfd-gold, var(--accent-warn));
     color: var(--fg);
     border: 3px solid var(--border);
     border-radius: 10px;
@@ -2228,7 +2225,7 @@
   }
   .subtab-dropdown-item:hover:not(.active) { background: #fef9c3; }
   .subtab-dropdown-item.active {
-    background: var(--accent-warn);
+    background: var(--pfd-gold, var(--accent-warn));
     border-color: var(--border);
     font-weight:500;
   }
@@ -2396,7 +2393,7 @@
     font-size: 20px; font-weight:700; line-height: 1.25;
     padding: 12px 16px; border-radius: 10px;
     margin-bottom: 12px;
-    background: var(--accent-warn); color: var(--fg);
+    background: var(--pfd-gold, var(--accent-warn)); color: var(--fg);
     border:1px solid var(--border);
   }
   .hero-verdict.short-heavy { background: #ef4444; color: #fff; }
@@ -2444,7 +2441,7 @@
     padding: 6px 10px;
     margin: 0 0 8px 0;
     min-height: 44px;
-    background: linear-gradient(180deg, #FFF3B0 0%, var(--accent-warn) 100%);
+    background: var(--bg-card);
     border:1px solid var(--border);
     border-radius: 12px;
     box-shadow: 3px 3px 0 var(--border);
@@ -2480,7 +2477,7 @@
     white-space: nowrap;
     font-size: 13px;
   }
-  [data-theme="dark"] .rs-price { background: var(--accent-warn); color: var(--fg); border-color: #f59e0b; }
+  [data-theme="dark"] .rs-price { background: var(--pfd-gold, var(--accent-warn)); color: var(--fg); border-color: #f59e0b; }
   .rs-price .rs-price-chg { margin-left: 6px; font-size: 12px; font-weight: 800; }
   .rs-price .rs-price-chg.up   { color: #22c55e; }
   .rs-price .rs-price-chg.down { color: #ef4444; }
@@ -2596,7 +2593,7 @@
     font-weight:700; font-size: 13px; cursor: pointer; box-shadow: 2px 2px 0 var(--border);
     font-family: inherit; white-space: nowrap;
   }
-  .chart-asset.active { background: var(--accent-warn); color: var(--fg); }
+  .chart-asset.active { background: var(--pfd-gold, var(--accent-warn)); color: var(--fg); }
   .chart-tf-row { display: flex; gap: 4px; margin-bottom: 12px; overflow-x: auto; padding: 4px 0; align-items: center; }
   .chart-tf {
     padding: 6px 10px; border:1px solid var(--fg); border-radius: 6px;
@@ -2620,7 +2617,7 @@
   }
   .chart-canvas-wrap {
     position: relative;
-    background: var(--panel-bg, #fff);
+    background: #0a0a0a !important;
     border: 3px solid var(--border); border-radius: 12px;
     min-height: 480px; overflow: hidden;
     box-shadow: 4px 4px 0 var(--border);
@@ -2718,7 +2715,7 @@
   }
   .chart-zoom-btn {
     width: 34px; height: 34px; border: none; border-radius: 6px;
-    background: var(--accent-warn); color: var(--fg);
+    background: var(--pfd-gold, var(--accent-warn)); color: var(--fg);
     font-size: 16px; font-weight:700; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     font-family: inherit;
@@ -3088,7 +3085,7 @@
     font-family: inherit; white-space: nowrap;
   }
   .chart-ind:hover, .chart-draw:hover { transform: translateY(-1px); }
-  .chart-ind.active { background: var(--accent-warn); color: var(--fg); box-shadow: 2px 2px 0 var(--border); }
+  .chart-ind.active { background: var(--pfd-gold, var(--accent-warn)); color: var(--fg); box-shadow: 2px 2px 0 var(--border); }
   .chart-draw.active { background: #ec4899; color: #fff; box-shadow: 2px 2px 0 var(--border); }
   .chart-draw-clear { background: #ef4444; color: #fff; }
   .chart-draw-clear:hover { background: #ef4444; }
@@ -3098,8 +3095,8 @@
   }
   .chart-loading, .chart-err {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    color: var(--fg-muted, #666); font-weight: 700; font-size: 13px;
-    background: rgba(255,255,255,0.6); pointer-events: none; padding: 12px; text-align: center;
+    color: var(--fg-muted, #999); font-weight: 700; font-size: 13px;
+    background: rgba(10,10,15,0.85); pointer-events: none; padding: 12px; text-align: center;
   }
   .chart-err { background: rgba(255,222,0,0.9); color: var(--fg); }
   .chart-stats {
@@ -3879,11 +3876,13 @@
     color: var(--pfd-text);
   }
   #panel-playbook .disclaimer {
-    background: rgba(255,222,0,0.04) !important;
+    background: rgba(255,222,0,0.06) !important;
     border: 1px solid var(--pfd-gold-line) !important;
-    color: var(--pfd-text-dim) ;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
     border-radius: var(--pfd-radius-sm) ;
-    padding: 10px 12px ;
+    padding: 12px 14px !important ;
     font-size: 12px ;
     line-height: 1.5 !important;
     box-shadow: none !important;
@@ -5775,39 +5774,64 @@
 
 /* ===== BEGINNER MODE ===== */
 #beginner-mode-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: rgba(157, 78, 221, 0.08);
-  border: 1px solid rgba(157, 78, 221, 0.25);
-  border-radius: 10px;
-  color: #9D4EDD;
-  font-size: 13px;
-  font-weight: 700;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg-muted);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+  transition: all 0.15s ease;
   white-space: nowrap;
   user-select: none;
+  flex-shrink: 0;
 }
 #beginner-mode-btn:hover {
-  background: rgba(157, 78, 221, 0.15);
-  border-color: #9D4EDD;
-  box-shadow:none;
+  background: var(--bg-inset);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 #beginner-mode-btn.active {
-  background: rgba(157, 78, 221, 0.2);
-  border-color: #9D4EDD;
-  color: #9D4EDD;
-  box-shadow:none;
+  background: var(--bg-inset);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
-/* Beginner Mode UI changes — simplified, larger, clearer */
-body.beginner-mode .tab {
-  font-size: 14px ;
-  font-weight: 700 ;
-  padding: 10px 14px ;
-}
+
+  /* === FIX: Live charts visibility in dark theme === */
+  #chart-canvas {
+    background: #0a0a0a !important;
+    min-height: 400px !important;
+  }
+  .chart-canvas-wrap {
+    min-height: 400px !important;
+  }
+  /* Don't let the loading shimmer hide the loading text */
+  #chart-loading {
+    background: rgba(10,10,10,0.9) !important;
+    color: #f59e0b !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    z-index: 10 !important;
+  }
+  #chart-err {
+    background: rgba(10,10,10,0.9) !important;
+    color: #ef4444 !important;
+    font-size: 14px !important;
+    z-index: 10 !important;
+  }
+  /* Ensure live perp grid is visible */
+  #live-perp-grid {
+    display: grid !important;
+    visibility: visible !important;
+  }
+
+/* Beginner Mode UI changes — simplify without breaking layout */
+/* Keep tab styling identical — just hide advanced ones */
 body.beginner-mode .tab .tab-badge {
   display: none !important;
 }
@@ -5817,34 +5841,94 @@ body.beginner-mode .tab[data-tab="community"],
 body.beginner-mode .tab[data-tab="book"] {
   display: none !important;
 }
-/* Simplify panels */
-body.beginner-mode .pfd-dash-section-head {
-  font-size: 16px ;
+/* Center remaining tabs when 3 are hidden */
+body.beginner-mode .tabs {
+  justify-content: center;
 }
+/* Hide the SHOW COVER bar in beginner mode — less clutter */
+body.beginner-mode .book-cover-collapsed-bar {
+  display: none !important;
+}
+body.beginner-mode .book-cover {
+  display: none !important;
+}
+/* Move beginner button inline — make it a small floating badge instead of a full row */
+body.beginner-mode #beginner-mode-btn {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 200;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+body.beginner-mode #beginner-mode-btn:hover {
+  opacity: 1;
+}
+/* Slightly larger inputs for readability — but not enough to break layout */
 body.beginner-mode input[type="number"],
 body.beginner-mode select {
-  font-size: 15px ;
-  padding: 10px 12px ;
+  font-size: 14px;
 }
-body.beginner-mode button {
-  font-size: 14px ;
-  padding: 10px 16px ;
+/* Keep buttons same size — don't resize */
+/* Show beginner helper tooltips */
+body.beginner-mode .beginner-tip {
+  display: block !important;
+}
+/* Larger, more readable beginner tips on mobile */
+@media (max-width: 640px) {
+  body.beginner-mode .beginner-tip {
+    font-size: 16px !important;
+    padding: 16px 20px !important;
+    line-height: 1.65 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+  /* Boost card text in beginner mode for readability */
+  body.beginner-mode .pfd-onb-card,
+  body.beginner-mode .panel {
+    font-size: 14px !important;
+  }
+  body.beginner-mode .pfd-onb-title {
+    font-size: 18px !important;
+  }
 }
 /* Show beginner helper tooltips */
 body.beginner-mode .beginner-tip {
   display: block !important;
 }
+/* Larger, more readable beginner tips on mobile */
+@media (max-width: 640px) {
+  body.beginner-mode .beginner-tip {
+    font-size: 16px !important;
+    padding: 16px 20px !important;
+    line-height: 1.65 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+  /* Boost card text in beginner mode for readability */
+  body.beginner-mode .pfd-onb-card,
+  body.beginner-mode .panel {
+    font-size: 14px !important;
+  }
+  body.beginner-mode .pfd-onb-title {
+    font-size: 18px !important;
+  }
+}
 .beginner-tip {
   display: none;
-  font-size: 12px;
-  color: #9D4EDD;
-  padding: 8px 12px;
-  margin: 4px 0;
-  background: rgba(157, 78, 221, 0.08);
+  font-size: 14px;
+  color: #ffffff;
+  padding: 14px 18px;
+  margin: 0 0 12px 0;
+  background: var(--bg-inset, #121627);
   border-radius: 8px;
-  border-left: 3px solid #9D4EDD;
-  font-weight: 500;
-  line-height: 1.5;
+  border-left: 3px solid var(--accent-primary, #4FD1E5);
+  font-weight: 600;
+  line-height: 1.55;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ===== FUTURISTIC COLOR SYSTEM ===== */
@@ -6042,9 +6126,15 @@ body.beginner-mode .beginner-tip {
     if (btn) {
       if (enabled) {
         btn.classList.add('active');
+        btn.style.background = 'var(--bg-inset)';
+        btn.style.borderColor = 'var(--accent-primary)';
+        btn.style.color = 'var(--accent-primary)';
         btn.textContent = '🎓 Beginner: ON';
       } else {
         btn.classList.remove('active');
+        btn.style.background = 'var(--bg-card)';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--fg-muted)';
         btn.textContent = '🎓 Beginner Mode';
       }
     }
@@ -6052,24 +6142,35 @@ body.beginner-mode .beginner-tip {
     _paShowToast(enabled ? '🎓 Beginner Mode ON — simplified UI, larger text, tips visible' : '🎓 Beginner Mode OFF — full interface restored', 3000, 'info');
   }
 
-  // Inject the beginner mode button into the tab bar
+  // Inject the beginner mode button ABOVE the tab bar (not inside it)
   function injectBeginnerButton() {
-    var tabBar = document.querySelector('.tabs');
-    if (!tabBar) return;
+    var contentDiv = document.querySelector('.content');
+    if (!contentDiv) return;
     if (document.getElementById('beginner-mode-btn')) return;
 
     var btn = document.createElement('div');
     btn.id = 'beginner-mode-btn';
     btn.className = 'no-anim';
-    btn.style.cssText = 'flex-shrink:0;padding:8px 14px;background:rgba(157,78,221,0.08);border:1px solid rgba(157,78,221,0.25);border-radius:10px;color:#9D4EDD;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;user-select:none;display:flex;align-items:center;gap:6px;margin-left:auto;';
+    btn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--fg-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s ease;white-space:nowrap;user-select:none;flex-shrink:0;margin:8px 0 0 8px;';
     btn.textContent = beginnerEnabled ? '🎓 Beginner: ON' : '🎓 Beginner Mode';
-    if (beginnerEnabled) btn.classList.add('active');
+    if (beginnerEnabled) {
+      btn.classList.add('active');
+      btn.style.background = 'var(--bg-inset)';
+      btn.style.borderColor = 'var(--accent-primary)';
+      btn.style.color = 'var(--accent-primary)';
+    }
     btn.onclick = function(e) {
       e.stopPropagation();
       beginnerEnabled = !beginnerEnabled;
       applyBeginnerMode(beginnerEnabled);
     };
-    tabBar.appendChild(btn);
+    // Insert BEFORE the tabs, not inside them
+    var tabBar = contentDiv.querySelector('.tabs');
+    if (tabBar) {
+      contentDiv.insertBefore(btn, tabBar);
+    } else {
+      contentDiv.insertBefore(btn, contentDiv.firstChild);
+    }
 
     if (beginnerEnabled) {
       document.body.classList.add('beginner-mode');
@@ -6482,8 +6583,6 @@ body.beginner-mode .beginner-tip {
     <div class="tab"        data-group="learn"  data-tab="learn">🎓 Learn</div>
     <div class="tab"        data-group="community" data-tab="community">🌐 Community</div>
     <div class="tab"        data-group="vibe"     data-tab="vibe">🎵 Vibe</div>
-    <div class="tab"        data-group="pro"     data-tab="pro">⚡ Pro Tools</div>
-
   </div>
 
   <!-- REAPER'S READ — persistent live status strip. Populated by _pfdReadStripPaint(). -->
@@ -9029,8 +9128,7 @@ var _pfdGroups = {
   coach:  { subs: ['rewards','coach','mind'],                subs_default: 'coach', labels: ['🎟️ Rewards','🎓 Professor','🧘 Mind'] },
   learn:  { subs: ['learn','games','pattern-trainer','scenarios','risk-sim','what-if','cosmic'],     labels: ['📚 Learn','🎮 Games','🎴 Pattern Cards','⏮️ Replay','🎲 Risk Sim','⏳ What If','🌌 Cosmic'] },
   community: { subs: ['community'], labels: ['🌐 Community'] },
-  vibe:    { subs: ['vibe'], subs_default: 'vibe', labels: ['🎵 Vibe'] },
-  pro:     { subs: ['pro'], subs_default: 'pro', labels: ['⚡ Pro Tools'] }
+  vibe:    { subs: ['vibe'], subs_default: 'vibe', labels: ['🎵 Vibe'] }
 };
 // Reverse index: sub -> group (built once, at parse time)
 var _pfdSubToGroup = (function(){
@@ -18925,9 +19023,46 @@ async function _pfdBacktestRun(coin, setupName) {
   var results = document.getElementById('bt-results');
   if (!results) return;
   results.innerHTML = '<div style="padding:20px; text-align:center;">Running backtest for ' + coin + ' - ' + setupName + '…</div>';
+
+  // ---- Helpers ----
+  function calcEMA(candles, idx, period) {
+    if (idx < period) return parseFloat(candles[idx].c);
+    var k = 2 / (period + 1);
+    var ema = parseFloat(candles[period - 1].c);
+    for (var i = period; i <= idx; i++) ema = parseFloat(candles[i].c) * k + ema * (1 - k);
+    return ema;
+  }
+  function calcRSI(candles, period, idx) {
+    if (idx < period) return 50;
+    var g = 0, l = 0;
+    for (var i = idx - period; i < idx; i++) {
+      var ch = parseFloat(candles[i+1].c) - parseFloat(candles[i].c);
+      if (ch >= 0) g += ch; else l += Math.abs(ch);
+    }
+    var ag = g / period, al = l / period;
+    return al === 0 ? 100 : 100 - (100 / (1 + ag / al));
+  }
+  function calcMA(candles, idx, period) {
+    if (idx < period) return parseFloat(candles[idx].c);
+    var s = 0; for (var i = idx - period; i < idx; i++) s += parseFloat(candles[i].c); return s / period;
+  }
+  function calcVolRatio(candles, idx, lb) {
+    lb = lb || 10;
+    if (idx < lb) return 1;
+    var r = parseFloat(candles[idx].h) - parseFloat(candles[idx].l);
+    var s = 0; for (var i = idx - lb; i < idx; i++) s += parseFloat(candles[i].h) - parseFloat(candles[i].l);
+    var a = s / lb; return a > 0 ? r / a : 1;
+  }
+
+  var TAKER_FEE = 0.07;
+  var STOP_PCT = 0.03;
+  var TARGET_MULT = 2.0;
+  var MAX_HOLD = 12;
+
   try {
+    // Fix 3: 365-day backtest (was 90 days)
     var endMs = Date.now();
-    var startMs = endMs - 90 * 86400 * 1000;
+    var startMs = endMs - 365 * 86400 * 1000;
     var r = await fetch('https://api.hyperliquid.xyz/info', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -18936,59 +19071,158 @@ async function _pfdBacktestRun(coin, setupName) {
     if (!r.ok) throw new Error('http ' + r.status);
     var candles = await r.json();
     if (!Array.isArray(candles) || candles.length === 0) { results.innerHTML = '<div style="padding:20px; color:#ef4444;">No historical data for ' + coin + '.</div>'; return; }
+
     var name = setupName.toLowerCase();
     var signals = [];
-    for (var i = 3; i < candles.length - 1; i++) {
+    var longCount = 0, shortCount = 0;
+
+    for (var i = 50; i < candles.length - 1; i++) {
       var c = candles[i], prev = candles[i-1], prev2 = candles[i-2], prev3 = candles[i-3];
       var o = parseFloat(c.o), h = parseFloat(c.h), l = parseFloat(c.l), cl = parseFloat(c.c);
       var po = parseFloat(prev.o), pc = parseFloat(prev.c), ph = parseFloat(prev.h), pl2 = parseFloat(prev.l);
       var isGreen = cl > o, isRed = cl < o;
-      var prevGreen = pc > po, prevRed = pc < po;
+
+      // Fix 3: L:S ratio enforcement — skip longs if > 65%
+      var tot = longCount + shortCount;
+      var longPct = tot > 10 ? longCount / tot : 0;
+      var skipLong = longPct > 0.65;
+
       var signal = null;
-      if (name.indexOf('golden cross') >= 0 && i >= 10) {
-        var last5 = candles.slice(i-5, i);
-        var prev5 = candles.slice(i-10, i-5);
-        var last5Green = last5.every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
-        var prev5Red = prev5.every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
-        if (last5Green && prev5Red) signal = 'long';
+
+      // ---- Fix 1: Golden Cross (proper EMA50/EMA200 crossover) ----
+      if (name.indexOf('golden cross') >= 0 && i >= 200) {
+        var e50n = calcEMA(candles, i, 50), e200n = calcEMA(candles, i, 200);
+        var e50p = calcEMA(candles, i-1, 50), e200p = calcEMA(candles, i-1, 200);
+        if (e50p < e200p && e50n > e200n && !skipLong) {
+          var rsiGC = calcRSI(candles, 14, i);
+          if (rsiGC >= 30 && rsiGC <= 75) signal = 'long';
+        }
       }
-      if (name.indexOf('death cross') >= 0 && i >= 10) {
-        var last5r = candles.slice(i-5, i);
-        var prev5g = candles.slice(i-10, i-5);
-        var last5Red = last5r.every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
-        var prev5Green = prev5g.every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
-        if (last5Red && prev5Green) signal = 'short';
+
+      // ---- Fix 5: Death Cross (proper EMA50/EMA200 crossunder) ----
+      if (!signal && name.indexOf('death cross') >= 0 && i >= 200) {
+        var e50nD = calcEMA(candles, i, 50), e200nD = calcEMA(candles, i, 200);
+        var e50pD = calcEMA(candles, i-1, 50), e200pD = calcEMA(candles, i-1, 200);
+        if (e50pD > e200pD && e50nD < e200nD) {
+          var rsiDC = calcRSI(candles, 14, i);
+          if (rsiDC >= 25 && rsiDC <= 70) signal = 'short';
+        }
       }
-      if (name.indexOf('bull flag') >= 0 && i >= 4) {
-        var strong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.05;
-        var pullback = prevRed && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
-        if (strong && pullback) signal = 'long';
+
+      // ---- Bull Flag ----
+      if (!signal && name.indexOf('bull flag') >= 0 && i >= 4 && !skipLong) {
+        var strong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.03;
+        var pullback = pc < po && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
+        if (strong && pullback) {
+          var e20bf = calcEMA(candles, i, 20), e50bf = calcEMA(candles, i, 50);
+          if (e20bf > e50bf) signal = 'long'; // trend filter
+        }
       }
-      if (name.indexOf('bear flag') >= 0 && i >= 4) {
-        var strongDown = (parseFloat(prev3.o) - parseFloat(prev3.c)) / parseFloat(prev3.o) > 0.05;
-        var pullbackUp = prevGreen && parseFloat(prev2.c) > parseFloat(prev2.o) && isRed;
-        if (strongDown && pullbackUp) signal = 'short';
+
+      // ---- Bear Flag ----
+      if (!signal && name.indexOf('bear flag') >= 0 && i >= 4) {
+        var strongDown = (parseFloat(prev3.o) - parseFloat(prev3.c)) / parseFloat(prev3.o) > 0.03;
+        var pullbackUp = pc > po && parseFloat(prev2.c) > parseFloat(prev2.o) && isRed;
+        if (strongDown && pullbackUp) {
+          var e20bfD = calcEMA(candles, i, 20), e50bfD = calcEMA(candles, i, 50);
+          if (e20bfD < e50bfD) signal = 'short'; // trend filter
+        }
       }
-      if (name.indexOf('double top') >= 0 && i >= 5) {
-        var peak1 = Math.max(parseFloat(prev3.h), parseFloat(prev2.h));
-        var peak2 = h;
-        var valley = parseFloat(prev.l);
-        if (Math.abs(peak2 - peak1) / peak1 < 0.02 && valley < peak1 * 0.97 && isRed) signal = 'short';
+
+      // ---- Double Top (widened: 2.5% peaks, RSI > 60) ----
+      if (!signal && name.indexOf('double top') >= 0 && i >= 15) {
+        var p1i = -1, p2i = -1, p1v = 0, p2v = 0;
+        for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
+        for (var j2 = p1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
+        if (p1i !== -1 && p2i !== -1) {
+          var peakDiff = Math.abs(p1v - p2v) / Math.max(p1v, p2v) * 100;
+          var valley = parseFloat(candles[Math.floor((p1i + p2i) / 2)].l);
+          var rsiDT = calcRSI(candles, 14, i);
+          var ma20DT = calcMA(candles, i, 20);
+          if (peakDiff <= 2.5 && valley < Math.min(p1v, p2v) * 0.98 && rsiDT >= 60 && cl <= ma20DT * 1.02 && isRed) signal = 'short';
+        }
       }
-      if (name.indexOf('stairway') >= 0 && i >= 5) {
+
+      // ---- Double Bottom (NEW LONG setup) ----
+      if (!signal && name.indexOf('double bottom') >= 0 && i >= 15 && !skipLong) {
+        var t1i = -1, t2i = -1, t1v = 999999, t2v = 999999;
+        for (var j = i - 15; j < i - 2; j++) { var ll = parseFloat(candles[j].l); if (ll < t1v) { t1v = ll; t1i = j; } }
+        for (var j2 = t1i + 2; j2 < i; j2++) { var ll2 = parseFloat(candles[j2].l); if (ll2 < t2v) { t2v = ll2; t2i = j2; } }
+        if (t1i !== -1 && t2i !== -1) {
+          var troughDiff = Math.abs(t1v - t2v) / Math.min(t1v, t2v) * 100;
+          var bounce = parseFloat(candles[Math.floor((t1i + t2i) / 2)].h);
+          var rsiDB = calcRSI(candles, 14, i);
+          var ma20DB = calcMA(candles, i, 20);
+          if (troughDiff <= 2.5 && bounce > Math.min(t1v, t2v) * 1.02 && rsiDB <= 40 && cl >= ma20DB * 0.98 && isGreen) signal = 'long';
+        }
+      }
+
+      // ---- Stairway to Hell ----
+      if (!signal && name.indexOf('stairway') >= 0 && i >= 5) {
         var lh1 = parseFloat(prev3.h), lh2 = parseFloat(prev2.h), lh3 = parseFloat(prev.h);
         if (lh1 > lh2 && lh2 > lh3 && h < lh3 && isRed) signal = 'short';
       }
-      if (!signal) {
-        if (isRed && candles.slice(i-3, i).every(function(x){return parseFloat(x.c) > parseFloat(x.o);}) && (o - cl) / o > 0.03) signal = 'short';
-        if (isGreen && candles.slice(i-3, i).every(function(x){return parseFloat(x.c) < parseFloat(x.o);}) && (cl - o) / o > 0.03) signal = 'long';
+
+      // ---- Head & Shoulders (short) ----
+      if (!signal && name.indexOf('head & shoulders') >= 0 && i >= 10) {
+        var hsLookback = 10;
+        var hsHigh = 0, hsHighIdx = 0;
+        for (var j = i - hsLookback; j < i; j++) { if (parseFloat(candles[j].h) > hsHigh) { hsHigh = parseFloat(candles[j].h); hsHighIdx = j; } }
+        if (hsHighIdx > i - hsLookback + 1 && hsHighIdx < i - 1) {
+          var lsH = parseFloat(candles[hsHighIdx - 1].h), rsH = parseFloat(candles[hsHighIdx + 1].h);
+          if (Math.abs(lsH - rsH) / Math.max(lsH, rsH) * 100 < 5 && hsHigh > lsH && hsHigh > rsH && isRed) signal = 'short';
+        }
       }
+
+      // ---- Inverse Head & Shoulders (long) ----
+      if (!signal && name.indexOf('inverse head') >= 0 && i >= 10 && !skipLong) {
+        var ihsLookback = 10;
+        var ihsLow = 999999, ihsLowIdx = 0;
+        for (var j = i - ihsLookback; j < i; j++) { if (parseFloat(candles[j].l) < ihsLow) { ihsLow = parseFloat(candles[j].l); ihsLowIdx = j; } }
+        if (ihsLowIdx > i - ihsLookback + 1 && ihsLowIdx < i - 1) {
+          var lsL = parseFloat(candles[ihsLowIdx - 1].l), rsL = parseFloat(candles[ihsLowIdx + 1].l);
+          if (Math.abs(lsL - rsL) / Math.min(lsL, rsL) * 100 < 5 && ihsLow < lsL && ihsLow < rsL && isGreen) signal = 'long';
+        }
+      }
+
+      // ---- Falling Wedge (long) ----
+      if (!signal && name.indexOf('falling wedge') >= 0 && i >= 10 && !skipLong) {
+        var fwH1 = parseFloat(candles[i-10].h), fwH2 = parseFloat(candles[i-5].h);
+        var fwL1 = parseFloat(candles[i-10].l), fwL2 = parseFloat(candles[i-5].l);
+        if (fwH1 > fwH2 && fwL1 > fwL2 && isGreen) {
+          var fwRange1 = fwH1 - fwL1, fwRange2 = fwH2 - fwL2;
+          if (fwRange2 < fwRange1 * 0.8) signal = 'long';
+        }
+      }
+
+      // ---- Rising Wedge (short) ----
+      if (!signal && name.indexOf('rising wedge') >= 0 && i >= 10) {
+        var rwH1 = parseFloat(candles[i-10].h), rwH2 = parseFloat(candles[i-5].h);
+        var rwL1 = parseFloat(candles[i-10].l), rwL2 = parseFloat(candles[i-5].l);
+        if (rwH1 < rwH2 && rwL1 < rwL2 && isRed) {
+          var rwRange1 = rwH1 - rwL1, rwRange2 = rwH2 - rwL2;
+          if (rwRange2 < rwRange1 * 0.8) signal = 'short';
+        }
+      }
+
+      // ---- Balanced fallback (no short bias — checks both equally) ----
+      if (!signal) {
+        var prev3Red = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
+        var prev3Green = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
+        if (!skipLong && isGreen && prev3Red && (cl - o) / o > 0.03) signal = 'long';
+        if (isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
+      }
+
       if (signal) {
+        if (signal === 'long') longCount++; else shortCount++;
         var entry = cl;
-        var stop = signal === 'long' ? Math.min(pl2, l) * 0.99 : Math.max(ph, h) * 1.01;
-        var target = signal === 'long' ? entry + (entry - stop) * 2 : entry - (stop - entry) * 2;
+        // Fix: 3% stop loss (was 1%)
+        var stopDist = entry * STOP_PCT;
+        var stop = signal === 'long' ? entry - stopDist : entry + stopDist;
+        var risk = Math.abs(entry - stop);
+        var target = signal === 'long' ? entry + TARGET_MULT * risk : entry - TARGET_MULT * risk;
         var exit = null, exitReason = null;
-        for (var j = i+1; j < Math.min(candles.length, i+11); j++) {
+        for (var j = i+1; j < Math.min(candles.length, i + MAX_HOLD + 1); j++) {
           var fh = parseFloat(candles[j].h), fl = parseFloat(candles[j].l);
           if (signal === 'long') {
             if (fl <= stop) { exit = stop; exitReason = 'stop'; break; }
@@ -18998,25 +19232,34 @@ async function _pfdBacktestRun(coin, setupName) {
             if (fl <= target) { exit = target; exitReason = 'target'; break; }
           }
         }
-        if (!exit) { exit = parseFloat(candles[Math.min(candles.length-1, i+10)].c); exitReason = 'timeout'; }
+        if (!exit) { exit = parseFloat(candles[Math.min(candles.length-1, i + MAX_HOLD)].c); exitReason = 'timeout'; }
+        // Fix 4: Subtract taker fees (0.07% round-trip)
         var pnlPct = signal === 'long' ? (exit - entry) / entry * 100 : (entry - exit) / entry * 100;
+        pnlPct -= TAKER_FEE;
         signals.push({ i: i, date: new Date(c.t).toISOString().slice(0,10), side: signal, entry: entry, stop: stop, target: target, exit: exit, exitReason: exitReason, pnlPct: pnlPct });
       }
     }
-    if (signals.length === 0) { results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for this setup in the last 90 days.</div>'; return; }
+
+    if (signals.length === 0) { results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for this setup in the last 365 days.</div>'; return; }
+
     var wins = signals.filter(function(s){return s.pnlPct > 0;}).length;
     var wr = wins / signals.length * 100;
     var avgPnl = signals.reduce(function(s,x){return s + x.pnlPct;}, 0) / signals.length;
     var totalPnl = signals.reduce(function(s,x){return s + x.pnlPct;}, 0);
+    var longs = signals.filter(function(s){return s.side === 'long';}).length;
+    var shorts = signals.filter(function(s){return s.side === 'short';}).length;
     var bestTrade = signals.reduce(function(b,x){return x.pnlPct > b.pnlPct ? x : b;}, signals[0]);
     var worstTrade = signals.reduce(function(w,x){return x.pnlPct < w.pnlPct ? x : w;}, signals[0]);
+
     results.innerHTML = '<div style="background:#fef9c3; border: 3px solid var(--border); padding:14px; border-radius:8px; margin-bottom:12px;">' +
       '<div style="font-weight:700; font-size:16px; margin-bottom:8px;">' + coin + ' · ' + setupName + '</div>' +
       '<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; font-size:13px;">' +
-      '<div><strong>' + signals.length + ' signals</strong> in 90d</div>' +
+      '<div><strong>' + signals.length + ' signals</strong> in 365d</div>' +
       '<div><strong>Win rate: ' + wr.toFixed(0) + '%</strong> (' + wins + '/' + signals.length + ')</div>' +
       '<div><strong>Avg PnL: <span style="color:' + (avgPnl >= 0 ? '#22c55e' : '#ef4444') + ';">' + (avgPnl >= 0 ? '+' : '') + avgPnl.toFixed(2) + '%</span></strong></div>' +
       '<div><strong>Total PnL: <span style="color:' + (totalPnl >= 0 ? '#22c55e' : '#ef4444') + ';">' + (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(1) + '%</span></strong></div>' +
+      '<div>L/S: ' + longs + 'L / ' + shorts + 'S</div>' +
+      '<div>Fees: 0.07% per trade</div>' +
       '<div>Best: +' + bestTrade.pnlPct.toFixed(1) + '% on ' + bestTrade.date + '</div>' +
       '<div>Worst: ' + worstTrade.pnlPct.toFixed(1) + '% on ' + worstTrade.date + '</div>' +
       '</div></div>' +
@@ -27150,7 +27393,7 @@ function renderTutorial() {
   const container = document.getElementById('tutorial-steps');
   container.innerHTML = TUTORIAL_STEPS.map((step, i) => {
     const done = learnState.tutorialProgress[step.id] === 'done';
-    const bgColor = done ? 'linear-gradient(135deg, rgba(34,197,94,0.08) 0%, var(--bg-card) 100%)' : 'var(--bg-card)';
+    const bgColor = done ? 'linear-gradient(135deg, #F0FDF4 0%, #fff 100%)' : '#fff';
     const borderColor = done ? '#22c55e' : 'var(--border)';
     return `
     <div class="setup-card" data-tutorial-idx="${i}" style="background:${bgColor}; border-color:${borderColor}; margin-top: 20px;">
@@ -27159,7 +27402,7 @@ function renderTutorial() {
           <div style="font-size:28px;">${step.icon}</div>
           <div>
             <div class="setup-name">${step.title}</div>
-            <div style="font-size:10px; color: var(--fg-muted); font-weight:700; margin-top:2px;">
+            <div style="font-size:10px; color:#666; font-weight:700; margin-top:2px;">
               ${done ? '✅ COMPLETED · +25 XP earned' : 'Tap to open · +25 XP'}
             </div>
           </div>
@@ -27167,7 +27410,7 @@ function renderTutorial() {
       </div>
       <div class="setup-body">
         <div style="font-size:13px; line-height:1.6; color: var(--fg);">${step.body}</div>
-        <div style="margin-top:14px; background: var(--bg-inset); border:1px solid var(--border); padding:12px; border-radius:8px;">
+        <div style="margin-top:14px; var(--bg-inset); border:1px solid var(--border); padding:12px; border-radius:8px;">
           <div style="font-weight:700; font-size:12px; color: var(--fg); margin-bottom:8px; text-transform:uppercase;">Quick Check</div>
           <div style="font-size:12px; color: var(--fg); font-weight:600; margin-bottom:10px;">${step.quiz.q}</div>
           <div id="quiz-${step.id}" style="display:flex; flex-direction:column; gap:6px;">
@@ -28735,7 +28978,7 @@ function renderCheatSheet() {
       </div>
       ${rules.slice(0, 10).map((r, i) => `
         <div style="display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px dashed rgba(0,0,0,0.15);">
-          <div style="background:linear-gradient(135deg,#ef4444,#FF00A8); color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex-shrink:0; border:1px solid var(--border);">${i+1}</div>
+          <div style="background:var(--bg-inset); color:var(--accent-primary); width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex-shrink:0; border:1px solid var(--border);">${i+1}</div>
           <div style="flex:1; font-size:13px; font-weight:700; color: var(--fg); padding-top:2px;">${r}</div>
         </div>
       `).join('')}
@@ -40036,7 +40279,7 @@ try {
       '@keyframes pfdxFade { from { opacity:0 } to { opacity:1 } }',
       '.pfdx-panel { background: var(--panel-bg, #fff); color: var(--fg); border: 3px solid var(--fg); border-radius: 14px; box-shadow: 6px 6px 0 rgba(0,0,0,0.35); max-width: 460px; width: 100%; max-height: 92vh; overflow-y: auto; }',
       '.pfdx-title { font-size: 18px; font-weight:700; letter-spacing: 0.5px; margin: 0 0 10px 0; }',
-      '.pfdx-card { display: block; width: 100%; text-align: left; background: var(--accent-warn); color: var(--fg); border:1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-weight:700; font-size: 15px; cursor: pointer; box-shadow: 3px 3px 0 var(--border); transition: transform 0.08s ease-out; }',
+      '.pfdx-card { display: block; width: 100%; text-align: left; background: var(--pfd-gold, var(--accent-warn)); color: var(--fg); border:1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-weight:700; font-size: 15px; cursor: pointer; box-shadow: 3px 3px 0 var(--border); transition: transform 0.08s ease-out; }',
       '.pfdx-card:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--border); }',
       '.pfdx-card:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--border); }',
       '.pfdx-card + .pfdx-card { margin-top: 10px; }',
@@ -47938,7 +48181,7 @@ if (st) st.textContent = '⚠ ' + e.message;
     #pfd-topmenu-btn {
       position: fixed; top: 8px; left: 8px;
       width: 40px; height: 40px; border-radius: 10px;
-      background: var(--accent-warn); color: var(--fg); border:1px solid var(--border);
+      background: var(--pfd-gold, var(--accent-warn)); color: var(--fg); border:1px solid var(--border);
       font-size: 20px; font-weight:700; cursor: pointer;
       box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
       z-index: 2147483646; padding: 0;
@@ -49713,6 +49956,19 @@ html, body { max-width: 100vw; overflow-x: hidden; }
     box-shadow:none;
   }
   .pfd-prof-avatar svg { display: block; width: 100%; height: 100%; }
+  .pfd-prof-avatar-emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 40%, rgba(45,55,50,0.9) 0%, rgba(8,12,10,0.95) 100%);
+    border: 1px solid rgba(255,222,0,0.35);
+    overflow: hidden;
+  }
+  .pfd-prof-avatar-emoji svg {
+    width: 92%;
+    height: 92%;
+    display: block;
+  }
   .pfd-prof-meta {
     flex: 1 1 auto;
     min-width: 0;
@@ -49750,39 +50006,34 @@ html, body { max-width: 100vw; overflow-x: hidden; }
 <script>
 (function(){
   var PROF_HEADER = '<div class="pfd-prof-header">' +
-    '<div class="pfd-prof-avatar">' +
-      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="72" height="72" role="img" aria-label="Professor BigFoot">' +
+    '<div class="pfd-prof-avatar pfd-prof-avatar-emoji">' +
+      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Professor BigFoot">' +
         '<defs>' +
-          '<radialGradient id="pfBg" cx="50%" cy="45%" r="55%">' +
-            '<stop offset="0%" stop-color="#3a2a10"/>' +
-            '<stop offset="100%" stop-color="#0a0806"/>' +
-          '</radialGradient>' +
-          '<linearGradient id="pfFur" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%" stop-color="#8b5a2b"/>' +
+          '<linearGradient id="pfBrown" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#6b4423"/>' +
             '<stop offset="100%" stop-color="#3d2611"/>' +
           '</linearGradient>' +
-          '<linearGradient id="pfCap" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%" stop-color="#1a1a1a"/>' +
-            '<stop offset="100%" stop-color="#000"/>' +
+          '<linearGradient id="pfChest" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#8b6035"/>' +
+            '<stop offset="100%" stop-color="#5c3818"/>' +
           '</linearGradient>' +
         '</defs>' +
-        '<circle cx="50" cy="50" r="48" fill="url(#pfBg)" stroke="var(--accent-warn)" stroke-width="1.5" opacity="0.9"/>' +
-        '<path d="M20 92 Q30 68 50 68 Q70 68 80 92 Z" fill="url(#pfFur)"/>' +
-        '<ellipse cx="50" cy="52" rx="22" ry="24" fill="url(#pfFur)"/>' +
-        '<path d="M28 42 Q26 50 30 58 Q26 60 24 56 M72 42 Q74 50 70 58 Q74 60 76 56" stroke="#5c3818" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
-        '<path d="M36 46 Q42 42 46 47 M54 47 Q58 42 64 46" stroke="#1a0e04" stroke-width="2" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="42" cy="52" r="2.8" fill="var(--accent-warn)"/>' +
-        '<circle cx="58" cy="52" r="2.8" fill="var(--accent-warn)"/>' +
-        '<circle cx="42" cy="52" r="1.2" fill="#000"/>' +
-        '<circle cx="58" cy="52" r="1.2" fill="#000"/>' +
-        '<ellipse cx="50" cy="60" rx="7" ry="5" fill="#2a1a08"/>' +
-        '<ellipse cx="50" cy="58" rx="2.5" ry="1.8" fill="#0a0503"/>' +
-        '<g>' +
-          '<polygon points="20,30 80,30 68,22 32,22" fill="url(#pfCap)" stroke="var(--accent-warn)" stroke-width="0.8"/>' +
-          '<rect x="34" y="30" width="32" height="6" fill="#000" stroke="var(--accent-warn)" stroke-width="0.5"/>' +
-          '<line x1="72" y1="30" x2="80" y2="42" stroke="var(--accent-warn)" stroke-width="1"/>' +
-          '<circle cx="80" cy="43" r="2.5" fill="var(--accent-warn)"/>' +
-        '</g>' +
+        '<path d="M56 75 Q58 82 55 92 L60 92 Q64 82 62 75 Z" fill="#3d2611"/>' +
+        '<path d="M42 75 Q40 84 44 93 L52 93 Q52 84 48 75 Z" fill="url(#pfBrown)"/>' +
+        '<path d="M38 42 Q35 55 38 72 Q42 78 55 78 Q65 78 62 72 Q65 55 62 42 Z" fill="url(#pfBrown)"/>' +
+        '<path d="M43 48 Q42 60 46 70 Q50 72 54 70 Q58 60 57 48 Q50 46 43 48 Z" fill="url(#pfChest)"/>' +
+        '<path d="M60 44 Q68 52 70 65 Q68 68 66 65 Q64 52 60 44 Z" fill="#3d2611"/>' +
+        '<path d="M38 44 Q32 54 30 66 Q28 68 26 65 Q28 52 34 44 Z" fill="url(#pfBrown)"/>' +
+        '<ellipse cx="50" cy="32" rx="13" ry="14" fill="url(#pfBrown)"/>' +
+        '<ellipse cx="50" cy="35" rx="8" ry="9" fill="#c9a37a"/>' +
+        '<path d="M42 30 Q46 27 50 30 M50 30 Q54 27 58 30" stroke="#3d2611" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
+        '<ellipse cx="46" cy="33" rx="1.4" ry="1.6" fill="#1a0e04"/>' +
+        '<ellipse cx="54" cy="33" rx="1.4" ry="1.6" fill="#1a0e04"/>' +
+        '<ellipse cx="50" cy="37" rx="1.5" ry="1.2" fill="#0a0503"/>' +
+        '<path d="M47 40 Q50 41 53 40" stroke="#2a1a08" stroke-width="0.8" fill="none" stroke-linecap="round"/>' +
+        '<ellipse cx="46" cy="94" rx="6" ry="2" fill="#c9a37a"/>' +
+        '<ellipse cx="58" cy="93" rx="6" ry="2" fill="#c9a37a"/>' +
+        '<path d="M35 44 Q33 47 34 50 M65 44 Q67 47 66 50" stroke="#3d2611" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
       '</svg>' +
     '</div>' +
     '<div class="pfd-prof-meta">' +
@@ -50579,6 +50830,25 @@ html, body { max-width: 100vw; overflow-x: hidden; }
     initRipper();
   }
 })();
+
+  /* === FIX: Prevent dropdown change from scrolling to top === */
+  (function() {
+    var savedScrollY = 0;
+    document.addEventListener('change', function(e) {
+      if (e.target && e.target.tagName === 'SELECT') {
+        savedScrollY = window.scrollY;
+        // Restore scroll position after the change handler chain completes
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            if (Math.abs(window.scrollY - savedScrollY) > 50) {
+              window.scrollTo(0, savedScrollY);
+            }
+          });
+        });
+      }
+    }, true); // capture phase — runs BEFORE other handlers
+  })();
+
 </script>
 
 <!-- ==================== 🩶 WAVE 7 · STABILITY PATCHES ==================== -->
@@ -50756,7 +51026,7 @@ html, body { max-width: 100vw; overflow-x: hidden; }
     position: absolute;
     top: -9px; left: 50%;
     transform: translateX(-50%);
-    background: var(--accent-warn);
+    background: var(--pfd-gold, var(--accent-warn));
     color: #000;
     font-size: 9px;
     font-weight:700;
@@ -50824,620 +51094,6 @@ html, body { max-width: 100vw; overflow-x: hidden; }
   }
 }
 </style>
-
-
-<!-- ==================== PRO TOOLS PANEL ==================== -->
-<div class="panel" id="panel-pro">
-  <!-- Sub-tab navigation -->
-  <div class="pro-subtabs" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">
-    <button class="pro-subtab active" data-pro-tab="funding" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer;">💰 Funding Rates</button>
-    <button class="pro-subtab" data-pro-tab="liq" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#aaa; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">🔥 Liquidations</button>
-    <button class="pro-subtab" data-pro-tab="fng" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#aaa; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">😰 Fear & Greed</button>
-    <button class="pro-subtab" data-pro-tab="positions" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#aaa; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">📊 Positions</button>
-    <button class="pro-subtab" data-pro-tab="badges" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#aaa; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">🏆 Badges</button>
-  </div>
-
-  <!-- FUNDING RATES -->
-  <div class="pro-section" id="pro-funding" style="display:block;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">💰 Funding Rates (Hyperliquid + Binance)</h2>
-      <button id="pro-funding-refresh" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
-    </div>
-    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Real-time funding rates for top perpetual contracts. Negative = shorts pay longs (bearish). Positive = longs pay shorts (bullish).</div>
-    <div id="pro-funding-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;">
-      <div style="grid-column:1/-1; text-align:center; padding:20px; color:#7D8590; font-size:13px;">Loading funding rates...</div>
-    </div>
-    <div id="pro-funding-summary" style="margin-top:12px; padding:10px; border-radius:8px; background:rgba(79,209,229,0.05); border:1px solid rgba(79,209,229,0.15); font-size:12px; color:#7D8590;">
-      <span id="pro-funding-text">Fetching data...</span>
-    </div>
-  </div>
-
-  <!-- LIQUIDATIONS -->
-  <div class="pro-section" id="pro-liq" style="display:none;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">🔥 Liquidation Watch</h2>
-      <button id="pro-liq-refresh" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
-    </div>
-    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Recent large liquidations across Binance Futures. Updated every 30 seconds.</div>
-    <div id="pro-liq-stats" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
-      <div style="padding:10px; border-radius:8px; background:rgba(248,81,73,0.1); border:1px solid rgba(248,81,73,0.2); text-align:center;">
-        <div style="font-size:11px; color:#7D8590;">Long Liqs (1h)</div>
-        <div id="pro-liq-long" style="font-size:18px; font-weight:800; color:#F85149;">—</div>
-      </div>
-      <div style="padding:10px; border-radius:8px; background:rgba(63,185,80,0.1); border:1px solid rgba(63,185,80,0.2); text-align:center;">
-        <div style="font-size:11px; color:#7D8590;">Short Liqs (1h)</div>
-        <div id="pro-liq-short" style="font-size:18px; font-weight:800; color:#3FB950;">—</div>
-      </div>
-      <div style="padding:10px; border-radius:8px; background:rgba(210,153,34,0.1); border:1px solid rgba(210,153,34,0.2); text-align:center;">
-        <div style="font-size:11px; color:#7D8590;">Total (1h)</div>
-        <div id="pro-liq-total" style="font-size:18px; font-weight:800; color:#D29922;">—</div>
-      </div>
-    </div>
-    <div id="pro-liq-list" style="display:flex; flex-direction:column; gap:4px; max-height:400px; overflow-y:auto;">
-      <div style="text-align:center; padding:20px; color:#7D8590; font-size:13px;">Loading liquidation data...</div>
-    </div>
-  </div>
-
-  <!-- FEAR & GREED -->
-  <div class="pro-section" id="pro-fng" style="display:none;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">😰 Crypto Fear & Greed Index</h2>
-      <button id="pro-fng-refresh" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
-    </div>
-    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Market sentiment from alternative.me. 0 = Extreme Fear, 100 = Extreme Greed.</div>
-    <div id="pro-fng-display" style="text-align:center; padding:20px;">
-      <div id="pro-fng-gauge" style="font-size:64px; font-weight:900; margin-bottom:8px;">—</div>
-      <div id="pro-fng-label" style="font-size:18px; font-weight:700; margin-bottom:12px;">Loading...</div>
-      <div id="pro-fng-bar-container" style="width:100%; max-width:300px; height:12px; border-radius:6px; background:linear-gradient(90deg, #F85149 0%, #D29922 50%, #3FB950 100%); margin:0 auto; position:relative; overflow:hidden;">
-        <div id="pro-fng-bar-marker" style="position:absolute; top:-2px; width:4px; height:16px; background:#fff; border-radius:2px; left:50%; transition:left 0.5s ease;"></div>
-      </div>
-      <div style="display:flex; justify-content:space-between; max-width:300px; margin:4px auto 0; font-size:10px; color:#7D8590;">
-        <span>Extreme Fear</span><span>Neutral</span><span>Extreme Greed</span>
-      </div>
-      <div id="pro-fng-history" style="margin-top:16px; display:flex; gap:4px; justify-content:center; flex-wrap:wrap;"></div>
-      <div style="margin-top:12px; font-size:11px; color:#7D8590;">
-        <span id="pro-fng-updated">—</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- POSITIONS -->
-  <div class="pro-section" id="pro-positions" style="display:none;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">📊 Position Tracker (Hyperliquid)</h2>
-      <button id="pro-pos-refresh" style="background:rgba(79,209,229,0.15); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
-    </div>
-    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Enter your Hyperliquid wallet address to track open positions with live PnL.</div>
-    <div style="display:flex; gap:8px; margin-bottom:12px;">
-      <input id="pro-pos-address" type="text" placeholder="0x... Hyperliquid address" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid rgba(79,209,229,0.3); color:#E6EDF3; padding:10px 14px; border-radius:8px; font-size:13px; outline:none; -webkit-appearance:none;" />
-      <button id="pro-pos-load" style="background:rgba(79,209,229,0.2); border:1px solid rgba(79,209,229,0.4); color:#4FD1E5; padding:10px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">Load</button>
-    </div>
-    <div id="pro-pos-summary" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; display:none;">
-      <div style="padding:12px; border-radius:8px; background:rgba(79,209,229,0.05); border:1px solid rgba(79,209,229,0.15);">
-        <div style="font-size:11px; color:#7D8590;">Total Unrealized PnL</div>
-        <div id="pro-pos-pnl" style="font-size:20px; font-weight:800; color:#3FB950;">—</div>
-      </div>
-      <div style="padding:12px; border-radius:8px; background:rgba(79,209,229,0.05); border:1px solid rgba(79,209,229,0.15);">
-        <div style="font-size:11px; color:#7D8590;">Margin Used</div>
-        <div id="pro-pos-margin" style="font-size:20px; font-weight:800; color:#4FD1E5;">—</div>
-      </div>
-    </div>
-    <div id="pro-pos-list" style="display:flex; flex-direction:column; gap:6px;">
-      <div style="text-align:center; padding:20px; color:#7D8590; font-size:13px;">Enter your wallet address above to load positions.</div>
-    </div>
-  </div>
-
-  <!-- ACHIEVEMENT BADGES -->
-  <div class="pro-section" id="pro-badges" style="display:none;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-      <h2 style="margin:0; font-size:16px; font-weight:800; color:#E6EDF3;">🏆 Achievement Badges</h2>
-      <div style="font-size:12px; color:#7D8590;">
-        <span id="pro-badge-count">0</span> / 12 unlocked
-      </div>
-    </div>
-    <div style="font-size:11px; color:#7D8590; margin-bottom:10px;">Earn badges by trading, journaling, and mastering the markets. Badges persist on your device.</div>
-    <div id="pro-badge-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;"></div>
-    <div style="margin-top:14px; padding:10px; border-radius:8px; background:rgba(79,209,229,0.05); border:1px solid rgba(79,209,229,0.15);">
-      <div style="font-size:12px; font-weight:700; color:#4FD1E5; margin-bottom:4px;">📊 Your Stats</div>
-      <div id="pro-badge-stats" style="font-size:12px; color:#7D8590;">Loading stats...</div>
-    </div>
-  </div>
-</div>
-
-<style>
-.pro-subtab.active { background:rgba(79,209,229,0.2) !important; border-color:#4FD1E5 !important; color:#4FD1E5 !important; }
-.funding-card { padding:10px; border-radius:8px; background:rgba(22,27,34,0.8); border:1px solid rgba(79,209,229,0.12); transition:border-color 0.2s; }
-.funding-card:hover { border-color:rgba(79,209,229,0.3); }
-.funding-card .sym { font-size:14px; font-weight:800; color:#E6EDF3; }
-.funding-card .rate { font-size:16px; font-weight:700; margin-top:4px; }
-.funding-card .rate.pos { color:#3FB950; }
-.funding-card .rate.neg { color:#F85149; }
-.funding-card .apr { font-size:11px; color:#7D8590; margin-top:2px; }
-.liq-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px; background:rgba(22,27,34,0.6); border:1px solid rgba(79,209,229,0.08); font-size:12px; }
-.liq-row.long { border-left:3px solid #F85149; }
-.liq-row.short { border-left:3px solid #3FB950; }
-.liq-row .sym { font-weight:800; color:#E6EDF3; width:60px; }
-.liq-row .side { font-size:11px; width:40px; }
-.liq-row .price { color:#7D8590; flex:1; text-align:right; }
-.liq-row .size { font-weight:700; text-align:right; width:80px; }
-.pos-card { padding:12px; border-radius:8px; background:rgba(22,27,34,0.8); border:1px solid rgba(79,209,229,0.12); }
-.pos-card .sym { font-size:14px; font-weight:800; color:#E6EDF3; }
-.pos-card .row { display:flex; justify-content:space-between; margin-top:4px; font-size:12px; }
-.pos-card .pnl-pos { color:#3FB950; font-weight:700; }
-.pos-card .pnl-neg { color:#F85149; font-weight:700; }
-.badge-card { padding:14px; border-radius:10px; background:rgba(22,27,34,0.8); border:1px solid rgba(79,209,229,0.08); text-align:center; transition:all 0.2s; }
-.badge-card.unlocked { border-color:rgba(79,209,229,0.3); background:rgba(79,209,229,0.05); }
-.badge-card.locked { opacity:0.4; filter:grayscale(1); }
-.badge-card .icon { font-size:28px; margin-bottom:4px; }
-.badge-card .name { font-size:12px; font-weight:700; color:#E6EDF3; }
-.badge-card .desc { font-size:10px; color:#7D8590; margin-top:2px; }
-</style>
-
-<script id="pro-tools-module">
-(function(){
-  'use strict';
-
-  // ===== SUB-TAB SWITCHING =====
-  document.querySelectorAll('.pro-subtab').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      document.querySelectorAll('.pro-subtab').forEach(function(b){
-        b.style.background = 'rgba(255,255,255,0.05)';
-        b.style.borderColor = 'rgba(255,255,255,0.1)';
-        b.style.color = '#aaa';
-        b.classList.remove('active');
-      });
-      btn.style.background = 'rgba(79,209,229,0.2)';
-      btn.style.borderColor = '#4FD1E5';
-      btn.style.color = '#4FD1E5';
-      btn.classList.add('active');
-      var tab = btn.getAttribute('data-pro-tab');
-      document.querySelectorAll('.pro-section').forEach(function(s){ s.style.display = 'none'; });
-      var section = document.getElementById('pro-' + tab);
-      if (section) section.style.display = 'block';
-      // Trigger data fetch on first view
-      if (tab === 'funding' && !window._proFundingLoaded) fetchFundingRates();
-      if (tab === 'liq' && !window._proLiqLoaded) fetchLiquidations();
-      if (tab === 'fng' && !window._proFnGLoaded) fetchFearGreed();
-      if (tab === 'badges' && !window._proBadgesLoaded) renderBadges();
-    });
-  });
-
-  // ===== 1. FUNDING RATES =====
-  function fetchFundingRates(){
-    window._proFundingLoaded = true;
-    var grid = document.getElementById('pro-funding-grid');
-    var summary = document.getElementById('pro-funding-text');
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#7D8590;">Fetching funding rates from Hyperliquid...</div>';
-
-    // Fetch all asset contexts from Hyperliquid (works globally, no geo-block)
-    fetch('https://api.hyperliquid.xyz/info', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({type: 'metaAndAssetCtxs'})
-    })
-    .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(data){
-      if (!data || !data[0] || !data[1]) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#F85149;">Failed to load funding data.</div>';
-        return;
-      }
-      var meta = data[0].universe;
-      var ctxs = data[1];
-      var assets = [];
-      for (var i = 0; i < meta.length; i++) {
-        var name = meta[i].name;
-        var funding = parseFloat(ctxs[i].funding);
-        var oi = parseFloat(ctxs[i].openInterest);
-        var markPx = parseFloat(ctxs[i].markPx);
-        // Only show assets with meaningful OI
-        if (oi > 0 && markPx > 0) {
-          var oiUsd = oi * markPx;
-          if (oiUsd > 100000) { // Min $100K OI
-            assets.push({name: name, funding: funding, oi: oiUsd, markPx: markPx});
-          }
-        }
-      }
-      // Sort by absolute funding rate (most extreme first)
-      assets.sort(function(a, b){ return Math.abs(b.funding) - Math.abs(a.funding); });
-
-      // Show top 30
-      var cards = '';
-      var posCount = 0, negCount = 0, totalApr = 0;
-      var shown = assets.slice(0, 30);
-      shown.forEach(function(a){
-        var rate = a.funding;
-        // Hyperliquid funding is per-period (every 8h), so APR = rate * 3 * 365 * 100
-        var apr = rate * 3 * 365 * 100;
-        var isPos = rate >= 0;
-        if (isPos) posCount++; else negCount++;
-        totalApr += Math.abs(apr);
-        var ratePct = (rate * 100).toFixed(4);
-        var aprPct = apr.toFixed(1);
-        var cls = isPos ? 'pos' : 'neg';
-        var arrow = isPos ? '↗' : '↘';
-        var oiStr = a.oi >= 1e6 ? '$' + (a.oi/1e6).toFixed(1) + 'M' : '$' + (a.oi/1e3).toFixed(0) + 'K';
-        cards += '<div class="funding-card">' +
-          '<div class="sym">' + a.name + '</div>' +
-          '<div class="rate ' + cls + '">' + arrow + ' ' + (ratePct > 0 ? '+' : '') + ratePct + '%</div>' +
-          '<div class="apr">' + (isPos ? '+' : '') + aprPct + '% APR · OI ' + oiStr + '</div>' +
-        '</div>';
-      });
-      grid.innerHTML = cards;
-      var avgApr = (totalApr / shown.length).toFixed(1);
-      var bias = posCount > negCount * 2 ? 'Strongly Bullish (longs paying heavy)' : posCount > negCount ? 'Bullish (longs paying)' : negCount > posCount * 2 ? 'Strongly Bearish (shorts paying heavy)' : negCount > posCount ? 'Bearish (shorts paying)' : 'Neutral';
-      summary.textContent = shown.length + ' assets shown | ' + posCount + ' positive / ' + negCount + ' negative | Avg APR: ' + avgApr + '% | Bias: ' + bias;
-    })
-    .catch(function(){
-      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#F85149;">Failed to load funding rates. Try refreshing.</div>';
-    });
-  }
-
-  document.getElementById('pro-funding-refresh').addEventListener('click', function(){
-    window._proFundingLoaded = false;
-    fetchFundingRates();
-  });
-
-  // ===== 2. LIQUIDATIONS =====
-  function fetchLiquidations(){
-    window._proLiqLoaded = true;
-    var list = document.getElementById('pro-liq-list');
-    list.innerHTML = '<div style="text-align:center; padding:20px; color:#7D8590;">Fetching large trades (liquidation proxy)...</div>';
-    document.getElementById('pro-liq-long').textContent = '—';
-    document.getElementById('pro-liq-short').textContent = '—';
-    document.getElementById('pro-liq-total').textContent = '—';
-
-    // Try Binance first, fall back to Hyperliquid large trades
-    fetch('https://fapi.binance.com/fapi/v1/allForceOrders?limit=50')
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(orders){
-        if (orders && orders.length > 0) {
-          renderLiqData(orders, 'binance');
-        } else {
-          // Fallback: use Hyperliquid recent trades as proxy
-          fetchHLProxyLiqs();
-        }
-      })
-      .catch(function(){ fetchHLProxyLiqs(); });
-
-    function fetchHLProxyLiqs(){
-      // Use Hyperliquid funding history + OI changes as liquidation proxy
-      var assets = ['BTC','ETH','SOL'];
-      var allTrades = [];
-
-      var promises = assets.map(function(coin){
-        return fetch('https://api.hyperliquid.xyz/info', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({type: 'trades', coin: coin})
-        })
-        .then(function(r){ return r.ok ? r.json() : []; })
-        .catch(function(){ return []; });
-      });
-
-      Promise.all(promises).then(function(results){
-        var allTrades = [];
-        results.forEach(function(trades, idx){
-          var coin = assets[idx];
-          trades.forEach(function(t){
-            var side = t.side; // 'A' = ask (sell), 'B' = bid (buy)
-            var price = parseFloat(t.px);
-            var size = parseFloat(t.sz);
-            var val = price * size;
-            // Only large trades (proxy for liquidations)
-            if (val > 50000) {
-              allTrades.push({coin: coin, side: side, price: price, size: size, val: val, time: t.time});
-            }
-          });
-        });
-
-        if (allTrades.length === 0) {
-          list.innerHTML = '<div style="text-align:center; padding:20px; color:#7D8590; font-size:13px;">No large trades detected recently.<br><span style="font-size:11px;">Binance Futures API geo-blocked. Showing Hyperliquid large trades as proxy.</span></div>';
-          return;
-        }
-
-        // Sort by value descending
-        allTrades.sort(function(a, b){ return b.val - a.val; });
-
-        var longTotal = 0, shortTotal = 0;
-        var rows = '';
-        var shown = allTrades.slice(0, 25);
-
-        shown.forEach(function(t){
-          var isLong = t.side === 'A'; // Ask = sell = long liquidation proxy
-          var val = t.val;
-          if (isLong) longTotal += val; else shortTotal += val;
-          var time = new Date(t.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-          rows += '<div class="liq-row ' + (isLong ? 'long' : 'short') + '">' +
-            '<span style="color:#7D8590; font-size:10px;">' + time + '</span>' +
-            '<span class="sym">' + t.coin + '</span>' +
-            '<span class="side" style="color:' + (isLong ? '#F85149' : '#3FB950') + ';">' + (isLong ? 'LONG' : 'SHORT') + '</span>' +
-            '<span class="price">@ $' + t.price.toLocaleString() + '</span>' +
-            '<span class="size">' + (val >= 1000 ? '$' + (val/1000).toFixed(1) + 'K' : '$' + val.toFixed(0)) + '</span>' +
-          '</div>';
-        });
-
-        var total = longTotal + shortTotal;
-        document.getElementById('pro-liq-long').textContent = '$' + (longTotal >= 1000 ? (longTotal/1000).toFixed(1) + 'K' : longTotal.toFixed(0));
-        document.getElementById('pro-liq-short').textContent = '$' + (shortTotal >= 1000 ? (shortTotal/1000).toFixed(1) + 'K' : shortTotal.toFixed(0));
-        document.getElementById('pro-liq-total').textContent = '$' + (total >= 1000 ? (total/1000).toFixed(1) + 'K' : total.toFixed(0));
-        list.innerHTML = rows;
-        // Add note about proxy
-        list.innerHTML += '<div style="text-align:center; padding:8px; color:#7D8590; font-size:10px; margin-top:6px;">⚠️ Binance Futures API geo-blocked. Showing Hyperliquid large trades (&gt;$50K) as liquidation proxy.</div>';
-      })
-      .catch(function(){
-        list.innerHTML = '<div style="text-align:center; padding:20px; color:#F85149; font-size:13px;">Failed to load liquidation data.</div>';
-      });
-    }
-
-    function renderLiqData(orders, src){
-      var longTotal = 0, shortTotal = 0;
-      var rows = '';
-      var now = Date.now();
-      var oneHourAgo = now - 3600000;
-      var recent = orders.filter(function(o){ return o.time >= oneHourAgo; });
-
-      recent.forEach(function(o){
-        var isLong = o.side === 'SELL';
-        var val = parseFloat(o.price) * parseFloat(o.qty);
-        if (isLong) longTotal += val; else shortTotal += val;
-        var sym = o.symbol.replace('USDT','');
-        var time = new Date(o.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-        rows += '<div class="liq-row ' + (isLong ? 'long' : 'short') + '">' +
-          '<span style="color:#7D8590; font-size:10px;">' + time + '</span>' +
-          '<span class="sym">' + sym + '</span>' +
-          '<span class="side" style="color:' + (isLong ? '#F85149' : '#3FB950') + ';">' + (isLong ? 'LONG' : 'SHORT') + '</span>' +
-          '<span class="price">@ $' + parseFloat(o.price).toLocaleString() + '</span>' +
-          '<span class="size">' + (val >= 1000 ? '$' + (val/1000).toFixed(1) + 'K' : '$' + val.toFixed(0)) + '</span>' +
-        '</div>';
-      });
-
-      var total = longTotal + shortTotal;
-      document.getElementById('pro-liq-long').textContent = '$' + (longTotal >= 1000 ? (longTotal/1000).toFixed(1) + 'K' : longTotal.toFixed(0));
-      document.getElementById('pro-liq-short').textContent = '$' + (shortTotal >= 1000 ? (shortTotal/1000).toFixed(1) + 'K' : shortTotal.toFixed(0));
-      document.getElementById('pro-liq-total').textContent = '$' + (total >= 1000 ? (total/1000).toFixed(1) + 'K' : total.toFixed(0));
-      list.innerHTML = rows || '<div style="text-align:center; padding:20px; color:#7D8590; font-size:13px;">No liquidations in the last hour.</div>';
-    }
-  }
-
-  document.getElementById('pro-liq-refresh').addEventListener('click', fetchLiquidations);
-
-  // Auto-refresh liquidations every 30s when visible
-  setInterval(function(){
-    var liqSection = document.getElementById('pro-liq');
-    var proPanel = document.getElementById('panel-pro');
-    if (liqSection && liqSection.style.display !== 'none' && proPanel && proPanel.classList.contains('active')) {
-      fetchLiquidations();
-    }
-  }, 30000);
-
-  // ===== 3. FEAR & GREED INDEX =====
-  function fetchFearGreed(){
-    window._proFnGLoaded = true;
-    fetch('https://api.alternative.me/fng/?limit=7')
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(data){
-        if (!data || !data.data || data.data.length === 0) {
-          document.getElementById('pro-fng-gauge').textContent = '—';
-          document.getElementById('pro-fng-label').textContent = 'Failed to load';
-          return;
-        }
-        var current = data.data[0];
-        var val = parseInt(current.value);
-        var label = current.value_classification;
-        var color = val < 25 ? '#F85149' : val < 45 ? '#D29922' : val < 55 ? '#7D8590' : val < 75 ? '#4FD1E5' : '#3FB950';
-        document.getElementById('pro-fng-gauge').textContent = val;
-        document.getElementById('pro-fng-gauge').style.color = color;
-        document.getElementById('pro-fng-label').textContent = label;
-        document.getElementById('pro-fng-label').style.color = color;
-        document.getElementById('pro-fng-bar-marker').style.left = val + '%';
-        document.getElementById('pro-fng-updated').textContent = 'Last updated: ' + new Date(current.timestamp * 1000).toLocaleString();
-
-        // History sparkline
-        var history = '';
-        for (var i = data.data.length - 1; i >= 0; i--) {
-          var d = data.data[i];
-          var v = parseInt(d.value);
-          var c = v < 25 ? '#F85149' : v < 45 ? '#D29922' : v < 55 ? '#7D8590' : v < 75 ? '#4FD1E5' : '#3FB950';
-          history += '<div style="text-align:center; min-width:38px;">' +
-            '<div style="width:28px; height:' + (v * 0.5) + 'px; background:' + c + '; border-radius:3px 3px 0 0; margin:0 auto;"></div>' +
-            '<div style="font-size:9px; color:#7D8590; margin-top:2px;">' + v + '</div>' +
-          '</div>';
-        }
-        document.getElementById('pro-fng-history').innerHTML = history;
-      })
-      .catch(function(){
-        document.getElementById('pro-fng-gauge').textContent = '—';
-        document.getElementById('pro-fng-label').textContent = 'Failed to load. Try refreshing.';
-      });
-  }
-
-  document.getElementById('pro-fng-refresh').addEventListener('click', function(){
-    window._proFnGLoaded = false;
-    fetchFearGreed();
-  });
-
-  // ===== 4. POSITION TRACKER =====
-  document.getElementById('pro-pos-load').addEventListener('click', function(){
-    var addr = document.getElementById('pro-pos-address').value.trim();
-    if (!addr) return;
-    localStorage.setItem('hl_address', addr);
-    loadPositions(addr);
-  });
-
-  // Auto-load saved address
-  var savedAddr = localStorage.getItem('hl_address');
-  if (savedAddr) {
-    document.getElementById('pro-pos-address').value = savedAddr;
-  }
-
-  function loadPositions(addr){
-    var list = document.getElementById('pro-pos-list');
-    var summary = document.getElementById('pro-pos-summary');
-    list.innerHTML = '<div style="text-align:center; padding:20px; color:#7D8590;">Loading positions...</div>';
-    summary.style.display = 'none';
-
-    fetch('https://api.hyperliquid.xyz/info', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({type: 'userState', user: addr})
-    })
-    .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(data){
-      if (!data || !data.assetPositions || data.assetPositions.length === 0) {
-        list.innerHTML = '<div style="text-align:center; padding:20px; color:#7D8590;">No open positions found.</div>';
-        summary.style.display = 'none';
-        return;
-      }
-      var totalPnl = 0, totalMargin = 0;
-      var cards = '';
-      data.assetPositions.forEach(function(pos){
-        var p = pos.position;
-        var coin = p.coin;
-        var szi = parseFloat(p.szi);
-        var entryPx = parseFloat(p.entryPx);
-        var leverage = parseFloat(p.leverage.value);
-        var margin = parseFloat(p.marginUsed);
-        var unrealizedPnl = parseFloat(p.unrealizedPnl);
-        totalPnl += unrealizedPnl;
-        totalMargin += margin;
-        var side = szi > 0 ? 'LONG' : 'SHORT';
-        var sideColor = szi > 0 ? '#3FB950' : '#F85149';
-        var pnlClass = unrealizedPnl >= 0 ? 'pnl-pos' : 'pnl-neg';
-        var pnlStr = (unrealizedPnl >= 0 ? '+$' : '-$') + Math.abs(unrealizedPnl).toFixed(2);
-        cards += '<div class="pos-card">' +
-          '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-            '<span class="sym">' + coin + ' ' + leverage + 'x</span>' +
-            '<span style="font-size:12px; font-weight:700; color:' + sideColor + ';">' + side + ' ' + Math.abs(szi).toFixed(3) + ' ' + coin + '</span>' +
-          '</div>' +
-          '<div class="row"><span style="color:#7D8590;">Entry</span><span>$' + entryPx.toLocaleString() + '</span></div>' +
-          '<div class="row"><span style="color:#7D8590;">Margin</span><span>$' + margin.toFixed(2) + '</span></div>' +
-          '<div class="row"><span style="color:#7D8590;">uPnL</span><span class="' + pnlClass + '">' + pnlStr + '</span></div>' +
-        '</div>';
-      });
-      list.innerHTML = cards;
-      summary.style.display = 'grid';
-      var pnlEl = document.getElementById('pro-pos-pnl');
-      pnlEl.textContent = (totalPnl >= 0 ? '+$' : '-$') + Math.abs(totalPnl).toFixed(2);
-      pnlEl.style.color = totalPnl >= 0 ? '#3FB950' : '#F85149';
-      document.getElementById('pro-pos-margin').textContent = '$' + totalMargin.toFixed(2);
-    })
-    .catch(function(){
-      list.innerHTML = '<div style="text-align:center; padding:20px; color:#F85149;">Failed to load positions. Check the address.</div>';
-      summary.style.display = 'none';
-    });
-  }
-
-  document.getElementById('pro-pos-refresh').addEventListener('click', function(){
-    var addr = document.getElementById('pro-pos-address').value.trim();
-    if (addr) loadPositions(addr);
-  });
-
-  // ===== 5. ACHIEVEMENT BADGES =====
-  var BADGES = [
-    {id:'first_trade', icon:'🥇', name:'First Steps', desc:'Complete your first paper trade'},
-    {id:'streak_3', icon:'🔥', name:'On Fire', desc:'3 profitable trades in a row'},
-    {id:'streak_7', icon:'⚡', name:'Lightning', desc:'7 profitable trades in a row'},
-    {id:'journal_7', icon:'📖', name:'Journalist', desc:'Journal trades for 7 days'},
-    {id:'stop_master', icon:'🛡️', name:'Risk Manager', desc:'Set stop-loss on 10 trades'},
-    {id:'profit_100', icon:'💰', name:'Century Club', desc:'Reach $100 in paper profit'},
-    {id:'profit_1000', icon:'💎', name:'Diamond Hands', desc:'Reach $1000 in paper profit'},
-    {id:'all_signals', icon:'🎯', name:'Signal Master', desc:'Trade all signal types'},
-    {id:'early_bird', icon:'🌅', name:'Early Bird', desc:'Trade during pre-market hours'},
-    {id:'night_owl', icon:'🦉', name:'Night Owl', desc:'Trade during Asian session'},
-    {id:'fear_test', icon:'😰', name:'Fear Tester', desc:'Trade during Extreme Fear'},
-    {id:'greed_test', icon:'😎', name:'Greed Tester', desc:'Trade during Extreme Greed'}
-  ];
-
-  function getBadgeStats(){
-    return {
-      unlocked: JSON.parse(localStorage.getItem('pro_badges') || '[]'),
-      trades: parseInt(localStorage.getItem('pro_trade_count') || '0'),
-      profitStreak: parseInt(localStorage.getItem('pro_profit_streak') || '0'),
-      maxStreak: parseInt(localStorage.getItem('pro_max_streak') || '0'),
-      journalDays: parseInt(localStorage.getItem('pro_journal_days') || '0'),
-      stopCount: parseInt(localStorage.getItem('pro_stop_count') || '0'),
-      paperProfit: parseFloat(localStorage.getItem('pro_paper_profit') || '0')
-    };
-  }
-
-  function checkBadgeUnlocks(){
-    var stats = getBadgeStats();
-    var newlyUnlocked = [];
-    function unlock(id){
-      if (stats.unlocked.indexOf(id) === -1) {
-        stats.unlocked.push(id);
-        newlyUnlocked.push(id);
-      }
-    }
-    if (stats.trades >= 1) unlock('first_trade');
-    if (stats.maxStreak >= 3) unlock('streak_3');
-    if (stats.maxStreak >= 7) unlock('streak_7');
-    if (stats.journalDays >= 7) unlock('journal_7');
-    if (stats.stopCount >= 10) unlock('stop_master');
-    if (stats.paperProfit >= 100) unlock('profit_100');
-    if (stats.paperProfit >= 1000) unlock('profit_1000');
-    localStorage.setItem('pro_badges', JSON.stringify(stats.unlocked));
-    return newlyUnlocked;
-  }
-
-  function renderBadges(){
-    window._proBadgesLoaded = true;
-    checkBadgeUnlocks();
-    var stats = getBadgeStats();
-    var grid = document.getElementById('pro-badge-grid');
-    var html = '';
-    BADGES.forEach(function(badge){
-      var unlocked = stats.unlocked.indexOf(badge.id) !== -1;
-      html += '<div class="badge-card ' + (unlocked ? 'unlocked' : 'locked') + '">' +
-        '<div class="icon">' + badge.icon + '</div>' +
-        '<div class="name">' + badge.name + '</div>' +
-        '<div class="desc">' + badge.desc + '</div>' +
-      '</div>';
-    });
-    grid.innerHTML = html;
-    document.getElementById('pro-badge-count').textContent = stats.unlocked.length;
-    document.getElementById('pro-badge-stats').innerHTML =
-      'Trades: ' + stats.trades + ' | Best streak: ' + stats.maxStreak + ' | Journal days: ' + stats.journalDays +
-      ' | Stops set: ' + stats.stopCount + ' | Paper profit: $' + stats.paperProfit.toFixed(2);
-  }
-
-  // Expose badge tracking for other parts of the app
-  window._proTrackTrade = function(isProfit, hasStop){
-    var trades = parseInt(localStorage.getItem('pro_trade_count') || '0') + 1;
-    localStorage.setItem('pro_trade_count', trades);
-    if (hasStop) {
-      var stops = parseInt(localStorage.getItem('pro_stop_count') || '0') + 1;
-      localStorage.setItem('pro_stop_count', stops);
-    }
-    var streak = isProfit ? parseInt(localStorage.getItem('pro_profit_streak') || '0') + 1 : 0;
-    localStorage.setItem('pro_profit_streak', streak);
-    var maxStreak = Math.max(parseInt(localStorage.getItem('pro_max_streak') || '0'), streak);
-    localStorage.setItem('pro_max_streak', maxStreak);
-    var profit = parseFloat(localStorage.getItem('pro_paper_profit') || '0') + (isProfit ? 10 : -5);
-    localStorage.setItem('pro_paper_profit', profit);
-    checkBadgeUnlocks();
-  };
-
-  window._proTrackJournal = function(){
-    var days = parseInt(localStorage.getItem('pro_journal_days') || '0') + 1;
-    localStorage.setItem('pro_journal_days', days);
-    checkBadgeUnlocks();
-  };
-
-  // Auto-fetch funding rates when Pro Tools tab is activated
-  var proTab = document.querySelector('.tab[data-tab="pro"]');
-  if (proTab) {
-    proTab.addEventListener('click', function(){
-      setTimeout(function(){
-        if (!window._proFundingLoaded) fetchFundingRates();
-      }, 100);
-    });
-  }
-
-})();
-</script>
-<!-- ==================== END PRO TOOLS ==================== -->
-
 
 </body>
 </html>
