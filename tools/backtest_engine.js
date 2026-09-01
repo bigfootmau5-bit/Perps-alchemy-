@@ -10,8 +10,8 @@ const COINS = ['BTC','ETH','SOL','HYPE','XRP','DOGE','AVAX','ARB'];
 const DAYS = 365;
 const TAKER_FEE = 0.07;
 const MAX_HOLD = 12;
-const STOP_PCT = 0.03;
-const TARGET_MULT = 2.0;
+const STOP_PCT = 0.04;
+const TARGET_MULT = 1.5;
 
 function fetchCandles(coin) {
   return new Promise((resolve) => {
@@ -93,6 +93,15 @@ async function run(){
       if(!s)s=detectDeathCross(c,i,rsi,vr);
       if(!s)s=detectDoubleTop(c,i,rsi,vr,ma20);
       if(!s)continue;
+      // Regime gate (FIXED: uses s.setup, not 'name')
+      const ma50=calcMA(c,i,50),regPct=(ma20-ma50)/ma50*100;
+      const mkt=regPct>1?'bull':(regPct<-1?'bear':'range');
+      const fp=(s.setup||'').toLowerCase();
+      const isRev=fp.indexOf('double top')>=0||fp.indexOf('double bottom')>=0
+        ||fp.indexOf('head & shoulders')>=0||fp.indexOf('stairway')>=0
+        ||fp.indexOf('golden cross')>=0||fp.indexOf('death cross')>=0;
+      if(mkt==='bull'&&s.side==='short'&&!isRev)continue;
+      if(mkt==='bear'&&s.side==='long'&&!isRev)continue;
       const{pnl,er}=execTrade(c,i,s);tp+=pnl;cp+=pnl;cs++;
       if(s.side==='long'){lc++;cl++}else{sc++;cs2++}
       if(s.setup==='Golden Cross')gc++;

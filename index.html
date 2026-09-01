@@ -19056,8 +19056,8 @@ async function _pfdBacktestRun(coin, setupName) {
   }
 
   var TAKER_FEE = 0.07;
-  var STOP_PCT = 0.07;
-  var TARGET_MULT = 2.5;
+  var STOP_PCT = 0.04;
+  var TARGET_MULT = 1.5;
   var MAX_HOLD = 20;
 
   try {
@@ -19456,9 +19456,10 @@ async function _pfdBacktestRun(coin, setupName) {
 
       // Regime filter gate: suppress counter-regime signals (except reversal patterns)
       if (signal) {
-        var isReversalPattern = name.indexOf('double top') >= 0 || name.indexOf('double bottom') >= 0
-          || name.indexOf('head & shoulders') >= 0 || name.indexOf('stairway') >= 0
-          || name.indexOf('golden cross') >= 0 || name.indexOf('death cross') >= 0;
+        var fpLower = (firedPattern || '').toLowerCase();
+        var isReversalPattern = fpLower.indexOf('double top') >= 0 || fpLower.indexOf('double bottom') >= 0
+          || fpLower.indexOf('head & shoulders') >= 0 || fpLower.indexOf('stairway') >= 0
+          || fpLower.indexOf('golden cross') >= 0 || fpLower.indexOf('death cross') >= 0;
         if (marketRegime === 'bull' && signal === 'short' && !isReversalPattern) signal = null;
         if (marketRegime === 'bear' && signal === 'long' && !isReversalPattern) signal = null;
       }
@@ -19466,7 +19467,7 @@ async function _pfdBacktestRun(coin, setupName) {
       if (signal) {
         if (signal === 'long') longCount++; else shortCount++;
         var entry = cl;
-        // Fix: 3% stop loss (was 1%)
+        // Fix: 4% stop loss (was 3% — too tight for daily candles)
         var stopDist = entry * STOP_PCT;
         var stop = signal === 'long' ? entry - stopDist : entry + stopDist;
         var risk = Math.abs(entry - stop);
