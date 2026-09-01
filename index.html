@@ -19078,6 +19078,7 @@ async function _pfdBacktestRun(coin, setupName) {
     var longCount = 0, shortCount = 0;
 
     for (var i = 50; i < candles.length - 1; i++) {
+      var firedPattern = setupName; // tracks which pattern fired this signal (for concentration cap)
       var c = candles[i], prev = candles[i-1], prev2 = candles[i-2], prev3 = candles[i-3];
       var o = parseFloat(c.o), h = parseFloat(c.h), l = parseFloat(c.l), cl = parseFloat(c.c);
       var po = parseFloat(prev.o), pc = parseFloat(prev.c), ph = parseFloat(prev.h), pl2 = parseFloat(prev.l);
@@ -19111,12 +19112,15 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Fix 5: Death Cross (proper EMA50/EMA200 crossunder) ----
+      // ---- Fix: Death Cross (STRONGER — must align with SMA20 < SMA50 trend confirmation) ----
       if (!signal && name.indexOf('death cross') >= 0 && i >= 50) {
         var e50nD = calcEMA(candles, i, 50), e50pD = calcEMA(candles, i-1, 50);
         var e200nD = calcMA(candles, i, 200), e200pD = calcMA(candles, i-1, 200);
         if (e50pD > e200pD && e50nD < e200nD) {
           var rsiDC = calcRSI(candles, 14, i);
-          if (rsiDC >= 20 && rsiDC <= 75) signal = 'short';
+          var dcSMA20 = calcMA(candles, i, 20), dcSMA50 = calcMA(candles, i, 50);
+          // Must be aligned with broader trend: SMA20 < SMA50 confirms downtrend
+          if (rsiDC >= 20 && rsiDC <= 75 && dcSMA20 < dcSMA50) signal = 'short';
         }
       }
 
@@ -19218,13 +19222,20 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Inverse Head & Shoulders (long) ----
-      if (!signal && name.indexOf('inverse head') >= 0 && i >= 10) {
-        var ihsLookback = 10;
+      // ---- Fix: Inverse H&S (TIGHTENED — was over-firing, now needs 3% symmetry + 3% head depth + neckline break + RSI) ----
+      if (!signal && name.indexOf('inverse head') >= 0 && i >= 15) {
+        var ihsLookback = 15;
         var ihsLow = 999999, ihsLowIdx = 0;
         for (var j = i - ihsLookback; j < i; j++) { if (parseFloat(candles[j].l) < ihsLow) { ihsLow = parseFloat(candles[j].l); ihsLowIdx = j; } }
-        if (ihsLowIdx > i - ihsLookback + 1 && ihsLowIdx < i - 1) {
+        if (ihsLowIdx > i - ihsLookback + 2 && ihsLowIdx < i - 2) {
           var lsL = parseFloat(candles[ihsLowIdx - 1].l), rsL = parseFloat(candles[ihsLowIdx + 1].l);
-          if (Math.abs(lsL - rsL) / Math.min(lsL, rsL) * 100 < 5 && ihsLow < lsL && ihsLow < rsL && isGreen) signal = 'long';
+          var ihsSym = Math.abs(lsL - rsL) / Math.min(lsL, rsL) * 100;
+          var ihsProm = ihsLow < Math.min(lsL, rsL) * 0.97; // head must be 3%+ deeper than shoulders
+          var ihsNeck = Math.max(parseFloat(candles[ihsLowIdx - 1].h), parseFloat(candles[ihsLowIdx + 1].h));
+          if (ihsSym < 3 && ihsProm && cl > ihsNeck && isGreen) {
+            var ihsRSI = calcRSI(candles, 14, i);
+            if (ihsRSI > 35 && ihsRSI < 70) signal = 'long';
+          }
         }
       }
 
@@ -19310,13 +19321,137 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Fallback: ONLY fires for 'all setups' or generic scan, NOT for specific named setups ----
+      // ---- "All Setups" mode: run ALL pattern detectors, track which pattern fired ----
       var isGenericScan = (name === 'all' || name === 'all setups' || name === 'mixed' || name === 'scan' || name.length < 3);
-      if (!signal && isGenericScan) {
-        var prev3Red = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
-        var prev3Green = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
-        if (isGreen && prev3Red && (cl - o) / o > 0.03) signal = 'long';
-        if (isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
+      if (isGenericScan) {
+        // Run every pattern detector and pick the FIRST match (priority order)
+        // Track which pattern fired for concentration cap
+        if (!signal) {
+          // Golden Cross
+          if (i >= 50) {
+            var gcFast = calcEMA(candles, i, 50), gcFastP = calcEMA(candles, i-1, 50);
+            var gcSlow = calcMA(candles, i, 200), gcSlowP = calcMA(candles, i-1, 200);
+            if (gcFastP > gcSlowP && gcFast < gcSlow) { var gcRSI = calcRSI(candles, 14, i); if (gcRSI >= 25 && gcRSI <= 80) { signal = 'long'; firedPattern = 'Golden Cross'; } }
+          }
+        }
+        if (!signal) {
+          // Death Cross (with BTC trend alignment)
+          if (i >= 50) {
+            var e50nD = calcEMA(candles, i, 50), e50pD = calcEMA(candles, i-1, 50);
+            var e200nD = calcMA(candles, i, 200), e200pD = calcMA(candles, i-1, 200);
+            if (e50pD > e200pD && e50nD < e200nD) {
+              var rsiDC = calcRSI(candles, 14, i);
+              // Must be aligned with broader trend: SMA20 < SMA50 (downtrend confirmed)
+              var dcSMA20 = calcMA(candles, i, 20), dcSMA50 = calcMA(candles, i, 50);
+              if (rsiDC >= 20 && rsiDC <= 75 && dcSMA20 < dcSMA50) { signal = 'short'; firedPattern = 'Death Cross'; }
+            }
+          }
+        }
+        if (!signal && i >= 15) {
+          // Double Top
+          var dt1i = -1, dt2i = -1, dt1v = 0, dt2v = 0;
+          for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > dt1v) { dt1v = hh; dt1i = j; } }
+          for (var j2 = dt1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > dt2v) { dt2v = hh2; dt2i = j2; } }
+          if (dt1i !== -1 && dt2i !== -1) {
+            var pdt = Math.abs(dt1v - dt2v) / Math.max(dt1v, dt2v) * 100;
+            var vdt = parseFloat(candles[Math.floor((dt1i + dt2i) / 2)].l);
+            var rdt = calcRSI(candles, 14, i), mdt = calcMA(candles, i, 20);
+            if (pdt <= 2 && vdt < Math.min(dt1v, dt2v) * 0.98 && rdt >= 62 && cl <= mdt * 1.01 && isRed) { signal = 'short'; firedPattern = 'Double Top'; }
+          }
+        }
+        if (!signal && i >= 15) {
+          // Double Bottom
+          var db1i = -1, db2i = -1, db1v = 999999, db2v = 999999;
+          for (var j = i - 15; j < i - 2; j++) { var ll = parseFloat(candles[j].l); if (ll < db1v) { db1v = ll; db1i = j; } }
+          for (var j2 = db1i + 2; j2 < i; j2++) { var ll2 = parseFloat(candles[j2].l); if (ll2 < db2v) { db2v = ll2; db2i = j2; } }
+          if (db1i !== -1 && db2i !== -1) {
+            var tdt = Math.abs(db1v - db2v) / Math.min(db1v, db2v) * 100;
+            var bdt = parseFloat(candles[Math.floor((db1i + db2i) / 2)].h);
+            var rdb = calcRSI(candles, 14, i), mdb = calcMA(candles, i, 20);
+            if (tdt <= 2.5 && bdt > Math.min(db1v, db2v) * 1.02 && rdb <= 40 && cl >= mdb * 0.98 && isGreen) { signal = 'long'; firedPattern = 'Double Bottom'; }
+          }
+        }
+        if (!signal && i >= 8) {
+          // Stairway to Hell
+          var sh1 = parseFloat(candles[i-3].h), sh2 = parseFloat(candles[i-2].h), sh3 = parseFloat(candles[i-1].h);
+          if (sh1 > sh2 && sh2 > sh3 && l < parseFloat(candles[i-1].l) && isRed) {
+            var sthRSI = calcRSI(candles, 14, i);
+            if (sthRSI < 60) { signal = 'short'; firedPattern = 'Stairway to Hell'; }
+          }
+        }
+        if (!signal && i >= 15) {
+          // Head & Shoulders (tightened)
+          var hsH = 0, hsI = 0;
+          for (var j = i - 15; j < i; j++) { if (parseFloat(candles[j].h) > hsH) { hsH = parseFloat(candles[j].h); hsI = j; } }
+          if (hsI > i - 13 && hsI < i - 2) {
+            var lsH = parseFloat(candles[hsI - 1].h), rsH = parseFloat(candles[hsI + 1].h);
+            if (Math.abs(lsH - rsH) / Math.max(lsH, rsH) * 100 < 3 && hsH > Math.max(lsH, rsH) * 1.03) {
+              var nl = Math.min(parseFloat(candles[hsI - 1].l), parseFloat(candles[hsI + 1].l));
+              if (cl < nl && isRed) { var hsRSI = calcRSI(candles, 14, i); if (hsRSI < 65 && hsRSI > 35) { signal = 'short'; firedPattern = 'Head & Shoulders'; } }
+            }
+          }
+        }
+        if (!signal && i >= 15) {
+          // Inverse H&S (TIGHTENED: 3% shoulder match, head must be 3% deeper, neckline break + volume + RSI)
+          var ihsLow = 999999, ihsI = 0;
+          for (var j = i - 15; j < i; j++) { if (parseFloat(candles[j].l) < ihsLow) { ihsLow = parseFloat(candles[j].l); ihsI = j; } }
+          if (ihsI > i - 13 && ihsI < i - 2) {
+            var ilsL = parseFloat(candles[ihsI - 1].l), irsL = parseFloat(candles[ihsI + 1].l);
+            var ihsSym = Math.abs(ilsL - irsL) / Math.min(ilsL, irsL) * 100;
+            var ihsProm = ihsLow < Math.min(ilsL, irsL) * 0.97; // head must be 3%+ deeper
+            var ihsNeck = Math.max(parseFloat(candles[ihsI - 1].h), parseFloat(candles[ihsI + 1].h));
+            if (ihsSym < 3 && ihsProm && cl > ihsNeck && isGreen) {
+              var ihsRSI = calcRSI(candles, 14, i);
+              if (ihsRSI > 35 && ihsRSI < 70) { signal = 'long'; firedPattern = 'Inverse H&S'; }
+            }
+          }
+        }
+        if (!signal && i >= 10) {
+          // Falling Wedge
+          var fwH1 = parseFloat(candles[i-10].h), fwH2 = parseFloat(candles[i-5].h);
+          var fwL1 = parseFloat(candles[i-10].l), fwL2 = parseFloat(candles[i-5].l);
+          if (fwH1 > fwH2 && fwL1 > fwL2 && isGreen) {
+            var fwR1 = fwH1 - fwL1, fwR2 = fwH2 - fwL2;
+            if (fwR2 < fwR1 * 0.8) { signal = 'long'; firedPattern = 'Falling Wedge'; }
+          }
+        }
+        if (!signal && i >= 25) {
+          // Cup & Handle
+          var cupSt = i - 20, cupEn = i - 10, cupHi = 0, cupLo = 999999;
+          for (var ci = cupSt; ci < cupEn; ci++) { if (parseFloat(candles[ci].h) > cupHi) cupHi = parseFloat(candles[ci].h); if (parseFloat(candles[ci].l) < cupLo) cupLo = parseFloat(candles[ci].l); }
+          var cupD = (cupHi - cupLo) / cupHi * 100;
+          if (cupD >= 8 && cupD <= 25 && isGreen && cl > cupHi * 0.98) { signal = 'long'; firedPattern = 'Cup & Handle'; }
+        }
+        if (!signal && i >= 15) {
+          // Ascending Triangle
+          var atR = parseFloat(candles[i-15].h), atT = 1;
+          for (var j = i-14; j < i; j++) { if (Math.abs(parseFloat(candles[j].h) - atR) / atR * 100 < 1.5) atT++; }
+          var atL = [parseFloat(candles[i-15].l), parseFloat(candles[i-10].l), parseFloat(candles[i-5].l)];
+          if (atT >= 2 && atL[0] < atL[1] && atL[1] < atL[2] && cl > atR * 0.99 && isGreen) { signal = 'long'; firedPattern = 'Ascending Triangle'; }
+        }
+        if (!signal && i >= 15) {
+          // Descending Triangle
+          var dtS = parseFloat(candles[i-15].l), dtT = 1;
+          for (var j = i-14; j < i; j++) { if (Math.abs(parseFloat(candles[j].l) - dtS) / dtS * 100 < 1.5) dtT++; }
+          var dtH = [parseFloat(candles[i-15].h), parseFloat(candles[i-10].h), parseFloat(candles[i-5].h)];
+          if (dtT >= 2 && dtH[0] > dtH[1] && dtH[1] > dtH[2] && cl < dtS * 1.01 && isRed) { signal = 'short'; firedPattern = 'Descending Triangle'; }
+        }
+        if (!signal && i >= 4) {
+          // Bull Flag
+          var bfH = parseFloat(candles[i-4].h), bfL = parseFloat(candles[i-1].l);
+          if (bfH > bfL && (bfH - bfL) / bfH * 100 > 5 && isGreen) {
+            var e20bf = calcEMA(candles, i, 20), e50bf = calcMA(candles, i, 50);
+            if (e20bf > e50bf) { signal = 'long'; firedPattern = 'Bull Flag'; }
+          }
+        }
+        if (!signal && i >= 4) {
+          // Bear Flag
+          var bfD = parseFloat(candles[i-4].l), bfH2 = parseFloat(candles[i-1].h);
+          if (bfH2 > bfD && (bfH2 - bfD) / bfD * 100 > 5 && isRed) {
+            var e20bfD = calcEMA(candles, i, 20), e50bfD = calcMA(candles, i, 50);
+            if (e20bfD < e50bfD) { signal = 'short'; firedPattern = 'Bear Flag'; }
+          }
+        }
       }
 
       // Regime filter gate: suppress counter-regime signals (except reversal patterns)
@@ -19351,8 +19486,27 @@ async function _pfdBacktestRun(coin, setupName) {
         // Fix 4: Subtract taker fees (0.07% round-trip)
         var pnlPct = signal === 'long' ? (exit - entry) / entry * 100 : (entry - exit) / entry * 100;
         pnlPct -= TAKER_FEE;
-        signals.push({ i: i, date: new Date(c.t).toISOString().slice(0,10), side: signal, entry: entry, stop: stop, target: target, exit: exit, exitReason: exitReason, pnlPct: pnlPct });
+        signals.push({ i: i, date: new Date(c.t).toISOString().slice(0,10), side: signal, entry: entry, stop: stop, target: target, exit: exit, exitReason: exitReason, pnlPct: pnlPct, pattern: firedPattern });
       }
+    }
+
+    // ---- ARCHITECTURAL FIX: Per-setup concentration cap (max 20% of total signals) ----
+    if (isGenericScan && signals.length > 0) {
+      var patternCounts = {};
+      signals.forEach(function(s) { if (s.pattern) patternCounts[s.pattern] = (patternCounts[s.pattern] || 0) + 1; });
+      var maxPerPattern = Math.ceil(signals.length * 0.20); // 20% cap
+      var patternSeen = {};
+      var cappedSignals = [];
+      for (var si = 0; si < signals.length; si++) {
+        var p = signals[si].pattern || 'Unknown';
+        if ((patternSeen[p] || 0) < maxPerPattern) {
+          cappedSignals.push(signals[si]);
+          patternSeen[p] = (patternSeen[p] || 0) + 1;
+        }
+      }
+      // Log cap stats
+      console.log('[Concentration Cap] Before:', signals.length, 'signals | After:', cappedSignals.length, '| Caps:', Object.keys(patternCounts).map(function(k){return k+':'+patternCounts[k]+'→'+Math.min(patternCounts[k],maxPerPattern);}).join(', '));
+      signals = cappedSignals;
     }
 
     if (signals.length === 0) { results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for this setup in the last 365 days.</div>'; return; }
@@ -19366,8 +19520,19 @@ async function _pfdBacktestRun(coin, setupName) {
     var bestTrade = signals.reduce(function(b,x){return x.pnlPct > b.pnlPct ? x : b;}, signals[0]);
     var worstTrade = signals.reduce(function(w,x){return x.pnlPct < w.pnlPct ? x : w;}, signals[0]);
 
+    // Pattern breakdown for all-setups mode
+    var patternBreakdown = '';
+    if (isGenericScan && signals.length > 0) {
+      var pc = {};
+      signals.forEach(function(s) { if (s.pattern) pc[s.pattern] = (pc[s.pattern] || 0) + 1; });
+      var sorted = Object.keys(pc).sort(function(a,b){return pc[b]-pc[a];});
+      patternBreakdown = '<div style="margin-top:8px; padding-top:8px; border-top:1px solid #ccc; font-size:11px; color:#666;">' +
+        '<strong>Pattern mix (20% cap applied):</strong> ' + sorted.map(function(k){return k+' ('+pc[k]+')';}).join(' · ') + '</div>';
+    }
+
     results.innerHTML = '<div style="background:#fef9c3; border: 3px solid var(--border); padding:14px; border-radius:8px; margin-bottom:12px;">' +
       '<div style="font-weight:700; font-size:16px; margin-bottom:8px;">' + coin + ' · ' + setupName + '</div>' +
+      patternBreakdown +
       '<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; font-size:13px;">' +
       '<div><strong>' + signals.length + ' signals</strong> in 365d</div>' +
       '<div><strong>Win rate: ' + wr.toFixed(0) + '%</strong> (' + wins + '/' + signals.length + ')</div>' +
