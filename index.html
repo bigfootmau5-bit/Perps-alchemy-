@@ -19056,9 +19056,9 @@ async function _pfdBacktestRun(coin, setupName) {
   }
 
   var TAKER_FEE = 0.07;
-  var STOP_PCT = 0.03;
-  var TARGET_MULT = 2.0;
-  var MAX_HOLD = 12;
+  var STOP_PCT = 0.07;
+  var TARGET_MULT = 2.5;
+  var MAX_HOLD = 20;
 
   try {
     // Fix 3: 365-day backtest (was 90 days)
@@ -19086,9 +19086,7 @@ async function _pfdBacktestRun(coin, setupName) {
       // Fix 3: L:S ratio enforcement — skip longs if > 65%
       var tot = longCount + shortCount;
       var longPct = tot > 10 ? longCount / tot : 0;
-      var skipLong = longPct > 0.65;
-      var shortPct = tot > 10 ? shortCount / tot : 0;
-      var skipShort = shortPct > 0.65;
+/* L:S enforcement removed — signals fire on pattern quality alone */
 
       var signal = null;
 
@@ -19096,7 +19094,7 @@ async function _pfdBacktestRun(coin, setupName) {
       if (name.indexOf('golden cross') >= 0 && i >= 50) {
         var e50n = calcEMA(candles, i, 50), e50p = calcEMA(candles, i-1, 50);
         var e200n = calcMA(candles, i, 200), e200p = calcMA(candles, i-1, 200);
-        if (e50p < e200p && e50n > e200n && !skipLong) {
+        if (e50p < e200p && e50n > e200n) {
           var rsiGC = calcRSI(candles, 14, i);
           if (rsiGC >= 25 && rsiGC <= 80) signal = 'long';
         }
@@ -19106,14 +19104,14 @@ async function _pfdBacktestRun(coin, setupName) {
       if (!signal && name.indexOf('death cross') >= 0 && i >= 50) {
         var e50nD = calcEMA(candles, i, 50), e50pD = calcEMA(candles, i-1, 50);
         var e200nD = calcMA(candles, i, 200), e200pD = calcMA(candles, i-1, 200);
-        if (e50pD > e200pD && e50nD < e200nD && !skipShort) {
+        if (e50pD > e200pD && e50nD < e200nD) {
           var rsiDC = calcRSI(candles, 14, i);
           if (rsiDC >= 20 && rsiDC <= 75) signal = 'short';
         }
       }
 
       // ---- Bull Flag ----
-      if (!signal && name.indexOf('bull flag') >= 0 && i >= 4 && !skipLong) {
+      if (!signal && name.indexOf('bull flag') >= 0 && i >= 4) {
         var strong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.03;
         var pullback = pc < po && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
         if (strong && pullback) {
@@ -19123,7 +19121,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Bear Flag ----
-      if (!signal && name.indexOf('bear flag') >= 0 && i >= 4 && !skipShort) {
+      if (!signal && name.indexOf('bear flag') >= 0 && i >= 4) {
         var strongDown = (parseFloat(prev3.o) - parseFloat(prev3.c)) / parseFloat(prev3.o) > 0.03;
         var pullbackUp = pc > po && parseFloat(prev2.c) > parseFloat(prev2.o) && isRed;
         if (strongDown && pullbackUp) {
@@ -19133,7 +19131,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Double Top (widened: 2.5% peaks, RSI > 60) ----
-      if (!signal && name.indexOf('double top') >= 0 && i >= 15 && !skipShort) {
+      if (!signal && name.indexOf('double top') >= 0 && i >= 15) {
         var p1i = -1, p2i = -1, p1v = 0, p2v = 0;
         for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
         for (var j2 = p1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
@@ -19147,7 +19145,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Double Bottom (NEW LONG setup) ----
-      if (!signal && name.indexOf('double bottom') >= 0 && i >= 15 && !skipLong) {
+      if (!signal && name.indexOf('double bottom') >= 0 && i >= 15) {
         var t1i = -1, t2i = -1, t1v = 999999, t2v = 999999;
         for (var j = i - 15; j < i - 2; j++) { var ll = parseFloat(candles[j].l); if (ll < t1v) { t1v = ll; t1i = j; } }
         for (var j2 = t1i + 2; j2 < i; j2++) { var ll2 = parseFloat(candles[j2].l); if (ll2 < t2v) { t2v = ll2; t2i = j2; } }
@@ -19161,13 +19159,13 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Stairway to Hell ----
-      if (!signal && name.indexOf('stairway') >= 0 && i >= 5 && !skipShort) {
+      if (!signal && name.indexOf('stairway') >= 0 && i >= 5) {
         var lh1 = parseFloat(prev3.h), lh2 = parseFloat(prev2.h), lh3 = parseFloat(prev.h);
         if (lh1 > lh2 && lh2 > lh3 && h < lh3 && isRed) signal = 'short';
       }
 
       // ---- Head & Shoulders (short) ----
-      if (!signal && name.indexOf('head & shoulders') >= 0 && name.indexOf('inverse') < 0 && i >= 10 && !skipShort) {
+      if (!signal && name.indexOf('head & shoulders') >= 0 && name.indexOf('inverse') < 0 && i >= 10) {
         var hsLookback = 10;
         var hsHigh = 0, hsHighIdx = 0;
         for (var j = i - hsLookback; j < i; j++) { if (parseFloat(candles[j].h) > hsHigh) { hsHigh = parseFloat(candles[j].h); hsHighIdx = j; } }
@@ -19178,7 +19176,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Inverse Head & Shoulders (long) ----
-      if (!signal && name.indexOf('inverse head') >= 0 && i >= 10 && !skipLong) {
+      if (!signal && name.indexOf('inverse head') >= 0 && i >= 10) {
         var ihsLookback = 10;
         var ihsLow = 999999, ihsLowIdx = 0;
         for (var j = i - ihsLookback; j < i; j++) { if (parseFloat(candles[j].l) < ihsLow) { ihsLow = parseFloat(candles[j].l); ihsLowIdx = j; } }
@@ -19189,7 +19187,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Falling Wedge (long) ----
-      if (!signal && name.indexOf('falling wedge') >= 0 && i >= 10 && !skipLong) {
+      if (!signal && name.indexOf('falling wedge') >= 0 && i >= 10) {
         var fwH1 = parseFloat(candles[i-10].h), fwH2 = parseFloat(candles[i-5].h);
         var fwL1 = parseFloat(candles[i-10].l), fwL2 = parseFloat(candles[i-5].l);
         if (fwH1 > fwH2 && fwL1 > fwL2 && isGreen) {
@@ -19199,7 +19197,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Rising Wedge (short) ----
-      if (!signal && name.indexOf('rising wedge') >= 0 && i >= 10 && !skipShort) {
+      if (!signal && name.indexOf('rising wedge') >= 0 && i >= 10) {
         var rwH1 = parseFloat(candles[i-10].h), rwH2 = parseFloat(candles[i-5].h);
         var rwL1 = parseFloat(candles[i-10].l), rwL2 = parseFloat(candles[i-5].l);
         if (rwH1 < rwH2 && rwL1 < rwL2 && isRed) {
@@ -19209,7 +19207,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Cup & Handle (long) ----
-      if (!signal && name.indexOf('cup & handle') >= 0 && i >= 20 && !skipLong) {
+      if (!signal && name.indexOf('cup & handle') >= 0 && i >= 20) {
         var cupStart = i - 20, cupEnd = i - 10;
         var cupHigh = 0, cupLow = 999999;
         for (var ci = cupStart; ci < cupEnd; ci++) {
@@ -19227,7 +19225,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Ascending Triangle (long) ----
-      if (!signal && name.indexOf('ascending triangle') >= 0 && i >= 15 && !skipLong) {
+      if (!signal && name.indexOf('ascending triangle') >= 0 && i >= 15) {
         var atResistance = 0;
         for (var ai = i - 15; ai < i; ai++) { if (parseFloat(candles[ai].h) > atResistance) atResistance = parseFloat(candles[ai].h); }
         var atTouches = 0;
@@ -19239,7 +19237,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Descending Triangle (short) ----
-      if (!signal && name.indexOf('descending triangle') >= 0 && i >= 15 && !skipShort) {
+      if (!signal && name.indexOf('descending triangle') >= 0 && i >= 15) {
         var dtSupport = 999999;
         for (var di = i - 15; di < i; di++) { if (parseFloat(candles[di].l) < dtSupport) dtSupport = parseFloat(candles[di].l); }
         var dtTouches = 0;
@@ -19256,8 +19254,8 @@ async function _pfdBacktestRun(coin, setupName) {
         var stLows = [parseFloat(candles[i-3].l), parseFloat(candles[i-7].l), parseFloat(candles[i-11].l)];
         var stConverging = stHighs[0] < stHighs[1] && stHighs[1] < stHighs[2] && stLows[0] > stLows[1] && stLows[1] > stLows[2];
         if (stConverging) {
-          if (!skipLong && isGreen && cl > stHighs[0]) signal = 'long';
-          else if (!skipShort && isRed && cl < stLows[0]) signal = 'short';
+          if (isGreen && cl > stHighs[0]) signal = 'long';
+          else if (isRed && cl < stLows[0]) signal = 'short';
         }
       }
 
@@ -19266,8 +19264,8 @@ async function _pfdBacktestRun(coin, setupName) {
       if (!signal && isGenericScan) {
         var prev3Red = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
         var prev3Green = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
-        if (!skipLong && isGreen && prev3Red && (cl - o) / o > 0.03) signal = 'long';
-        if (!skipShort && isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
+        if (isGreen && prev3Red && (cl - o) / o > 0.03) signal = 'long';
+        if (isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
       }
 
       if (signal) {
