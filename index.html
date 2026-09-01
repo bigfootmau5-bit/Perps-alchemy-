@@ -19087,11 +19087,13 @@ async function _pfdBacktestRun(coin, setupName) {
       var tot = longCount + shortCount;
       var longPct = tot > 10 ? longCount / tot : 0;
       var skipLong = longPct > 0.65;
+      var shortPct = tot > 10 ? shortCount / tot : 0;
+      var skipShort = shortPct > 0.65;
 
       var signal = null;
 
       // ---- Fix 1: Golden Cross (proper EMA50/EMA200 crossover) ----
-      if (name.indexOf('golden cross') >= 0 && i >= 200) {
+      if (name.indexOf('golden cross') >= 0 && i >= 50) {
         var e50n = calcEMA(candles, i, 50), e200n = calcEMA(candles, i, 200);
         var e50p = calcEMA(candles, i-1, 50), e200p = calcEMA(candles, i-1, 200);
         if (e50p < e200p && e50n > e200n && !skipLong) {
@@ -19101,7 +19103,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Fix 5: Death Cross (proper EMA50/EMA200 crossunder) ----
-      if (!signal && name.indexOf('death cross') >= 0 && i >= 200) {
+      if (!signal && name.indexOf('death cross') >= 0 && i >= 50) {
         var e50nD = calcEMA(candles, i, 50), e200nD = calcEMA(candles, i, 200);
         var e50pD = calcEMA(candles, i-1, 50), e200pD = calcEMA(candles, i-1, 200);
         if (e50pD > e200pD && e50nD < e200nD) {
@@ -19121,7 +19123,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Bear Flag ----
-      if (!signal && name.indexOf('bear flag') >= 0 && i >= 4) {
+      if (!signal && name.indexOf('bear flag') >= 0 && i >= 4 && !skipShort) {
         var strongDown = (parseFloat(prev3.o) - parseFloat(prev3.c)) / parseFloat(prev3.o) > 0.03;
         var pullbackUp = pc > po && parseFloat(prev2.c) > parseFloat(prev2.o) && isRed;
         if (strongDown && pullbackUp) {
@@ -19131,7 +19133,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Double Top (widened: 2.5% peaks, RSI > 60) ----
-      if (!signal && name.indexOf('double top') >= 0 && i >= 15) {
+      if (!signal && name.indexOf('double top') >= 0 && i >= 15 && !skipShort) {
         var p1i = -1, p2i = -1, p1v = 0, p2v = 0;
         for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
         for (var j2 = p1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
@@ -19159,13 +19161,13 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Stairway to Hell ----
-      if (!signal && name.indexOf('stairway') >= 0 && i >= 5) {
+      if (!signal && name.indexOf('stairway') >= 0 && i >= 5 && !skipShort) {
         var lh1 = parseFloat(prev3.h), lh2 = parseFloat(prev2.h), lh3 = parseFloat(prev.h);
         if (lh1 > lh2 && lh2 > lh3 && h < lh3 && isRed) signal = 'short';
       }
 
       // ---- Head & Shoulders (short) ----
-      if (!signal && name.indexOf('head & shoulders') >= 0 && i >= 10) {
+      if (!signal && name.indexOf('head & shoulders') >= 0 && name.indexOf('inverse') < 0 && i >= 10 && !skipShort) {
         var hsLookback = 10;
         var hsHigh = 0, hsHighIdx = 0;
         for (var j = i - hsLookback; j < i; j++) { if (parseFloat(candles[j].h) > hsHigh) { hsHigh = parseFloat(candles[j].h); hsHighIdx = j; } }
@@ -19197,7 +19199,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Rising Wedge (short) ----
-      if (!signal && name.indexOf('rising wedge') >= 0 && i >= 10) {
+      if (!signal && name.indexOf('rising wedge') >= 0 && i >= 10 && !skipShort) {
         var rwH1 = parseFloat(candles[i-10].h), rwH2 = parseFloat(candles[i-5].h);
         var rwL1 = parseFloat(candles[i-10].l), rwL2 = parseFloat(candles[i-5].l);
         if (rwH1 < rwH2 && rwL1 < rwL2 && isRed) {
@@ -19206,12 +19208,65 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
+      // ---- Cup & Handle (long) ----
+      if (!signal && name.indexOf('cup & handle') >= 0 && i >= 20 && !skipLong) {
+        var cupStart = i - 20, cupEnd = i - 10;
+        var cupHigh = 0, cupLow = 999999;
+        for (var ci = cupStart; ci < cupEnd; ci++) {
+          if (parseFloat(candles[ci].h) > cupHigh) cupHigh = parseFloat(candles[ci].h);
+          if (parseFloat(candles[ci].l) < cupLow) cupLow = parseFloat(candles[ci].l);
+        }
+        var cupDepth = (cupHigh - cupLow) / cupHigh * 100;
+        var handleLow = 999999, handleHigh = 0;
+        for (var hi = cupEnd; hi < i; hi++) {
+          if (parseFloat(candles[hi].l) < handleLow) handleLow = parseFloat(candles[hi].l);
+          if (parseFloat(candles[hi].h) > handleHigh) handleHigh = parseFloat(candles[hi].h);
+        }
+        var handleDepth = (cupHigh - handleLow) / cupHigh * 100;
+        if (cupDepth >= 10 && cupDepth <= 35 && handleDepth <= cupDepth / 3 && cl > handleHigh && isGreen) signal = 'long';
+      }
+
+      // ---- Ascending Triangle (long) ----
+      if (!signal && name.indexOf('ascending triangle') >= 0 && i >= 15 && !skipLong) {
+        var atResistance = 0;
+        for (var ai = i - 15; ai < i; ai++) { if (parseFloat(candles[ai].h) > atResistance) atResistance = parseFloat(candles[ai].h); }
+        var atTouches = 0;
+        for (var ai2 = i - 15; ai2 < i; ai2++) {
+          if (Math.abs(parseFloat(candles[ai2].h) - atResistance) / atResistance * 100 < 1.5) atTouches++;
+        }
+        var atLows = [parseFloat(candles[i-3].l), parseFloat(candles[i-7].l), parseFloat(candles[i-11].l)];
+        if (atTouches >= 2 && atLows[0] > atLows[1] && atLows[1] > atLows[2] && cl > atResistance * 0.99 && isGreen) signal = 'long';
+      }
+
+      // ---- Descending Triangle (short) ----
+      if (!signal && name.indexOf('descending triangle') >= 0 && i >= 15 && !skipShort) {
+        var dtSupport = 999999;
+        for (var di = i - 15; di < i; di++) { if (parseFloat(candles[di].l) < dtSupport) dtSupport = parseFloat(candles[di].l); }
+        var dtTouches = 0;
+        for (var di2 = i - 15; di2 < i; di2++) {
+          if (Math.abs(parseFloat(candles[di2].l) - dtSupport) / dtSupport * 100 < 1.5) dtTouches++;
+        }
+        var dtHighs = [parseFloat(candles[i-3].h), parseFloat(candles[i-7].h), parseFloat(candles[i-11].h)];
+        if (dtTouches >= 2 && dtHighs[0] < dtHighs[1] && dtHighs[1] < dtHighs[2] && cl < dtSupport * 1.01 && isRed) signal = 'short';
+      }
+
+      // ---- Symmetrical Triangle (neutral breakout) ----
+      if (!signal && name.indexOf('symmetrical triangle') >= 0 && i >= 15) {
+        var stHighs = [parseFloat(candles[i-3].h), parseFloat(candles[i-7].h), parseFloat(candles[i-11].h)];
+        var stLows = [parseFloat(candles[i-3].l), parseFloat(candles[i-7].l), parseFloat(candles[i-11].l)];
+        var stConverging = stHighs[0] < stHighs[1] && stHighs[1] < stHighs[2] && stLows[0] > stLows[1] && stLows[1] > stLows[2];
+        if (stConverging) {
+          if (!skipLong && isGreen && cl > stHighs[0]) signal = 'long';
+          else if (!skipShort && isRed && cl < stLows[0]) signal = 'short';
+        }
+      }
+
       // ---- Balanced fallback (no short bias — checks both equally) ----
       if (!signal) {
         var prev3Red = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) < parseFloat(x.o);});
         var prev3Green = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
         if (!skipLong && isGreen && prev3Red && (cl - o) / o > 0.03) signal = 'long';
-        if (isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
+        if (!skipShort && isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
       }
 
       if (signal) {
