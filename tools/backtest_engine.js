@@ -128,8 +128,8 @@ async function run(){
   console.log('═══════════════════════════════════════');
   console.log(ok?'🎯 ENGINE READY TO SHIP':'⚠️ ENGINE NEEDS ITERATION — see failed checks above');
   console.log('═══════════════════════════════════════\n');
-  console.log('Recent Signals:');
-  sigs.slice(-12).reverse().forEach(s=>{
+  console.log('ALL SIGNALS:');
+  sigs.reverse().forEach(s=>{
     const sd=s.side==='long'?'LONG ':'SHORT';
     console.log(`  [${sd}] ${s.date} ${s.coin.padEnd(5)} ${s.setup.padEnd(12)} RSI:${s.rsi} ${s.pnl>0?'+':''}${s.pnl}% ${s.win?'WIN':'LOSS'} (${s.er})`);
   });

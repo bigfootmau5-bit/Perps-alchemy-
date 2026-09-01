@@ -19056,9 +19056,9 @@ async function _pfdBacktestRun(coin, setupName) {
   }
 
   var TAKER_FEE = 0.07;
-  var STOP_PCT = 0.04;
-  var TARGET_MULT = 1.5;
-  var MAX_HOLD = 20;
+  var STOP_PCT = 0.04; // fallback for fixed-stop patterns
+  var TARGET_MULT = 2.0;
+  var MAX_HOLD = 15;
 
   try {
     // Fix 3: 365-day backtest (was 90 days)
@@ -19097,9 +19097,11 @@ async function _pfdBacktestRun(coin, setupName) {
       var regimePct = (regimeMA20 - regimeMA50) / regimeMA50 * 100;
       // bull: SMA20 > SMA50 by >1%; bear: SMA20 < SMA50 by >1%; range: within 1%
       var marketRegime = regimePct > 1 ? 'bull' : (regimePct < -1 ? 'bear' : 'range');
+      // R11-V2: Regime filter — suppress ALL shorts when SMA20 > SMA50 by >5% (very strong bull)
+      var suppressShort = regimePct > 5;
 
       // ---- Fix 4: Golden Cross (SMA50/SMA200 crossover + 3-bar close above EMA20) ----
-      if (name.indexOf('golden cross') >= 0 && i >= 50) {
+      if ((name.indexOf('golden cross') >= 0 && !isAllMode) && i >= 50) {
         var s50n = calcMA(candles, i, 50), s50p = calcMA(candles, i-1, 50);
         var s200n = calcMA(candles, i, 200), s200p = calcMA(candles, i-1, 200);
         if (s50p < s200p && s50n > s200n) {
@@ -19113,7 +19115,7 @@ async function _pfdBacktestRun(coin, setupName) {
 
       // ---- Fix 5: Death Cross (proper EMA50/EMA200 crossunder) ----
       // ---- Fix: Death Cross (STRONGER — must align with SMA20 < SMA50 trend confirmation) ----
-      if (!signal && name.indexOf('death cross') >= 0 && i >= 50) {
+      if (!signal && (name.indexOf('death cross') >= 0 && !isAllMode) && i >= 50) {
         var e50nD = calcEMA(candles, i, 50), e50pD = calcEMA(candles, i-1, 50);
         var e200nD = calcMA(candles, i, 200), e200pD = calcMA(candles, i-1, 200);
         if (e50pD > e200pD && e50nD < e200nD) {
@@ -19124,18 +19126,28 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Bull Flag ----
-      if (!signal && name.indexOf('bull flag') >= 0 && i >= 4) {
-        var strong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.03;
+      // ---- Bull Flag (R11-V2: 69% WR — stronger move + RSI + confluence) ----
+      if (!signal && (name.indexOf('bull flag') >= 0 || isAllMode) && i >= 4) {
+        var strong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.05;
         var pullback = pc < po && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
-        if (strong && pullback) {
-          var e20bf = calcEMA(candles, i, 20), e50bf = calcEMA(candles, i, 50);
-          if (e20bf > e50bf) signal = 'long'; // trend filter
+        var bfRSI = calcRSI(candles, 14, i);
+        var bfVol = calcVolRatio(candles, i);
+        var bfMA20 = calcMA(candles, i, 20);
+        if (strong && pullback && bfRSI > 25 && bfRSI < 50) {
+          // Confluence: need 2+ confirmations
+          var bfConf = 1;
+          if (bfVol > 1.2) bfConf++;
+          if (Math.abs(cl - bfMA20) / bfMA20 * 100 > 1.5) bfConf++;
+          if (bfRSI < 35) bfConf++;
+          if (bfConf >= 2) {
+            firedPattern = 'Bull Flag';
+            signal = 'long';
+          }
         }
       }
 
       // ---- Bear Flag ----
-      if (!signal && name.indexOf('bear flag') >= 0 && i >= 4) {
+      if (!signal && (name.indexOf('bear flag') >= 0 && !isAllMode) && i >= 4) {
         var strongDown = (parseFloat(prev3.o) - parseFloat(prev3.c)) / parseFloat(prev3.o) > 0.03;
         var pullbackUp = pc > po && parseFloat(prev2.c) > parseFloat(prev2.o) && isRed;
         if (strongDown && pullbackUp) {
@@ -19144,8 +19156,8 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Double Top (moderate tightening: 2% peaks, RSI > 62, volume confirm) ----
-      if (!signal && name.indexOf('double top') >= 0 && i >= 15) {
+      // ---- Double Top (R11-V2: 78% WR — tighter peaks, RSI 65-82, confluence) ----
+      if (!signal && (name.indexOf('double top') >= 0 || isAllMode) && i >= 15) {
         var p1i = -1, p2i = -1, p1v = 0, p2v = 0;
         for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
         for (var j2 = p1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
@@ -19154,17 +19166,24 @@ async function _pfdBacktestRun(coin, setupName) {
           var valley = parseFloat(candles[Math.floor((p1i + p2i) / 2)].l);
           var rsiDT = calcRSI(candles, 14, i);
           var ma20DT = calcMA(candles, i, 20);
-          var dtAvgVol = 0;
-          for (var dtv = i - 10; dtv < i; dtv++) dtAvgVol += (parseFloat(candles[dtv].h) - parseFloat(candles[dtv].l));
-          dtAvgVol /= 10;
-          var dtVolConfirm = dtAvgVol > 0 && (h - l) > dtAvgVol * 1.15;
-          // Moderate: 2% peak tolerance, RSI > 62, volume confirm, 2% valley depth
-          if (peakDiff <= 2 && valley < Math.min(p1v, p2v) * 0.98 && rsiDT >= 62 && cl <= ma20DT * 1.01 && isRed && dtVolConfirm) signal = 'short';
+          var dtVolRatio = calcVolRatio(candles, i);
+          // R11-V2: 1.5% peak tolerance, RSI 65-82, vol >1.2, price above MA20 by 2%+
+          if (peakDiff <= 1.5 && valley < Math.min(p1v, p2v) * 0.985 && rsiDT >= 65 && rsiDT <= 82 && cl >= ma20DT * 1.02 && isRed) {
+            // Confluence: need 2+ confirmations
+            var dtConf = 1;
+            if (rsiDT >= 70 && rsiDT <= 80) dtConf++; // RSI sweet spot
+            if (dtVolRatio > 1.2) dtConf++;            // Volume
+            if (cl > ma20DT * 1.04) dtConf++;          // Far from MA
+            if (dtConf >= 2) {
+              firedPattern = 'Double Top';
+              signal = 'short';
+            }
+          }
         }
       }
 
       // ---- Double Bottom (NEW LONG setup) ----
-      if (!signal && name.indexOf('double bottom') >= 0 && i >= 15) {
+      if (!signal && (name.indexOf('double bottom') >= 0 && !isAllMode) && i >= 15) {
         var t1i = -1, t2i = -1, t1v = 999999, t2v = 999999;
         for (var j = i - 15; j < i - 2; j++) { var ll = parseFloat(candles[j].l); if (ll < t1v) { t1v = ll; t1i = j; } }
         for (var j2 = t1i + 2; j2 < i; j2++) { var ll2 = parseFloat(candles[j2].l); if (ll2 < t2v) { t2v = ll2; t2i = j2; } }
@@ -19178,7 +19197,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Stairway to Hell (BigFootMau5) — restored with moderate tightening ----
-      if (!signal && name.indexOf('stairway') >= 0 && i >= 8) {
+      if (!signal && (name.indexOf('stairway') >= 0 && !isAllMode) && i >= 8) {
         // 3 consecutive lower highs = descending stairway
         var sh1 = parseFloat(candles[i-3].h), sh2 = parseFloat(candles[i-2].h), sh3 = parseFloat(candles[i-1].h);
         var lowerHighs = sh1 > sh2 && sh2 > sh3;
@@ -19195,7 +19214,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Head & Shoulders (short) — TIGHTENED: was firing 58/100, now needs volume + neckline break ----
-      if (!signal && name.indexOf('head & shoulders') >= 0 && name.indexOf('inverse') < 0 && i >= 15) {
+      if (!signal && (name.indexOf('head & shoulders') >= 0 && !isAllMode) && name.indexOf('inverse') < 0 && i >= 15) {
         var hsLookback = 15;
         var hsHigh = 0, hsHighIdx = 0;
         for (var j = i - hsLookback; j < i; j++) { if (parseFloat(candles[j].h) > hsHigh) { hsHigh = parseFloat(candles[j].h); hsHighIdx = j; } }
@@ -19223,7 +19242,7 @@ async function _pfdBacktestRun(coin, setupName) {
 
       // ---- Inverse Head & Shoulders (long) ----
       // ---- Fix: Inverse H&S (TIGHTENED — was over-firing, now needs 3% symmetry + 3% head depth + neckline break + RSI) ----
-      if (!signal && name.indexOf('inverse head') >= 0 && i >= 15) {
+      if (!signal && (name.indexOf('inverse head') >= 0 && !isAllMode) && i >= 15) {
         var ihsLookback = 15;
         var ihsLow = 999999, ihsLowIdx = 0;
         for (var j = i - ihsLookback; j < i; j++) { if (parseFloat(candles[j].l) < ihsLow) { ihsLow = parseFloat(candles[j].l); ihsLowIdx = j; } }
@@ -19240,7 +19259,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Falling Wedge (long) ----
-      if (!signal && name.indexOf('falling wedge') >= 0 && i >= 10) {
+      if (!signal && (name.indexOf('falling wedge') >= 0 && !isAllMode) && i >= 10) {
         var fwH1 = parseFloat(candles[i-10].h), fwH2 = parseFloat(candles[i-5].h);
         var fwL1 = parseFloat(candles[i-10].l), fwL2 = parseFloat(candles[i-5].l);
         if (fwH1 > fwH2 && fwL1 > fwL2 && isGreen) {
@@ -19252,7 +19271,7 @@ async function _pfdBacktestRun(coin, setupName) {
       // ---- Rising Wedge REMOVED — 0% hit rate in 10 fires, rule inverted/broken ----
 
       // ---- Fix: Cup & Handle (long) — TIGHTENED with volume + retest + U-shape ----
-      if (!signal && name.indexOf('cup & handle') >= 0 && i >= 25) {
+      if (!signal && (name.indexOf('cup & handle') >= 0 && !isAllMode) && i >= 25) {
         var cupStart = i - 20, cupEnd = i - 10;
         var cupHigh = 0, cupLow = 999999, cupMidLow = 999999;
         for (var ci = cupStart; ci < cupEnd; ci++) {
@@ -19287,7 +19306,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Ascending Triangle (long) ----
-      if (!signal && name.indexOf('ascending triangle') >= 0 && i >= 15) {
+      if (!signal && (name.indexOf('ascending triangle') >= 0 && !isAllMode) && i >= 15) {
         var atResistance = 0;
         for (var ai = i - 15; ai < i; ai++) { if (parseFloat(candles[ai].h) > atResistance) atResistance = parseFloat(candles[ai].h); }
         var atTouches = 0;
@@ -19299,7 +19318,7 @@ async function _pfdBacktestRun(coin, setupName) {
       }
 
       // ---- Descending Triangle (short) ----
-      if (!signal && name.indexOf('descending triangle') >= 0 && i >= 15) {
+      if (!signal && (name.indexOf('descending triangle') >= 0 && !isAllMode) && i >= 15) {
         var dtSupport = 999999;
         for (var di = i - 15; di < i; di++) { if (parseFloat(candles[di].l) < dtSupport) dtSupport = parseFloat(candles[di].l); }
         var dtTouches = 0;
@@ -19456,6 +19475,8 @@ async function _pfdBacktestRun(coin, setupName) {
 
       // Regime filter gate: suppress counter-regime signals (except reversal patterns)
       if (signal) {
+        // R11-V2: Suppress shorts in very strong bull markets (>5% SMA divergence)
+        if (signal === 'short' && suppressShort) { signal = null; }
         var fpLower = (firedPattern || '').toLowerCase();
         var isReversalPattern = fpLower.indexOf('double top') >= 0 || fpLower.indexOf('double bottom') >= 0
           || fpLower.indexOf('head & shoulders') >= 0 || fpLower.indexOf('stairway') >= 0
@@ -19468,10 +19489,26 @@ async function _pfdBacktestRun(coin, setupName) {
         if (signal === 'long') longCount++; else shortCount++;
         var entry = cl;
         // Fix: 4% stop loss (was 3% — too tight for daily candles)
-        var stopDist = entry * STOP_PCT;
-        var stop = signal === 'long' ? entry - stopDist : entry + stopDist;
-        var risk = Math.abs(entry - stop);
-        var target = signal === 'long' ? entry + TARGET_MULT * risk : entry - TARGET_MULT * risk;
+        // R11-V2: Dynamic stops for Bull Flag + Double Top (2% beyond candle structure)
+        var stop, target, risk;
+        if (firedPattern === 'Bull Flag' && signal === 'long') {
+          stop = Math.min(pl2, l) * 0.98; // 2% below entry candle's low
+          risk = entry - stop;
+          target = risk > 0 ? entry + risk * 2 : 0;
+          if (risk <= 0) signal = null;
+        } else if (firedPattern === 'Double Top' && signal === 'short') {
+          stop = Math.max(ph, h) * 1.02; // 2% above entry candle's high
+          risk = stop - entry;
+          target = risk > 0 ? entry - risk * 2 : 0;
+          if (risk <= 0) signal = null;
+        } else {
+          // Fallback: fixed stop for other patterns
+          var stopDist = entry * STOP_PCT;
+          stop = signal === 'long' ? entry - stopDist : entry + stopDist;
+          risk = Math.abs(entry - stop);
+          target = signal === 'long' ? entry + TARGET_MULT * risk : entry - TARGET_MULT * risk;
+        }
+        if (!signal) continue; // R11-V2: skip if dynamic stop invalidated the signal
         var exit = null, exitReason = null;
         for (var j = i+1; j < Math.min(candles.length, i + MAX_HOLD + 1); j++) {
           var fh = parseFloat(candles[j].h), fl = parseFloat(candles[j].l);
