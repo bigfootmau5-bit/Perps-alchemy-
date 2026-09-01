@@ -9148,7 +9148,7 @@ try { var _naEn = localStorage.getItem('perps-news-alerts-enabled'); if (_naEn =
 var CORR = { history: {}, lastComputeAt: 0 };
 var FUNDING = { list: [], lastFetch: 0, sort: 'abs' };
 var MTF = { data: {}, lastFetch: 0, fetching: false };
-var _PFD_MTF_COINS = ['BTC','ETH','SOL','BNB','XRP','HYPE','ADA','LINK','DOT','MATIC','POL','LTC','TRX','ARB','APT','NEAR','TIA','INJ','SEI','ONDO','TAO','ZEC','PUMP'];
+var _PFD_MTF_COINS = ['BTC','ETH','SOL','BNB','XRP','HYPE','DOGE','ADA','AVAX','LINK','DOT','MATIC','POL','LTC','TRX','ARB','OP','SUI','APT','NEAR','TIA','INJ','SEI','ONDO','TAO'];
 var _PFD_MTF_TFS = [
   { key:'5m', interval:'5m', lookback: 1 },
   { key:'1h', interval:'1h', lookback: 12 },
@@ -19023,379 +19023,593 @@ window._pfdMirrorActivate = _pfdMirrorActivate;
 async function _pfdBacktestRun(coin, setupName) {
   var results = document.getElementById('bt-results');
   if (!results) return;
-  results.innerHTML = '<div style="padding:20px; text-align:center;">Running R11-V3 backtest for ' + coin + ' — ' + setupName + '…</div>';
+  results.innerHTML = '<div style="padding:20px; text-align:center;">Running backtest for ' + coin + ' - ' + setupName + '…</div>';
 
-  // ============================================================
-  // R11-V3 ENGINE — The Reaper (Sept 1, 2026)
-  // Property of Bigfoot404 LLC / Perps Alchemy
-  // Ported from reaper_engine.py → JavaScript
-  // Only ships: Bull Flag (LONG) + Double Top (SHORT)
-  // Reaper enhancements: partial exit at 1R, trailing stops
-  // ============================================================
-
-  // --- COIN TIERS (volume-truthful per Mau5) ---
-  var TIER1_COINS = ["BTC", "ETH", "HYPE", "SOL", "ZEC", "PUMP", "XRP", "ARB"];
-  var TIER2_COINS = ["LINK", "RUNE", "ADA", "DOT", "NEAR", "INJ", "TIA", "SEI"];
-  var BLACKLISTED_COINS = ["OP", "SUI", "DOGE", "AVAX"]; // dropped DOGE/AVAX per Mau5
-
-  // --- TAKER FEE ---
-  var TAKER_FEE = 0.07; // 0.07% round-trip
-
-  // --- TIER CONFIGS ---
-  var TIER1_CONFIG = {
-    name: "LIQUIDITY",
-    max_hold: 15,
-    stop_pct: 0.02,
-    target_mult: 2.0,
-    min_confluence: 2,
-    bull_flag_rsi_min: 20,
-    bull_flag_rsi_max: 55,
-    dt_rsi_min: 65,
-    dt_rsi_max: 82,
-    vol_ratio_min: 1.0,
-    partial_exit_1r: true,
-    trailing_stop: true,
-  };
-
-  var TIER2_CONFIG = {
-    name: "EXPANDED",
-    max_hold: 8,
-    stop_pct: 0.025,
-    target_mult: 2.0,
-    min_confluence: 3,
-    bull_flag_rsi_min: 25,
-    bull_flag_rsi_max: 50,
-    dt_rsi_min: 68,
-    dt_rsi_max: 80,
-    vol_ratio_min: 1.2,
-    partial_exit_1r: true,
-    trailing_stop: true,
-  };
-
-  // --- GET COIN CONFIG ---
-  function getCoinConfig(coin) {
-    return TIER1_COINS.indexOf(coin) >= 0 ? TIER1_CONFIG : TIER2_CONFIG;
+  // ---- Helpers ----
+  function calcEMA(candles, idx, period) {
+    if (idx < period) return parseFloat(candles[idx].c);
+    var k = 2 / (period + 1);
+    var ema = parseFloat(candles[period - 1].c);
+    for (var i = period; i <= idx; i++) ema = parseFloat(candles[i].c) * k + ema * (1 - k);
+    return ema;
   }
-
-  // --- INDICATORS ---
   function calcRSI(candles, period, idx) {
     if (idx < period) return 50;
     var g = 0, l = 0;
     for (var i = idx - period; i < idx; i++) {
-      var ch = parseFloat(candles[i + 1].c) - parseFloat(candles[i].c);
+      var ch = parseFloat(candles[i+1].c) - parseFloat(candles[i].c);
       if (ch >= 0) g += ch; else l += Math.abs(ch);
     }
     var ag = g / period, al = l / period;
     return al === 0 ? 100 : 100 - (100 / (1 + ag / al));
   }
-
   function calcMA(candles, idx, period) {
     if (idx < period) return parseFloat(candles[idx].c);
-    var s = 0;
-    for (var i = idx - period; i < idx; i++) s += parseFloat(candles[i].c);
-    return s / period;
+    var s = 0; for (var i = idx - period; i < idx; i++) s += parseFloat(candles[i].c); return s / period;
   }
-
   function calcVolRatio(candles, idx, lb) {
     lb = lb || 10;
-    if (idx < lb) return 1.0;
+    if (idx < lb) return 1;
     var r = parseFloat(candles[idx].h) - parseFloat(candles[idx].l);
-    var s = 0;
-    for (var i = idx - lb; i < idx; i++) s += parseFloat(candles[i].h) - parseFloat(candles[i].l);
-    var a = s / lb;
-    return a > 0 ? r / a : 1.0;
+    var s = 0; for (var i = idx - lb; i < idx; i++) s += parseFloat(candles[i].h) - parseFloat(candles[i].l);
+    var a = s / lb; return a > 0 ? r / a : 1;
   }
 
-  // --- PATTERN DETECTORS ---
+  var TAKER_FEE = 0.07;
+  var STOP_PCT = 0.04; // fallback for fixed-stop patterns
+  var TARGET_MULT = 2.0;
+  var MAX_HOLD = 15;
 
-  function detectBullFlag(candles, i, rsi, volRatio, ma20, cfg) {
-    if (i < 4) return null;
-    var c0 = parseFloat(candles[i].c), o0 = parseFloat(candles[i].o);
-    var c1 = parseFloat(candles[i-1].c), o1 = parseFloat(candles[i-1].o);
-    var c2 = parseFloat(candles[i-2].c), o2 = parseFloat(candles[i-2].o);
-    var c3 = parseFloat(candles[i-3].c), o3 = parseFloat(candles[i-3].o);
-    var l1 = parseFloat(candles[i-1].l), l0 = parseFloat(candles[i].l);
-
-    var strong = o3 > 0 ? (c3 - o3) / o3 > 0.05 : false;
-    var pullback = (c1 < o1 && c2 < o2 && c0 > o0);
-    if (!(strong && pullback)) return null;
-
-    if (rsi < cfg.bull_flag_rsi_min || rsi > cfg.bull_flag_rsi_max) return null;
-    if (volRatio < cfg.vol_ratio_min) return null;
-
-    var confluence = 1;
-    if (volRatio > 1.2) confluence++;
-    if (Math.abs(c0 - ma20) / ma20 * 100 > 1.5) confluence++;
-    if (rsi < 35) confluence++;
-    if (confluence < cfg.min_confluence) return null;
-
-    var entry = c0;
-    var stop = Math.min(l1, l0) * (1 - cfg.stop_pct);
-    var risk = entry - stop;
-    if (risk <= 0) return null;
-    var target = entry + cfg.target_mult * risk;
-
-    return {
-      side: 'long', setup: 'Bull Flag',
-      entry: entry, stop: stop, target: target,
-      rsi: rsi, volRatio: volRatio, confluence: confluence
-    };
-  }
-
-  function detectDoubleTop(candles, i, rsi, volRatio, ma20, cfg) {
-    if (i < 4) return null;
-    var c0 = parseFloat(candles[i].c), o0 = parseFloat(candles[i].o);
-    var h0 = parseFloat(candles[i].h), h1 = parseFloat(candles[i-1].h);
-    var h2 = parseFloat(candles[i-2].h), h3 = parseFloat(candles[i-3].h);
-    var l1 = parseFloat(candles[i-1].l);
-
-    var isRed = c0 < o0;
-    var peak1 = Math.max(h3, h2);
-    var peak2 = h0;
-    var valley = l1;
-
-    if (!(Math.abs(peak2 - peak1) / peak1 < 0.015 && valley < peak1 * 0.985 && isRed)) return null;
-    if (rsi < cfg.dt_rsi_min || rsi > cfg.dt_rsi_max) return null;
-    if (c0 < ma20 * 1.02) return null;
-
-    var confluence = 1;
-    if (rsi >= 70 && rsi <= 80) confluence++;
-    if (volRatio > 1.2) confluence++;
-    if (c0 > ma20 * 1.04) confluence++;
-    if (confluence < cfg.min_confluence) return null;
-
-    var entry = c0;
-    var stop = Math.max(h1, h0) * (1 + cfg.stop_pct);
-    var risk = stop - entry;
-    if (risk <= 0) return null;
-    var target = entry - cfg.target_mult * risk;
-
-    return {
-      side: 'short', setup: 'Double Top',
-      entry: entry, stop: stop, target: target,
-      rsi: rsi, volRatio: volRatio, confluence: confluence
-    };
-  }
-
-  // --- TRADE EXECUTION (with Reaper enhancements) ---
-  function executeTrade(candles, i, signal, cfg) {
-    var entry = signal.entry, stop = signal.stop, target = signal.target, side = signal.side;
-    var maxHold = cfg.max_hold;
-    var risk = Math.abs(entry - stop);
-    var oneRTarget = side === 'long' ? entry + risk : entry - risk;
-
-    var exitPrice = null, exitReason = null;
-    var partialTaken = false;
-    var trailStop = stop;
-
-    for (var j = i + 1; j < Math.min(candles.length, i + maxHold + 1); j++) {
-      var fh = parseFloat(candles[j].h), fl = parseFloat(candles[j].l);
-      var fc = parseFloat(candles[j].c);
-
-      if (side === 'long') {
-        if (fl <= trailStop) {
-          exitPrice = trailStop;
-          exitReason = partialTaken ? 'trailing_stop' : 'stop';
-          break;
-        }
-        if (!partialTaken && cfg.partial_exit_1r && fh >= oneRTarget) {
-          partialTaken = true;
-          if (cfg.trailing_stop) trailStop = entry;
-        }
-        if (fh >= target) {
-          exitPrice = partialTaken ? (oneRTarget + target) / 2 : target;
-          exitReason = 'target';
-          break;
-        }
-        if (partialTaken && cfg.trailing_stop) {
-          var newTrail = fc - risk * 0.5;
-          if (newTrail > trailStop) trailStop = newTrail;
-        }
-      } else {
-        if (fh >= trailStop) {
-          exitPrice = trailStop;
-          exitReason = partialTaken ? 'trailing_stop' : 'stop';
-          break;
-        }
-        if (!partialTaken && cfg.partial_exit_1r && fl <= oneRTarget) {
-          partialTaken = true;
-          if (cfg.trailing_stop) trailStop = entry;
-        }
-        if (fl <= target) {
-          exitPrice = partialTaken ? (oneRTarget + target) / 2 : target;
-          exitReason = 'target';
-          break;
-        }
-        if (partialTaken && cfg.trailing_stop) {
-          var newTrailS = fc + risk * 0.5;
-          if (newTrailS < trailStop) trailStop = newTrailS;
-        }
-      }
-    }
-
-    if (!exitPrice) {
-      exitPrice = parseFloat(candles[Math.min(candles.length - 1, i + maxHold)].c);
-      exitReason = 'timeout';
-      if (partialTaken) exitPrice = (oneRTarget + exitPrice) / 2;
-    }
-
-    var pnlPct = side === 'long' ? (exitPrice - entry) / entry * 100 : (entry - exitPrice) / entry * 100;
-    pnlPct -= TAKER_FEE;
-
-    return { exitPrice: exitPrice, exitReason: exitReason, pnlPct: pnlPct, partialTaken: partialTaken };
-  }
-
-  // --- MAIN BACKTEST LOGIC ---
   try {
-    // Check blacklist
-    if (BLACKLISTED_COINS.indexOf(coin) >= 0) {
-      results.innerHTML = '<div style="padding:20px; color:#ef4444;">' + coin + ' is blacklisted (insufficient liquidity / data issues). T1 coins: ' + TIER1_COINS.join(', ') + '</div>';
-      return;
-    }
-
-    var cfg = getCoinConfig(coin);
-    var isAllMode = (setupName.toLowerCase() === 'all' || setupName.toLowerCase() === 'all setups' || setupName.toLowerCase() === 'mixed' || setupName.toLowerCase() === 'scan' || setupName.length < 3);
-
-    // Fetch 365 days of daily candles
+    // Fix 3: 365-day backtest (was 90 days)
     var endMs = Date.now();
     var startMs = endMs - 365 * 86400 * 1000;
     var r = await fetch('https://api.hyperliquid.xyz/info', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ type: 'candleSnapshot', req: { coin: coin, interval: '1d', startTime: startMs, endTime: endMs } })
     });
     if (!r.ok) throw new Error('http ' + r.status);
     var candles = await r.json();
-    if (!Array.isArray(candles) || candles.length === 0) {
-      results.innerHTML = '<div style="padding:20px; color:#ef4444;">No historical data for ' + coin + '.</div>';
-      return;
-    }
+    if (!Array.isArray(candles) || candles.length === 0) { results.innerHTML = '<div style="padding:20px; color:#ef4444;">No historical data for ' + coin + '.</div>'; return; }
 
+    var name = setupName.toLowerCase();
     var signals = [];
     var longCount = 0, shortCount = 0;
-    var name = setupName.toLowerCase();
 
     for (var i = 50; i < candles.length - 1; i++) {
-      var rsi = calcRSI(candles, 14, i);
-      var volRatio = calcVolRatio(candles, i);
-      var ma20 = calcMA(candles, i, 20);
+      var firedPattern = setupName; // tracks which pattern fired this signal (for concentration cap)
+      var c = candles[i], prev = candles[i-1], prev2 = candles[i-2], prev3 = candles[i-3];
+      var o = parseFloat(c.o), h = parseFloat(c.h), l = parseFloat(c.l), cl = parseFloat(c.c);
+      var po = parseFloat(prev.o), pc = parseFloat(prev.c), ph = parseFloat(prev.h), pl2 = parseFloat(prev.l);
+      var isGreen = cl > o, isRed = cl < o;
+
+      // Fix 3: skipLong cap — skip Cup & Handle longs if longs > 60% of total (prevents long over-representation)
+      var tot = longCount + shortCount;
+      var longPct = tot > 10 ? longCount / tot : 0;
+      var skipLongCap = longPct > 0.60;
 
       var signal = null;
-      var firedPattern = '';
 
-      // --- Bull Flag detection ---
-      if (name.indexOf('bull flag') >= 0 || isAllMode) {
-        signal = detectBullFlag(candles, i, rsi, volRatio, ma20, cfg);
-        if (signal) firedPattern = 'Bull Flag';
+      // ---- Fix 5: Regime Filter (SMA20 vs SMA50) — works in any backtest window ----
+      var regimeMA20 = calcMA(candles, i, 20);
+      var regimeMA50 = calcMA(candles, i, 50);
+      var regimePct = (regimeMA20 - regimeMA50) / regimeMA50 * 100;
+      // bull: SMA20 > SMA50 by >1%; bear: SMA20 < SMA50 by >1%; range: within 1%
+      var marketRegime = regimePct > 1 ? 'bull' : (regimePct < -1 ? 'bear' : 'range');
+      // R11-V2: Regime filter — suppress ALL shorts when SMA20 > SMA50 by >5% (very strong bull)
+      var suppressShort = regimePct > 5;
+
+      // ---- Fix 4: Golden Cross (SMA50/SMA200 crossover + 3-bar close above EMA20) ----
+      if ((name.indexOf('golden cross') >= 0 && !isAllMode) && i >= 50) {
+        var s50n = calcMA(candles, i, 50), s50p = calcMA(candles, i-1, 50);
+        var s200n = calcMA(candles, i, 200), s200p = calcMA(candles, i-1, 200);
+        if (s50p < s200p && s50n > s200n) {
+          var rsiGC = calcRSI(candles, 14, i);
+          // Require close above EMA20 for 3 consecutive bars (filters single-candle noise)
+          var ema20_0 = calcEMA(candles, i, 20), ema20_1 = calcEMA(candles, i-1, 20), ema20_2 = calcEMA(candles, i-2, 20);
+          var aboveEma20 = parseFloat(candles[i].c) > ema20_0 && parseFloat(candles[i-1].c) > ema20_1 && parseFloat(candles[i-2].c) > ema20_2;
+          if (rsiGC >= 25 && rsiGC <= 80 && aboveEma20) signal = 'long';
+        }
       }
 
-      // --- Double Top detection ---
-      if (!signal && (name.indexOf('double top') >= 0 || isAllMode)) {
-        signal = detectDoubleTop(candles, i, rsi, volRatio, ma20, cfg);
-        if (signal) firedPattern = 'Double Top';
+      // ---- Fix 5: Death Cross (proper EMA50/EMA200 crossunder) ----
+      // ---- Fix: Death Cross (STRONGER — must align with SMA20 < SMA50 trend confirmation) ----
+      if (!signal && (name.indexOf('death cross') >= 0 && !isAllMode) && i >= 50) {
+        var e50nD = calcEMA(candles, i, 50), e50pD = calcEMA(candles, i-1, 50);
+        var e200nD = calcMA(candles, i, 200), e200pD = calcMA(candles, i-1, 200);
+        if (e50pD > e200pD && e50nD < e200nD) {
+          var rsiDC = calcRSI(candles, 14, i);
+          var dcSMA20 = calcMA(candles, i, 20), dcSMA50 = calcMA(candles, i, 50);
+          // Must be aligned with broader trend: SMA20 < SMA50 confirms downtrend
+          if (rsiDC >= 20 && rsiDC <= 75 && dcSMA20 < dcSMA50) signal = 'short';
+        }
       }
 
-      if (!signal) continue;
-
-      // --- Regime filter: suppress shorts when SMA20 > SMA50 by >5% (very strong bull) ---
-      if (signal.side === 'short') {
-        var ma50 = calcMA(candles, i, 50);
-        var bullPct = ma50 > 0 ? (ma20 - ma50) / ma50 * 100 : 0;
-        if (bullPct > 5) continue;
+      // ---- Bull Flag (R11-V2: 69% WR — stronger move + RSI + confluence) ----
+      if (!signal && (name.indexOf('bull flag') >= 0 || isAllMode) && i >= 4) {
+        var strong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.05;
+        var pullback = pc < po && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
+        var bfRSI = calcRSI(candles, 14, i);
+        var bfVol = calcVolRatio(candles, i);
+        var bfMA20 = calcMA(candles, i, 20);
+        if (strong && pullback && bfRSI > 25 && bfRSI < 50) {
+          // Confluence: need 2+ confirmations
+          var bfConf = 1;
+          if (bfVol > 1.2) bfConf++;
+          if (Math.abs(cl - bfMA20) / bfMA20 * 100 > 1.5) bfConf++;
+          if (bfRSI < 35) bfConf++;
+          if (bfConf >= 2) {
+            firedPattern = 'Bull Flag';
+            signal = 'long';
+          }
+        }
       }
 
-      // --- Execute trade with Reaper enhancements ---
-      var result = executeTrade(candles, i, signal, cfg);
+      // ---- Bear Flag ----
+      if (!signal && (name.indexOf('bear flag') >= 0 && !isAllMode) && i >= 4) {
+        var strongDown = (parseFloat(prev3.o) - parseFloat(prev3.c)) / parseFloat(prev3.o) > 0.03;
+        var pullbackUp = pc > po && parseFloat(prev2.c) > parseFloat(prev2.o) && isRed;
+        if (strongDown && pullbackUp) {
+          var e20bfD = calcEMA(candles, i, 20), e50bfD = calcEMA(candles, i, 50);
+          if (e20bfD < e50bfD) signal = 'short'; // trend filter
+        }
+      }
 
-      var c = candles[i];
-      var dateStr = new Date(c.t).toISOString().slice(0, 10);
+      // ---- Double Top (R11-V2: 78% WR — tighter peaks, RSI 65-82, confluence) ----
+      if (!signal && (name.indexOf('double top') >= 0 || isAllMode) && i >= 15) {
+        var p1i = -1, p2i = -1, p1v = 0, p2v = 0;
+        for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
+        for (var j2 = p1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
+        if (p1i !== -1 && p2i !== -1) {
+          var peakDiff = Math.abs(p1v - p2v) / Math.max(p1v, p2v) * 100;
+          var valley = parseFloat(candles[Math.floor((p1i + p2i) / 2)].l);
+          var rsiDT = calcRSI(candles, 14, i);
+          var ma20DT = calcMA(candles, i, 20);
+          var dtVolRatio = calcVolRatio(candles, i);
+          // R11-V2: 1.5% peak tolerance, RSI 65-82, vol >1.2, price above MA20 by 2%+
+          if (peakDiff <= 1.5 && valley < Math.min(p1v, p2v) * 0.985 && rsiDT >= 65 && rsiDT <= 82 && cl >= ma20DT * 1.02 && isRed) {
+            // Confluence: need 2+ confirmations
+            var dtConf = 1;
+            if (rsiDT >= 70 && rsiDT <= 80) dtConf++; // RSI sweet spot
+            if (dtVolRatio > 1.2) dtConf++;            // Volume
+            if (cl > ma20DT * 1.04) dtConf++;          // Far from MA
+            if (dtConf >= 2) {
+              firedPattern = 'Double Top';
+              signal = 'short';
+            }
+          }
+        }
+      }
 
-      if (signal.side === 'long') longCount++;
-      else shortCount++;
+      // ---- Double Bottom (NEW LONG setup) ----
+      if (!signal && (name.indexOf('double bottom') >= 0 && !isAllMode) && i >= 15) {
+        var t1i = -1, t2i = -1, t1v = 999999, t2v = 999999;
+        for (var j = i - 15; j < i - 2; j++) { var ll = parseFloat(candles[j].l); if (ll < t1v) { t1v = ll; t1i = j; } }
+        for (var j2 = t1i + 2; j2 < i; j2++) { var ll2 = parseFloat(candles[j2].l); if (ll2 < t2v) { t2v = ll2; t2i = j2; } }
+        if (t1i !== -1 && t2i !== -1) {
+          var troughDiff = Math.abs(t1v - t2v) / Math.min(t1v, t2v) * 100;
+          var bounce = parseFloat(candles[Math.floor((t1i + t2i) / 2)].h);
+          var rsiDB = calcRSI(candles, 14, i);
+          var ma20DB = calcMA(candles, i, 20);
+          if (troughDiff <= 2.5 && bounce > Math.min(t1v, t2v) * 1.02 && rsiDB <= 40 && cl >= ma20DB * 0.98 && isGreen) signal = 'long';
+        }
+      }
 
-      signals.push({
-        i: i,
-        date: dateStr,
-        side: signal.side,
-        setup: firedPattern,
-        entry: signal.entry,
-        stop: signal.stop,
-        target: signal.target,
-        exit: result.exitPrice,
-        exitReason: result.exitReason,
-        pnlPct: result.pnlPct,
-        partial1R: result.partialTaken,
-        rsi: Math.round(rsi * 10) / 10,
-        volRatio: Math.round(volRatio * 100) / 100,
-        confluence: signal.confluence,
-        tier: cfg.name
-      });
+      // ---- Stairway to Hell (BigFootMau5) — restored with moderate tightening ----
+      if (!signal && (name.indexOf('stairway') >= 0 && !isAllMode) && i >= 8) {
+        // 3 consecutive lower highs = descending stairway
+        var sh1 = parseFloat(candles[i-3].h), sh2 = parseFloat(candles[i-2].h), sh3 = parseFloat(candles[i-1].h);
+        var lowerHighs = sh1 > sh2 && sh2 > sh3;
+        // Current candle is red and breaks below the previous low
+        var breakdown = l < parseFloat(candles[i-1].l) && isRed;
+        // Volume above average (lighter threshold — 1.1x not 1.2x)
+        var sthAvgVol = 0;
+        for (var sv = i - 8; sv < i; sv++) sthAvgVol += (parseFloat(candles[sv].h) - parseFloat(candles[sv].l));
+        sthAvgVol /= 8;
+        var sthVolConfirm = sthAvgVol > 0 && (h - l) > sthAvgVol * 1.1;
+        // RSI below 60 (downtrend, not overbought) — wider window
+        var sthRSI = calcRSI(candles, 14, i);
+        if (lowerHighs && breakdown && sthVolConfirm && sthRSI < 60) signal = 'short';
+      }
+
+      // ---- Head & Shoulders (short) — TIGHTENED: was firing 58/100, now needs volume + neckline break ----
+      if (!signal && (name.indexOf('head & shoulders') >= 0 && !isAllMode) && name.indexOf('inverse') < 0 && i >= 15) {
+        var hsLookback = 15;
+        var hsHigh = 0, hsHighIdx = 0;
+        for (var j = i - hsLookback; j < i; j++) { if (parseFloat(candles[j].h) > hsHigh) { hsHigh = parseFloat(candles[j].h); hsHighIdx = j; } }
+        if (hsHighIdx > i - hsLookback + 2 && hsHighIdx < i - 2) {
+          var lsH = parseFloat(candles[hsHighIdx - 1].h), rsH = parseFloat(candles[hsHighIdx + 1].h);
+          // Stricter shoulder symmetry: < 3% difference (was 5%)
+          var symPct = Math.abs(lsH - rsH) / Math.max(lsH, rsH) * 100;
+          // Head must be clearly above shoulders: > 2% higher (was just >)
+          var headClear = hsHigh > lsH * 1.02 && hsHigh > rsH * 1.02;
+          // Neckline = lowest point between shoulders
+          var neckline = 999999;
+          for (var nk = hsHighIdx - 1; nk <= hsHighIdx + 1; nk++) { if (parseFloat(candles[nk].l) < neckline) neckline = parseFloat(candles[nk].l); }
+          // Must break below neckline with red candle
+          var necklineBreak = cl < neckline && isRed;
+          // Volume confirmation on breakdown
+          var hsAvgVol = 0;
+          for (var hv = i - 10; hv < i; hv++) hsAvgVol += (parseFloat(candles[hv].h) - parseFloat(candles[hv].l));
+          hsAvgVol /= 10;
+          var hsVolConfirm = hsAvgVol > 0 && (h - l) > hsAvgVol * 1.2;
+          // RSI must be below 60 (was no RSI filter at all)
+          var hsRSI = calcRSI(candles, 14, i);
+          if (symPct < 3 && headClear && necklineBreak && hsVolConfirm && hsRSI < 60) signal = 'short';
+        }
+      }
+
+      // ---- Inverse Head & Shoulders (long) ----
+      // ---- Fix: Inverse H&S (TIGHTENED — was over-firing, now needs 3% symmetry + 3% head depth + neckline break + RSI) ----
+      if (!signal && (name.indexOf('inverse head') >= 0 && !isAllMode) && i >= 15) {
+        var ihsLookback = 15;
+        var ihsLow = 999999, ihsLowIdx = 0;
+        for (var j = i - ihsLookback; j < i; j++) { if (parseFloat(candles[j].l) < ihsLow) { ihsLow = parseFloat(candles[j].l); ihsLowIdx = j; } }
+        if (ihsLowIdx > i - ihsLookback + 2 && ihsLowIdx < i - 2) {
+          var lsL = parseFloat(candles[ihsLowIdx - 1].l), rsL = parseFloat(candles[ihsLowIdx + 1].l);
+          var ihsSym = Math.abs(lsL - rsL) / Math.min(lsL, rsL) * 100;
+          var ihsProm = ihsLow < Math.min(lsL, rsL) * 0.97; // head must be 3%+ deeper than shoulders
+          var ihsNeck = Math.max(parseFloat(candles[ihsLowIdx - 1].h), parseFloat(candles[ihsLowIdx + 1].h));
+          if (ihsSym < 3 && ihsProm && cl > ihsNeck && isGreen) {
+            var ihsRSI = calcRSI(candles, 14, i);
+            if (ihsRSI > 35 && ihsRSI < 70) signal = 'long';
+          }
+        }
+      }
+
+      // ---- Falling Wedge (long) ----
+      if (!signal && (name.indexOf('falling wedge') >= 0 && !isAllMode) && i >= 10) {
+        var fwH1 = parseFloat(candles[i-10].h), fwH2 = parseFloat(candles[i-5].h);
+        var fwL1 = parseFloat(candles[i-10].l), fwL2 = parseFloat(candles[i-5].l);
+        if (fwH1 > fwH2 && fwL1 > fwL2 && isGreen) {
+          var fwRange1 = fwH1 - fwL1, fwRange2 = fwH2 - fwL2;
+          if (fwRange2 < fwRange1 * 0.8) signal = 'long';
+        }
+      }
+
+      // ---- Rising Wedge REMOVED — 0% hit rate in 10 fires, rule inverted/broken ----
+
+      // ---- Fix: Cup & Handle (long) — TIGHTENED with volume + retest + U-shape ----
+      if (!signal && (name.indexOf('cup & handle') >= 0 && !isAllMode) && i >= 25) {
+        var cupStart = i - 20, cupEnd = i - 10;
+        var cupHigh = 0, cupLow = 999999, cupMidLow = 999999;
+        for (var ci = cupStart; ci < cupEnd; ci++) {
+          if (parseFloat(candles[ci].h) > cupHigh) cupHigh = parseFloat(candles[ci].h);
+          if (parseFloat(candles[ci].l) < cupLow) cupLow = parseFloat(candles[ci].l);
+          // Check U-shape: middle third should contain the lowest point
+          if (ci >= cupStart + 3 && ci < cupStart + 7) {
+            if (parseFloat(candles[ci].l) < cupMidLow) cupMidLow = parseFloat(candles[ci].l);
+          }
+        }
+        var cupDepth = (cupHigh - cupLow) / cupHigh * 100;
+        var handleLow = 999999, handleHigh = 0, handleCount = 0;
+        var retested = false;
+        for (var hi = cupEnd; hi < i; hi++) {
+          if (parseFloat(candles[hi].l) < handleLow) handleLow = parseFloat(candles[hi].l);
+          if (parseFloat(candles[hi].h) > handleHigh) handleHigh = parseFloat(candles[hi].h);
+          handleCount++;
+          // Retest confirmation: a candle in handle wicked above handleHigh but closed below it
+          if (parseFloat(candles[hi].h) >= handleHigh * 0.99 && parseFloat(candles[hi].c) < handleHigh) retested = true;
+        }
+        var handleDepth = (cupHigh - handleLow) / cupHigh * 100;
+        // Volume confirmation: breakout candle volume > 1.5x average of last 10
+        var avgVol = 0;
+        for (var vi = i - 10; vi < i; vi++) avgVol += (parseFloat(candles[vi].h) - parseFloat(candles[vi].l));
+        avgVol /= 10;
+        var curVol = h - l;
+        var volConfirm = avgVol > 0 && curVol > avgVol * 1.5;
+        // Tightened: U-shape + volume + retest + deeper cup
+        if (cupDepth >= 12 && cupDepth <= 35 && handleDepth <= cupDepth / 3 && handleCount >= 5
+            && cl > handleHigh && isGreen && volConfirm && retested
+            && cupMidLow <= cupLow * 1.01 && !skipLongCap) signal = 'long';
+      }
+
+      // ---- Ascending Triangle (long) ----
+      if (!signal && (name.indexOf('ascending triangle') >= 0 && !isAllMode) && i >= 15) {
+        var atResistance = 0;
+        for (var ai = i - 15; ai < i; ai++) { if (parseFloat(candles[ai].h) > atResistance) atResistance = parseFloat(candles[ai].h); }
+        var atTouches = 0;
+        for (var ai2 = i - 15; ai2 < i; ai2++) {
+          if (Math.abs(parseFloat(candles[ai2].h) - atResistance) / atResistance * 100 < 1.5) atTouches++;
+        }
+        var atLows = [parseFloat(candles[i-3].l), parseFloat(candles[i-7].l), parseFloat(candles[i-11].l)];
+        if (atTouches >= 2 && atLows[0] > atLows[1] && atLows[1] > atLows[2] && cl > atResistance * 0.99 && isGreen) signal = 'long';
+      }
+
+      // ---- Descending Triangle (short) ----
+      if (!signal && (name.indexOf('descending triangle') >= 0 && !isAllMode) && i >= 15) {
+        var dtSupport = 999999;
+        for (var di = i - 15; di < i; di++) { if (parseFloat(candles[di].l) < dtSupport) dtSupport = parseFloat(candles[di].l); }
+        var dtTouches = 0;
+        for (var di2 = i - 15; di2 < i; di2++) {
+          if (Math.abs(parseFloat(candles[di2].l) - dtSupport) / dtSupport * 100 < 1.5) dtTouches++;
+        }
+        var dtHighs = [parseFloat(candles[i-3].h), parseFloat(candles[i-7].h), parseFloat(candles[i-11].h)];
+        if (dtTouches >= 2 && dtHighs[0] < dtHighs[1] && dtHighs[1] < dtHighs[2] && cl < dtSupport * 1.01 && isRed) signal = 'short';
+      }
+
+      // ---- Symmetrical Triangle (neutral breakout) ----
+      if (!signal && name.indexOf('symmetrical triangle') >= 0 && i >= 15) {
+        var stHighs = [parseFloat(candles[i-3].h), parseFloat(candles[i-7].h), parseFloat(candles[i-11].h)];
+        var stLows = [parseFloat(candles[i-3].l), parseFloat(candles[i-7].l), parseFloat(candles[i-11].l)];
+        var stConverging = stHighs[0] < stHighs[1] && stHighs[1] < stHighs[2] && stLows[0] > stLows[1] && stLows[1] > stLows[2];
+        if (stConverging) {
+          if (isGreen && cl > stHighs[0]) signal = 'long';
+          else if (isRed && cl < stLows[0]) signal = 'short';
+        }
+      }
+
+      // ---- "All Setups" mode: run ALL pattern detectors, track which pattern fired ----
+      var isGenericScan = (name === 'all' || name === 'all setups' || name === 'mixed' || name === 'scan' || name.length < 3);
+      if (isGenericScan) {
+        // Run every pattern detector and pick the FIRST match (priority order)
+        // Track which pattern fired for concentration cap
+        // R11-V2: Golden Cross DISABLED — 30% WR, -11% PnL was dragging hit rate
+        /* if (!signal) {
+          if (i >= 50) {
+            var gcFast = calcEMA(candles, i, 50), gcFastP = calcEMA(candles, i-1, 50);
+            var gcSlow = calcMA(candles, i, 200), gcSlowP = calcMA(candles, i-1, 200);
+            if (gcFastP > gcSlowP && gcFast < gcSlow) { var gcRSI = calcRSI(candles, 14, i); if (gcRSI >= 25 && gcRSI <= 80) { signal = 'long'; firedPattern = 'Golden Cross'; } }
+          }
+        } */
+        // R11-V2: Death Cross DISABLED — 56% WR with too many false entries
+        /* if (!signal) {
+          if (i >= 50) {
+            var e50nD = calcEMA(candles, i, 50), e50pD = calcEMA(candles, i-1, 50);
+            var e200nD = calcMA(candles, i, 200), e200pD = calcMA(candles, i-1, 200);
+            if (e50pD > e200pD && e50nD < e200nD) {
+              var rsiDC = calcRSI(candles, 14, i);
+              var dcSMA20 = calcMA(candles, i, 20), dcSMA50 = calcMA(candles, i, 50);
+              if (rsiDC >= 20 && rsiDC <= 75 && dcSMA20 < dcSMA50) { signal = 'short'; firedPattern = 'Death Cross'; }
+            }
+          }
+        } */
+        if (!signal && i >= 15) {
+          // R11-V2 Double Top: RSI 65-82, vol>1.2, price>MA20*1.02, confluence>=2
+          var dt1i = -1, dt2i = -1, dt1v = 0, dt2v = 0;
+          for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > dt1v) { dt1v = hh; dt1i = j; } }
+          for (var j2 = dt1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > dt2v) { dt2v = hh2; dt2i = j2; } }
+          if (dt1i !== -1 && dt2i !== -1) {
+            var pdt = Math.abs(dt1v - dt2v) / Math.max(dt1v, dt2v) * 100;
+            var vdt = parseFloat(candles[Math.floor((dt1i + dt2i) / 2)].l);
+            var rdt = calcRSI(candles, 14, i), mdt = calcMA(candles, i, 20);
+            var dtVR = calcVolRatio(candles, i);
+            if (pdt <= 2 && vdt < Math.min(dt1v, dt2v) * 0.98 && rdt >= 65 && rdt <= 82 && cl > mdt * 1.02 && isRed) {
+              var dtConf = 1;
+              if (rdt >= 70 && rdt <= 80) dtConf++;
+              if (dtVR > 1.2) dtConf++;
+              if (cl > mdt * 1.04) dtConf++;
+              if (dtConf >= 2) { signal = 'short'; firedPattern = 'Double Top'; }
+            }
+          }
+        }
+        if (!signal && i >= 15) {
+          // Double Bottom
+          var db1i = -1, db2i = -1, db1v = 999999, db2v = 999999;
+          for (var j = i - 15; j < i - 2; j++) { var ll = parseFloat(candles[j].l); if (ll < db1v) { db1v = ll; db1i = j; } }
+          for (var j2 = db1i + 2; j2 < i; j2++) { var ll2 = parseFloat(candles[j2].l); if (ll2 < db2v) { db2v = ll2; db2i = j2; } }
+          if (db1i !== -1 && db2i !== -1) {
+            var tdt = Math.abs(db1v - db2v) / Math.min(db1v, db2v) * 100;
+            var bdt = parseFloat(candles[Math.floor((db1i + db2i) / 2)].h);
+            var rdb = calcRSI(candles, 14, i), mdb = calcMA(candles, i, 20);
+            if (tdt <= 2.5 && bdt > Math.min(db1v, db2v) * 1.02 && rdb <= 40 && cl >= mdb * 0.98 && isGreen) { signal = 'long'; firedPattern = 'Double Bottom'; }
+          }
+        }
+        if (!signal && i >= 8) {
+          // Stairway to Hell
+          var sh1 = parseFloat(candles[i-3].h), sh2 = parseFloat(candles[i-2].h), sh3 = parseFloat(candles[i-1].h);
+          if (sh1 > sh2 && sh2 > sh3 && l < parseFloat(candles[i-1].l) && isRed) {
+            var sthRSI = calcRSI(candles, 14, i);
+            if (sthRSI < 60) { signal = 'short'; firedPattern = 'Stairway to Hell'; }
+          }
+        }
+        if (!signal && i >= 15) {
+          // Head & Shoulders (tightened)
+          var hsH = 0, hsI = 0;
+          for (var j = i - 15; j < i; j++) { if (parseFloat(candles[j].h) > hsH) { hsH = parseFloat(candles[j].h); hsI = j; } }
+          if (hsI > i - 13 && hsI < i - 2) {
+            var lsH = parseFloat(candles[hsI - 1].h), rsH = parseFloat(candles[hsI + 1].h);
+            if (Math.abs(lsH - rsH) / Math.max(lsH, rsH) * 100 < 3 && hsH > Math.max(lsH, rsH) * 1.03) {
+              var nl = Math.min(parseFloat(candles[hsI - 1].l), parseFloat(candles[hsI + 1].l));
+              if (cl < nl && isRed) { var hsRSI = calcRSI(candles, 14, i); if (hsRSI < 65 && hsRSI > 35) { signal = 'short'; firedPattern = 'Head & Shoulders'; } }
+            }
+          }
+        }
+        if (!signal && i >= 15) {
+          // Inverse H&S (TIGHTENED: 3% shoulder match, head must be 3% deeper, neckline break + volume + RSI)
+          var ihsLow = 999999, ihsI = 0;
+          for (var j = i - 15; j < i; j++) { if (parseFloat(candles[j].l) < ihsLow) { ihsLow = parseFloat(candles[j].l); ihsI = j; } }
+          if (ihsI > i - 13 && ihsI < i - 2) {
+            var ilsL = parseFloat(candles[ihsI - 1].l), irsL = parseFloat(candles[ihsI + 1].l);
+            var ihsSym = Math.abs(ilsL - irsL) / Math.min(ilsL, irsL) * 100;
+            var ihsProm = ihsLow < Math.min(ilsL, irsL) * 0.97; // head must be 3%+ deeper
+            var ihsNeck = Math.max(parseFloat(candles[ihsI - 1].h), parseFloat(candles[ihsI + 1].h));
+            if (ihsSym < 3 && ihsProm && cl > ihsNeck && isGreen) {
+              var ihsRSI = calcRSI(candles, 14, i);
+              if (ihsRSI > 35 && ihsRSI < 70) { signal = 'long'; firedPattern = 'Inverse H&S'; }
+            }
+          }
+        }
+        if (!signal && i >= 10) {
+          // Falling Wedge
+          var fwH1 = parseFloat(candles[i-10].h), fwH2 = parseFloat(candles[i-5].h);
+          var fwL1 = parseFloat(candles[i-10].l), fwL2 = parseFloat(candles[i-5].l);
+          if (fwH1 > fwH2 && fwL1 > fwL2 && isGreen) {
+            var fwR1 = fwH1 - fwL1, fwR2 = fwH2 - fwL2;
+            if (fwR2 < fwR1 * 0.8) { signal = 'long'; firedPattern = 'Falling Wedge'; }
+          }
+        }
+        if (!signal && i >= 25) {
+          // Cup & Handle
+          var cupSt = i - 20, cupEn = i - 10, cupHi = 0, cupLo = 999999;
+          for (var ci = cupSt; ci < cupEn; ci++) { if (parseFloat(candles[ci].h) > cupHi) cupHi = parseFloat(candles[ci].h); if (parseFloat(candles[ci].l) < cupLo) cupLo = parseFloat(candles[ci].l); }
+          var cupD = (cupHi - cupLo) / cupHi * 100;
+          if (cupD >= 8 && cupD <= 25 && isGreen && cl > cupHi * 0.98) { signal = 'long'; firedPattern = 'Cup & Handle'; }
+        }
+        if (!signal && i >= 15) {
+          // Ascending Triangle
+          var atR = parseFloat(candles[i-15].h), atT = 1;
+          for (var j = i-14; j < i; j++) { if (Math.abs(parseFloat(candles[j].h) - atR) / atR * 100 < 1.5) atT++; }
+          var atL = [parseFloat(candles[i-15].l), parseFloat(candles[i-10].l), parseFloat(candles[i-5].l)];
+          if (atT >= 2 && atL[0] < atL[1] && atL[1] < atL[2] && cl > atR * 0.99 && isGreen) { signal = 'long'; firedPattern = 'Ascending Triangle'; }
+        }
+        if (!signal && i >= 15) {
+          // Descending Triangle
+          var dtS = parseFloat(candles[i-15].l), dtT = 1;
+          for (var j = i-14; j < i; j++) { if (Math.abs(parseFloat(candles[j].l) - dtS) / dtS * 100 < 1.5) dtT++; }
+          var dtH = [parseFloat(candles[i-15].h), parseFloat(candles[i-10].h), parseFloat(candles[i-5].h)];
+          if (dtT >= 2 && dtH[0] > dtH[1] && dtH[1] > dtH[2] && cl < dtS * 1.01 && isRed) { signal = 'short'; firedPattern = 'Descending Triangle'; }
+        }
+        if (!signal && i >= 4) {
+          // R11-V2 Bull Flag: strong >5% move, 2 red pullback, green resume, RSI 25-50, vol>1.2, confluence>=2
+          var bfStrong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.05;
+          var bfPullback = parseFloat(prev.c) < parseFloat(prev.o) && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
+          if (bfStrong && bfPullback) {
+            var bfRSI = calcRSI(candles, 14, i), bfVR = calcVolRatio(candles, i), bfMA20 = calcMA(candles, i, 20);
+            if (bfRSI > 25 && bfRSI < 50) {
+              var bfConf = 1;
+              if (bfVR > 1.2) bfConf++;
+              if (Math.abs(cl - bfMA20) / bfMA20 * 100 > 1.5) bfConf++;
+              if (bfRSI < 35) bfConf++;
+              if (bfConf >= 2) { signal = 'long'; firedPattern = 'Bull Flag'; }
+            }
+          }
+        }
+        if (!signal && i >= 4) {
+          // Bear Flag
+          var bfD = parseFloat(candles[i-4].l), bfH2 = parseFloat(candles[i-1].h);
+          if (bfH2 > bfD && (bfH2 - bfD) / bfD * 100 > 5 && isRed) {
+            var e20bfD = calcEMA(candles, i, 20), e50bfD = calcMA(candles, i, 50);
+            if (e20bfD < e50bfD) { signal = 'short'; firedPattern = 'Bear Flag'; }
+          }
+        }
+      }
+
+      // Regime filter gate: suppress counter-regime signals (except reversal patterns)
+      if (signal) {
+        // R11-V2: Suppress shorts in very strong bull markets (>5% SMA divergence)
+        if (signal === 'short' && suppressShort) { signal = null; }
+        var fpLower = (firedPattern || '').toLowerCase();
+        var isReversalPattern = fpLower.indexOf('double top') >= 0 || fpLower.indexOf('double bottom') >= 0
+          || fpLower.indexOf('head & shoulders') >= 0 || fpLower.indexOf('stairway') >= 0
+          || fpLower.indexOf('golden cross') >= 0 || fpLower.indexOf('death cross') >= 0;
+        if (marketRegime === 'bull' && signal === 'short' && !isReversalPattern) signal = null;
+        if (marketRegime === 'bear' && signal === 'long' && !isReversalPattern) signal = null;
+      }
+
+      if (signal) {
+        if (signal === 'long') longCount++; else shortCount++;
+        var entry = cl;
+        // Fix: 4% stop loss (was 3% — too tight for daily candles)
+        // R11-V2: Dynamic stops for Bull Flag + Double Top (2% beyond candle structure)
+        var stop, target, risk;
+        if (firedPattern === 'Bull Flag' && signal === 'long') {
+          stop = Math.min(pl2, l) * 0.98; // 2% below entry candle's low
+          risk = entry - stop;
+          target = risk > 0 ? entry + risk * 2 : 0;
+          if (risk <= 0) signal = null;
+        } else if (firedPattern === 'Double Top' && signal === 'short') {
+          stop = Math.max(ph, h) * 1.02; // 2% above entry candle's high
+          risk = stop - entry;
+          target = risk > 0 ? entry - risk * 2 : 0;
+          if (risk <= 0) signal = null;
+        } else {
+          // Fallback: fixed stop for other patterns
+          var stopDist = entry * STOP_PCT;
+          stop = signal === 'long' ? entry - stopDist : entry + stopDist;
+          risk = Math.abs(entry - stop);
+          target = signal === 'long' ? entry + TARGET_MULT * risk : entry - TARGET_MULT * risk;
+        }
+        if (!signal) continue; // R11-V2: skip if dynamic stop invalidated the signal
+        var exit = null, exitReason = null;
+        for (var j = i+1; j < Math.min(candles.length, i + MAX_HOLD + 1); j++) {
+          var fh = parseFloat(candles[j].h), fl = parseFloat(candles[j].l);
+          if (signal === 'long') {
+            if (fl <= stop) { exit = stop; exitReason = 'stop'; break; }
+            if (fh >= target) { exit = target; exitReason = 'target'; break; }
+          } else {
+            if (fh >= stop) { exit = stop; exitReason = 'stop'; break; }
+            if (fl <= target) { exit = target; exitReason = 'target'; break; }
+          }
+        }
+        if (!exit) { exit = parseFloat(candles[Math.min(candles.length-1, i + MAX_HOLD)].c); exitReason = 'timeout'; }
+        // Fix 4: Subtract taker fees (0.07% round-trip)
+        var pnlPct = signal === 'long' ? (exit - entry) / entry * 100 : (entry - exit) / entry * 100;
+        pnlPct -= TAKER_FEE;
+        signals.push({ i: i, date: new Date(c.t).toISOString().slice(0,10), side: signal, entry: entry, stop: stop, target: target, exit: exit, exitReason: exitReason, pnlPct: pnlPct, pattern: firedPattern });
+      }
     }
 
-    // --- DISPLAY RESULTS ---
-    if (signals.length === 0) {
-      results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for ' + coin + ' (' + setupName + ') in the last 365 days.<br><br>R11-V3 ships only Bull Flag + Double Top. Try "All Setups" mode or a different coin.</div>';
-      return;
+    // ---- ARCHITECTURAL FIX: Per-setup concentration cap (max 20% of total signals) ----
+    if (isGenericScan && signals.length > 0) {
+      var patternCounts = {};
+      signals.forEach(function(s) { if (s.pattern) patternCounts[s.pattern] = (patternCounts[s.pattern] || 0) + 1; });
+      var maxPerPattern = Math.ceil(signals.length * 0.20); // 20% cap
+      var patternSeen = {};
+      var cappedSignals = [];
+      for (var si = 0; si < signals.length; si++) {
+        var p = signals[si].pattern || 'Unknown';
+        if ((patternSeen[p] || 0) < maxPerPattern) {
+          cappedSignals.push(signals[si]);
+          patternSeen[p] = (patternSeen[p] || 0) + 1;
+        }
+      }
+      // Log cap stats
+      console.log('[Concentration Cap] Before:', signals.length, 'signals | After:', cappedSignals.length, '| Caps:', Object.keys(patternCounts).map(function(k){return k+':'+patternCounts[k]+'→'+Math.min(patternCounts[k],maxPerPattern);}).join(', '));
+      signals = cappedSignals;
     }
 
-    var wins = signals.filter(function(s) { return s.pnlPct > 0; }).length;
+    if (signals.length === 0) { results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for this setup in the last 365 days.</div>'; return; }
+
+    var wins = signals.filter(function(s){return s.pnlPct > 0;}).length;
     var wr = wins / signals.length * 100;
-    var totalPnl = signals.reduce(function(sum, s) { return sum + s.pnlPct; }, 0);
-    var avgPnl = totalPnl / signals.length;
-    var longs = signals.filter(function(s) { return s.side === 'long'; }).length;
-    var shorts = signals.filter(function(s) { return s.side === 'short'; }).length;
-    var bestTrade = signals.reduce(function(b, s) { return s.pnlPct > b.pnlPct ? s : b; }, signals[0]);
-    var worstTrade = signals.reduce(function(w, s) { return s.pnlPct < w.pnlPct ? s : w; }, signals[0]);
-    var partialCount = signals.filter(function(s) { return s.partial1R; }).length;
-    var trailCount = signals.filter(function(s) { return s.exitReason === 'trailing_stop'; }).length;
-    var targetCount = signals.filter(function(s) { return s.exitReason === 'target'; }).length;
-    var stopCount = signals.filter(function(s) { return s.exitReason === 'stop'; }).length;
-    var timeoutCount = signals.filter(function(s) { return s.exitReason === 'timeout'; }).length;
+    var avgPnl = signals.reduce(function(s,x){return s + x.pnlPct;}, 0) / signals.length;
+    var totalPnl = signals.reduce(function(s,x){return s + x.pnlPct;}, 0);
+    var longs = signals.filter(function(s){return s.side === 'long';}).length;
+    var shorts = signals.filter(function(s){return s.side === 'short';}).length;
+    var bestTrade = signals.reduce(function(b,x){return x.pnlPct > b.pnlPct ? x : b;}, signals[0]);
+    var worstTrade = signals.reduce(function(w,x){return x.pnlPct < w.pnlPct ? x : w;}, signals[0]);
 
-    // Pattern breakdown
+    // Pattern breakdown for all-setups mode
     var patternBreakdown = '';
-    if (isAllMode && signals.length > 0) {
+    if (isGenericScan && signals.length > 0) {
       var pc = {};
-      signals.forEach(function(s) { if (s.setup) pc[s.setup] = (pc[s.setup] || 0) + 1; });
-      var sorted = Object.keys(pc).sort(function(a, b) { return pc[b] - pc[a]; });
+      signals.forEach(function(s) { if (s.pattern) pc[s.pattern] = (pc[s.pattern] || 0) + 1; });
+      var sorted = Object.keys(pc).sort(function(a,b){return pc[b]-pc[a];});
       patternBreakdown = '<div style="margin-top:8px; padding-top:8px; border-top:1px solid #ccc; font-size:11px; color:#666;">' +
-        '<strong>Pattern mix:</strong> ' + sorted.map(function(k) { return k + ' (' + pc[k] + ')'; }).join(' · ') + '</div>';
+        '<strong>Pattern mix (20% cap applied):</strong> ' + sorted.map(function(k){return k+' ('+pc[k]+')';}).join(' · ') + '</div>';
     }
 
     results.innerHTML = '<div style="background:#fef9c3; border: 3px solid var(--border); padding:14px; border-radius:8px; margin-bottom:12px;">' +
-      '<div style="font-weight:700; font-size:16px; margin-bottom:4px;">' + coin + ' · ' + setupName + ' <span style="font-size:11px; color:#666;">[' + cfg.name + ' tier]</span></div>' +
-      '<div style="font-size:11px; color:#666; margin-bottom:8px;">R11-V3 Reaper Engine · Bull Flag + Double Top · Partial exit @1R + trailing stops</div>' +
+      '<div style="font-weight:700; font-size:16px; margin-bottom:8px;">' + coin + ' · ' + setupName + '</div>' +
       patternBreakdown +
       '<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; font-size:13px;">' +
       '<div><strong>' + signals.length + ' signals</strong> in 365d</div>' +
-      '<div><strong>Win rate: ' + wr.toFixed(1) + '%</strong> (' + wins + '/' + signals.length + ')</div>' +
-      '<div><strong>Total PnL: <span style="color:' + (totalPnl >= 0 ? '#22c55e' : '#ef4444') + ';">' + (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(1) + '%</span></strong></div>' +
+      '<div><strong>Win rate: ' + wr.toFixed(0) + '%</strong> (' + wins + '/' + signals.length + ')</div>' +
       '<div><strong>Avg PnL: <span style="color:' + (avgPnl >= 0 ? '#22c55e' : '#ef4444') + ';">' + (avgPnl >= 0 ? '+' : '') + avgPnl.toFixed(2) + '%</span></strong></div>' +
+      '<div><strong>Total PnL: <span style="color:' + (totalPnl >= 0 ? '#22c55e' : '#ef4444') + ';">' + (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(1) + '%</span></strong></div>' +
       '<div>L/S: ' + longs + 'L / ' + shorts + 'S</div>' +
       '<div>Fees: 0.07% per trade</div>' +
-      '<div>Exits: ' + targetCount + ' target · ' + trailCount + ' trail · ' + stopCount + ' stop · ' + timeoutCount + ' timeout</div>' +
-      '<div>Partial @1R: ' + partialCount + '/' + signals.length + ' trades</div>' +
       '<div>Best: +' + bestTrade.pnlPct.toFixed(1) + '% on ' + bestTrade.date + '</div>' +
       '<div>Worst: ' + worstTrade.pnlPct.toFixed(1) + '% on ' + worstTrade.date + '</div>' +
       '</div></div>' +
-      '<div style="font-weight:700; font-size:13px; margin:10px 0;">Signal Log (latest 20):</div>' +
-      signals.slice(-20).reverse().map(function(s) {
+      '<div style="font-weight:700; font-size:13px; margin:10px 0;">Signal Log:</div>' +
+      signals.slice(-20).reverse().map(function(s){
         var color = s.pnlPct >= 0 ? '#22c55e' : '#ef4444';
         var sideEmoji = s.side === 'long' ? '🟢' : '🔴';
-        var partialTag = s.partial1R ? ' <span style="font-size:10px; color:#888;">⚡1R</span>' : '';
         return '<div style="display:grid; grid-template-columns: auto auto 1fr auto auto; gap:8px; padding:8px; border-bottom:1px solid #eee; align-items:center; font-size:12px;">' +
           '<div>' + sideEmoji + '</div>' +
           '<div style="font-weight:700;">' + s.date + '</div>' +
-          '<div>' + s.setup + ' · Entry $' + s.entry.toFixed(2) + ' → Exit $' + s.exit.toFixed(2) + ' (' + s.exitReason + ')' + partialTag + '</div>' +
-          '<div>RSI:' + s.rsi + ' · C:' + s.confluence + '</div>' +
+          '<div>Entry $' + s.entry.toFixed(2) + ' → Exit $' + s.exit.toFixed(2) + ' (' + s.exitReason + ')</div>' +
+          '<div>Stop: $' + s.stop.toFixed(2) + '</div>' +
           '<div style="color:' + color + '; font-weight:700;">' + (s.pnlPct >= 0 ? '+' : '') + s.pnlPct.toFixed(1) + '%</div>' +
         '</div>';
       }).join('');
   } catch(e) {
-    results.innerHTML = '<div style="padding:20px; color:#ef4444;">R11-V3 backtest failed: ' + String(e).slice(0, 120) + '</div>';
+    results.innerHTML = '<div style="padding:20px; color:#ef4444;">Backtest failed: ' + String(e).slice(0,80) + '</div>';
   }
 }
-
 
 function _pfdBacktestActivate() {
   var setupSelect = document.getElementById('bt-setup');

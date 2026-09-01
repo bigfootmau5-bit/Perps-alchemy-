@@ -9,7 +9,7 @@ CONFIGURATION (Sept 1, 2026):
 - Coin Tiers: Original 8 (standard V2 params) + Expanded (tighter params)
 
 TIER 1 — LIQUIDITY COINS (V2 params, 75% WR):
-  BTC, ETH, SOL, HYPE, XRP, DOGE, AVAX, ARB
+  BTC, ETH, HYPE, SOL, ZEC, PUMP, XRP, ARB
   - Deep order books, tight spreads, high OI
   - Standard V2 parameters: dynamic 2% stops, 2x R:R, 15d hold
   - Bull Flag RSI 25-50, Double Top RSI 65-82
@@ -50,9 +50,9 @@ from datetime import datetime
 HL_API = "https://api.hyperliquid.xyz/info"
 
 # --- COIN TIERS ---
-TIER1_COINS = ["BTC", "ETH", "SOL", "HYPE", "XRP", "DOGE", "AVAX", "ARB"]
+TIER1_COINS = ["BTC", "ETH", "HYPE", "SOL", "ZEC", "PUMP", "XRP", "ARB"]
 TIER2_COINS = ["LINK", "RUNE", "ADA", "DOT", "NEAR", "INJ", "TIA", "SEI"]
-BLACKLISTED_COINS = ["OP", "SUI"]
+BLACKLISTED_COINS = ["OP", "SUI", "DOGE", "AVAX"]
 SUPPORTED_COINS = TIER1_COINS + TIER2_COINS
 
 # --- TIER PARAMS ---
