@@ -19090,6 +19090,13 @@ async function _pfdBacktestRun(coin, setupName) {
 
       var signal = null;
 
+      // ---- Fix 5: Regime Filter (SMA50 vs SMA200) — gates signals by market regime ----
+      var regimeMA50 = calcMA(candles, i, 50);
+      var regimeMA200 = i >= 200 ? calcMA(candles, i, 200) : regimeMA50;
+      var regimePct = (regimeMA50 - regimeMA200) / regimeMA200 * 100;
+      // bull: SMA50 > SMA200 by >2%; bear: SMA50 < SMA200 by >2%; range: within 2%
+      var marketRegime = regimePct > 2 ? 'bull' : (regimePct < -2 ? 'bear' : 'range');
+
       // ---- Fix 4: Golden Cross (SMA50/SMA200 crossover + 3-bar close above EMA20) ----
       if (name.indexOf('golden cross') >= 0 && i >= 50) {
         var s50n = calcMA(candles, i, 50), s50p = calcMA(candles, i-1, 50);
@@ -19133,17 +19140,24 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Double Top (widened: 2.5% peaks, RSI > 60) ----
-      if (!signal && name.indexOf('double top') >= 0 && i >= 15) {
+      // ---- Fix: Double Top (TIGHTENED: 1.5% peaks, RSI > 65, volume confirm, min 6 candle spacing) ----
+      if (!signal && name.indexOf('double top') >= 0 && i >= 20) {
         var p1i = -1, p2i = -1, p1v = 0, p2v = 0;
-        for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
-        for (var j2 = p1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
+        for (var j = i - 20; j < i - 3; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
+        for (var j2 = p1i + 3; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
         if (p1i !== -1 && p2i !== -1) {
           var peakDiff = Math.abs(p1v - p2v) / Math.max(p1v, p2v) * 100;
+          var peakSpacing = p2i - p1i;
           var valley = parseFloat(candles[Math.floor((p1i + p2i) / 2)].l);
           var rsiDT = calcRSI(candles, 14, i);
           var ma20DT = calcMA(candles, i, 20);
-          if (peakDiff <= 2.5 && valley < Math.min(p1v, p2v) * 0.98 && rsiDT >= 60 && cl <= ma20DT * 1.02 && isRed) signal = 'short';
+          // Volume confirmation: breakout candle volume > 1.3x avg
+          var dtAvgVol = 0;
+          for (var dtv = i - 10; dtv < i; dtv++) dtAvgVol += (parseFloat(candles[dtv].h) - parseFloat(candles[dtv].l));
+          dtAvgVol /= 10;
+          var dtVolConfirm = dtAvgVol > 0 && (h - l) > dtAvgVol * 1.3;
+          // Tightened: 1.5% peak tolerance, 6+ candle spacing, RSI > 65, volume confirm, deeper valley
+          if (peakDiff <= 1.5 && peakSpacing >= 6 && valley < Math.min(p1v, p2v) * 0.97 && rsiDT >= 65 && cl <= ma20DT * 1.0 && isRed && dtVolConfirm) signal = 'short';
         }
       }
 
@@ -19161,11 +19175,7 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Stairway to Hell ----
-      if (!signal && name.indexOf('stairway') >= 0 && i >= 5) {
-        var lh1 = parseFloat(prev3.h), lh2 = parseFloat(prev2.h), lh3 = parseFloat(prev.h);
-        if (lh1 > lh2 && lh2 > lh3 && h < lh3 && isRed) signal = 'short';
-      }
+      // ---- Stairway to Hell REMOVED — killed entirely per Round 5 spec ----
 
       // ---- Head & Shoulders (short) ----
       if (!signal && name.indexOf('head & shoulders') >= 0 && name.indexOf('inverse') < 0 && i >= 10) {
@@ -19278,6 +19288,12 @@ async function _pfdBacktestRun(coin, setupName) {
         var prev3Green = candles.slice(i-3, i).every(function(x){return parseFloat(x.c) > parseFloat(x.o);});
         if (isGreen && prev3Red && (cl - o) / o > 0.03) signal = 'long';
         if (isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
+      }
+
+      // Regime filter gate: suppress counter-regime signals
+      if (signal) {
+        if (marketRegime === 'bull' && signal === 'short' && name.indexOf('golden cross') < 0 && name.indexOf('death cross') < 0) signal = null;
+        if (marketRegime === 'bear' && signal === 'long' && name.indexOf('golden cross') < 0 && name.indexOf('death cross') < 0) signal = null;
       }
 
       if (signal) {
