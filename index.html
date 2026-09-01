@@ -19345,29 +19345,28 @@ async function _pfdBacktestRun(coin, setupName) {
       if (isGenericScan) {
         // Run every pattern detector and pick the FIRST match (priority order)
         // Track which pattern fired for concentration cap
-        if (!signal) {
-          // Golden Cross
+        // R11-V2: Golden Cross DISABLED — 30% WR, -11% PnL was dragging hit rate
+        /* if (!signal) {
           if (i >= 50) {
             var gcFast = calcEMA(candles, i, 50), gcFastP = calcEMA(candles, i-1, 50);
             var gcSlow = calcMA(candles, i, 200), gcSlowP = calcMA(candles, i-1, 200);
             if (gcFastP > gcSlowP && gcFast < gcSlow) { var gcRSI = calcRSI(candles, 14, i); if (gcRSI >= 25 && gcRSI <= 80) { signal = 'long'; firedPattern = 'Golden Cross'; } }
           }
-        }
-        if (!signal) {
-          // Death Cross (with BTC trend alignment)
+        } */
+        // R11-V2: Death Cross DISABLED — 56% WR with too many false entries
+        /* if (!signal) {
           if (i >= 50) {
             var e50nD = calcEMA(candles, i, 50), e50pD = calcEMA(candles, i-1, 50);
             var e200nD = calcMA(candles, i, 200), e200pD = calcMA(candles, i-1, 200);
             if (e50pD > e200pD && e50nD < e200nD) {
               var rsiDC = calcRSI(candles, 14, i);
-              // Must be aligned with broader trend: SMA20 < SMA50 (downtrend confirmed)
               var dcSMA20 = calcMA(candles, i, 20), dcSMA50 = calcMA(candles, i, 50);
               if (rsiDC >= 20 && rsiDC <= 75 && dcSMA20 < dcSMA50) { signal = 'short'; firedPattern = 'Death Cross'; }
             }
           }
-        }
+        } */
         if (!signal && i >= 15) {
-          // Double Top
+          // R11-V2 Double Top: RSI 65-82, vol>1.2, price>MA20*1.02, confluence>=2
           var dt1i = -1, dt2i = -1, dt1v = 0, dt2v = 0;
           for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > dt1v) { dt1v = hh; dt1i = j; } }
           for (var j2 = dt1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > dt2v) { dt2v = hh2; dt2i = j2; } }
@@ -19375,7 +19374,14 @@ async function _pfdBacktestRun(coin, setupName) {
             var pdt = Math.abs(dt1v - dt2v) / Math.max(dt1v, dt2v) * 100;
             var vdt = parseFloat(candles[Math.floor((dt1i + dt2i) / 2)].l);
             var rdt = calcRSI(candles, 14, i), mdt = calcMA(candles, i, 20);
-            if (pdt <= 2 && vdt < Math.min(dt1v, dt2v) * 0.98 && rdt >= 62 && cl <= mdt * 1.01 && isRed) { signal = 'short'; firedPattern = 'Double Top'; }
+            var dtVR = calcVolRatio(candles, i);
+            if (pdt <= 2 && vdt < Math.min(dt1v, dt2v) * 0.98 && rdt >= 65 && rdt <= 82 && cl > mdt * 1.02 && isRed) {
+              var dtConf = 1;
+              if (rdt >= 70 && rdt <= 80) dtConf++;
+              if (dtVR > 1.2) dtConf++;
+              if (cl > mdt * 1.04) dtConf++;
+              if (dtConf >= 2) { signal = 'short'; firedPattern = 'Double Top'; }
+            }
           }
         }
         if (!signal && i >= 15) {
@@ -19456,11 +19462,18 @@ async function _pfdBacktestRun(coin, setupName) {
           if (dtT >= 2 && dtH[0] > dtH[1] && dtH[1] > dtH[2] && cl < dtS * 1.01 && isRed) { signal = 'short'; firedPattern = 'Descending Triangle'; }
         }
         if (!signal && i >= 4) {
-          // Bull Flag
-          var bfH = parseFloat(candles[i-4].h), bfL = parseFloat(candles[i-1].l);
-          if (bfH > bfL && (bfH - bfL) / bfH * 100 > 5 && isGreen) {
-            var e20bf = calcEMA(candles, i, 20), e50bf = calcMA(candles, i, 50);
-            if (e20bf > e50bf) { signal = 'long'; firedPattern = 'Bull Flag'; }
+          // R11-V2 Bull Flag: strong >5% move, 2 red pullback, green resume, RSI 25-50, vol>1.2, confluence>=2
+          var bfStrong = (parseFloat(prev3.c) - parseFloat(prev3.o)) / parseFloat(prev3.o) > 0.05;
+          var bfPullback = parseFloat(prev.c) < parseFloat(prev.o) && parseFloat(prev2.c) < parseFloat(prev2.o) && isGreen;
+          if (bfStrong && bfPullback) {
+            var bfRSI = calcRSI(candles, 14, i), bfVR = calcVolRatio(candles, i), bfMA20 = calcMA(candles, i, 20);
+            if (bfRSI > 25 && bfRSI < 50) {
+              var bfConf = 1;
+              if (bfVR > 1.2) bfConf++;
+              if (Math.abs(cl - bfMA20) / bfMA20 * 100 > 1.5) bfConf++;
+              if (bfRSI < 35) bfConf++;
+              if (bfConf >= 2) { signal = 'long'; firedPattern = 'Bull Flag'; }
+            }
           }
         }
         if (!signal && i >= 4) {
