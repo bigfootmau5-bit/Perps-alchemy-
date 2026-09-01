@@ -19319,10 +19319,13 @@ async function _pfdBacktestRun(coin, setupName) {
         if (isRed && prev3Green && (o - cl) / o > 0.03) signal = 'short';
       }
 
-      // Regime filter gate: suppress counter-regime signals
+      // Regime filter gate: suppress counter-regime signals (except reversal patterns)
       if (signal) {
-        if (marketRegime === 'bull' && signal === 'short' && name.indexOf('golden cross') < 0 && name.indexOf('death cross') < 0) signal = null;
-        if (marketRegime === 'bear' && signal === 'long' && name.indexOf('golden cross') < 0 && name.indexOf('death cross') < 0) signal = null;
+        var isReversalPattern = name.indexOf('double top') >= 0 || name.indexOf('double bottom') >= 0
+          || name.indexOf('head & shoulders') >= 0 || name.indexOf('stairway') >= 0
+          || name.indexOf('golden cross') >= 0 || name.indexOf('death cross') >= 0;
+        if (marketRegime === 'bull' && signal === 'short' && !isReversalPattern) signal = null;
+        if (marketRegime === 'bear' && signal === 'long' && !isReversalPattern) signal = null;
       }
 
       if (signal) {
