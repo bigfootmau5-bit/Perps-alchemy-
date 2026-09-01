@@ -19090,12 +19090,12 @@ async function _pfdBacktestRun(coin, setupName) {
 
       var signal = null;
 
-      // ---- Fix 5: Regime Filter (SMA50 vs SMA200) — gates signals by market regime ----
+      // ---- Fix 5: Regime Filter (SMA20 vs SMA50) — works in any backtest window ----
+      var regimeMA20 = calcMA(candles, i, 20);
       var regimeMA50 = calcMA(candles, i, 50);
-      var regimeMA200 = i >= 200 ? calcMA(candles, i, 200) : regimeMA50;
-      var regimePct = (regimeMA50 - regimeMA200) / regimeMA200 * 100;
-      // bull: SMA50 > SMA200 by >2%; bear: SMA50 < SMA200 by >2%; range: within 2%
-      var marketRegime = regimePct > 2 ? 'bull' : (regimePct < -2 ? 'bear' : 'range');
+      var regimePct = (regimeMA20 - regimeMA50) / regimeMA50 * 100;
+      // bull: SMA20 > SMA50 by >1%; bear: SMA20 < SMA50 by >1%; range: within 1%
+      var marketRegime = regimePct > 1 ? 'bull' : (regimePct < -1 ? 'bear' : 'range');
 
       // ---- Fix 4: Golden Cross (SMA50/SMA200 crossover + 3-bar close above EMA20) ----
       if (name.indexOf('golden cross') >= 0 && i >= 50) {
@@ -19140,24 +19140,22 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Fix: Double Top (TIGHTENED: 1.5% peaks, RSI > 65, volume confirm, min 6 candle spacing) ----
-      if (!signal && name.indexOf('double top') >= 0 && i >= 20) {
+      // ---- Double Top (moderate tightening: 2% peaks, RSI > 62, volume confirm) ----
+      if (!signal && name.indexOf('double top') >= 0 && i >= 15) {
         var p1i = -1, p2i = -1, p1v = 0, p2v = 0;
-        for (var j = i - 20; j < i - 3; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
-        for (var j2 = p1i + 3; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
+        for (var j = i - 15; j < i - 2; j++) { var hh = parseFloat(candles[j].h); if (hh > p1v) { p1v = hh; p1i = j; } }
+        for (var j2 = p1i + 2; j2 < i; j2++) { var hh2 = parseFloat(candles[j2].h); if (hh2 > p2v) { p2v = hh2; p2i = j2; } }
         if (p1i !== -1 && p2i !== -1) {
           var peakDiff = Math.abs(p1v - p2v) / Math.max(p1v, p2v) * 100;
-          var peakSpacing = p2i - p1i;
           var valley = parseFloat(candles[Math.floor((p1i + p2i) / 2)].l);
           var rsiDT = calcRSI(candles, 14, i);
           var ma20DT = calcMA(candles, i, 20);
-          // Volume confirmation: breakout candle volume > 1.3x avg
           var dtAvgVol = 0;
           for (var dtv = i - 10; dtv < i; dtv++) dtAvgVol += (parseFloat(candles[dtv].h) - parseFloat(candles[dtv].l));
           dtAvgVol /= 10;
-          var dtVolConfirm = dtAvgVol > 0 && (h - l) > dtAvgVol * 1.3;
-          // Tightened: 1.5% peak tolerance, 6+ candle spacing, RSI > 65, volume confirm, deeper valley
-          if (peakDiff <= 1.5 && peakSpacing >= 6 && valley < Math.min(p1v, p2v) * 0.97 && rsiDT >= 65 && cl <= ma20DT * 1.0 && isRed && dtVolConfirm) signal = 'short';
+          var dtVolConfirm = dtAvgVol > 0 && (h - l) > dtAvgVol * 1.15;
+          // Moderate: 2% peak tolerance, RSI > 62, volume confirm, 2% valley depth
+          if (peakDiff <= 2 && valley < Math.min(p1v, p2v) * 0.98 && rsiDT >= 62 && cl <= ma20DT * 1.01 && isRed && dtVolConfirm) signal = 'short';
         }
       }
 
@@ -19175,35 +19173,47 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Stairway to Hell (BigFootMau5) — TIGHTENED: 5-shelf descending structure ----
-      if (!signal && name.indexOf('stairway') >= 0 && i >= 15) {
-        // Require 3+ descending highs (lower-high shelves) with volume decline + breakdown candle
-        var sh1 = parseFloat(candles[i-5].h), sh2 = parseFloat(candles[i-4].h), sh3 = parseFloat(candles[i-3].h);
-        var shelf1 = parseFloat(candles[i-6].l), shelf2 = parseFloat(candles[i-4].l), shelf3 = parseFloat(candles[i-2].l);
-        // 3 consecutive lower highs = proper stairway pattern
+      // ---- Stairway to Hell (BigFootMau5) — restored with moderate tightening ----
+      if (!signal && name.indexOf('stairway') >= 0 && i >= 8) {
+        // 3 consecutive lower highs = descending stairway
+        var sh1 = parseFloat(candles[i-3].h), sh2 = parseFloat(candles[i-2].h), sh3 = parseFloat(candles[i-1].h);
         var lowerHighs = sh1 > sh2 && sh2 > sh3;
-        // 3 descending support shelves breaking (stairway going down)
-        var lowerShelves = shelf1 > shelf2 && shelf2 > shelf3;
-        // Current candle breaks below the last shelf
-        var breakdown = l < shelf3 && isRed;
-        // Volume confirmation on breakdown
+        // Current candle is red and breaks below the previous low
+        var breakdown = l < parseFloat(candles[i-1].l) && isRed;
+        // Volume above average (lighter threshold — 1.1x not 1.2x)
         var sthAvgVol = 0;
-        for (var sv = i - 10; sv < i; sv++) sthAvgVol += (parseFloat(candles[sv].h) - parseFloat(candles[sv].l));
-        sthAvgVol /= 10;
-        var sthVolConfirm = sthAvgVol > 0 && (h - l) > sthAvgVol * 1.2;
-        // RSI should be below 55 (downtrend confirmation, not oversold bounce)
+        for (var sv = i - 8; sv < i; sv++) sthAvgVol += (parseFloat(candles[sv].h) - parseFloat(candles[sv].l));
+        sthAvgVol /= 8;
+        var sthVolConfirm = sthAvgVol > 0 && (h - l) > sthAvgVol * 1.1;
+        // RSI below 60 (downtrend, not overbought) — wider window
         var sthRSI = calcRSI(candles, 14, i);
-        if (lowerHighs && lowerShelves && breakdown && sthVolConfirm && sthRSI < 55 && sthRSI > 25) signal = 'short';
+        if (lowerHighs && breakdown && sthVolConfirm && sthRSI < 60) signal = 'short';
       }
 
-      // ---- Head & Shoulders (short) ----
-      if (!signal && name.indexOf('head & shoulders') >= 0 && name.indexOf('inverse') < 0 && i >= 10) {
-        var hsLookback = 10;
+      // ---- Head & Shoulders (short) — TIGHTENED: was firing 58/100, now needs volume + neckline break ----
+      if (!signal && name.indexOf('head & shoulders') >= 0 && name.indexOf('inverse') < 0 && i >= 15) {
+        var hsLookback = 15;
         var hsHigh = 0, hsHighIdx = 0;
         for (var j = i - hsLookback; j < i; j++) { if (parseFloat(candles[j].h) > hsHigh) { hsHigh = parseFloat(candles[j].h); hsHighIdx = j; } }
-        if (hsHighIdx > i - hsLookback + 1 && hsHighIdx < i - 1) {
+        if (hsHighIdx > i - hsLookback + 2 && hsHighIdx < i - 2) {
           var lsH = parseFloat(candles[hsHighIdx - 1].h), rsH = parseFloat(candles[hsHighIdx + 1].h);
-          if (Math.abs(lsH - rsH) / Math.max(lsH, rsH) * 100 < 5 && hsHigh > lsH && hsHigh > rsH && isRed) signal = 'short';
+          // Stricter shoulder symmetry: < 3% difference (was 5%)
+          var symPct = Math.abs(lsH - rsH) / Math.max(lsH, rsH) * 100;
+          // Head must be clearly above shoulders: > 2% higher (was just >)
+          var headClear = hsHigh > lsH * 1.02 && hsHigh > rsH * 1.02;
+          // Neckline = lowest point between shoulders
+          var neckline = 999999;
+          for (var nk = hsHighIdx - 1; nk <= hsHighIdx + 1; nk++) { if (parseFloat(candles[nk].l) < neckline) neckline = parseFloat(candles[nk].l); }
+          // Must break below neckline with red candle
+          var necklineBreak = cl < neckline && isRed;
+          // Volume confirmation on breakdown
+          var hsAvgVol = 0;
+          for (var hv = i - 10; hv < i; hv++) hsAvgVol += (parseFloat(candles[hv].h) - parseFloat(candles[hv].l));
+          hsAvgVol /= 10;
+          var hsVolConfirm = hsAvgVol > 0 && (h - l) > hsAvgVol * 1.2;
+          // RSI must be below 60 (was no RSI filter at all)
+          var hsRSI = calcRSI(candles, 14, i);
+          if (symPct < 3 && headClear && necklineBreak && hsVolConfirm && hsRSI < 60) signal = 'short';
         }
       }
 
