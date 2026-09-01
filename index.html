@@ -19175,7 +19175,26 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Stairway to Hell REMOVED — killed entirely per Round 5 spec ----
+      // ---- Stairway to Hell (BigFootMau5) — TIGHTENED: 5-shelf descending structure ----
+      if (!signal && name.indexOf('stairway') >= 0 && i >= 15) {
+        // Require 3+ descending highs (lower-high shelves) with volume decline + breakdown candle
+        var sh1 = parseFloat(candles[i-5].h), sh2 = parseFloat(candles[i-4].h), sh3 = parseFloat(candles[i-3].h);
+        var shelf1 = parseFloat(candles[i-6].l), shelf2 = parseFloat(candles[i-4].l), shelf3 = parseFloat(candles[i-2].l);
+        // 3 consecutive lower highs = proper stairway pattern
+        var lowerHighs = sh1 > sh2 && sh2 > sh3;
+        // 3 descending support shelves breaking (stairway going down)
+        var lowerShelves = shelf1 > shelf2 && shelf2 > shelf3;
+        // Current candle breaks below the last shelf
+        var breakdown = l < shelf3 && isRed;
+        // Volume confirmation on breakdown
+        var sthAvgVol = 0;
+        for (var sv = i - 10; sv < i; sv++) sthAvgVol += (parseFloat(candles[sv].h) - parseFloat(candles[sv].l));
+        sthAvgVol /= 10;
+        var sthVolConfirm = sthAvgVol > 0 && (h - l) > sthAvgVol * 1.2;
+        // RSI should be below 55 (downtrend confirmation, not oversold bounce)
+        var sthRSI = calcRSI(candles, 14, i);
+        if (lowerHighs && lowerShelves && breakdown && sthVolConfirm && sthRSI < 55 && sthRSI > 25) signal = 'short';
+      }
 
       // ---- Head & Shoulders (short) ----
       if (!signal && name.indexOf('head & shoulders') >= 0 && name.indexOf('inverse') < 0 && i >= 10) {
