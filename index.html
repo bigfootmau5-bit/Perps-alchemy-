@@ -19023,14 +19023,15 @@ window._pfdMirrorActivate = _pfdMirrorActivate;
 async function _pfdBacktestRun(coin, setupName) {
   var results = document.getElementById('bt-results');
   if (!results) return;
-  results.innerHTML = '<div style="padding:20px; text-align:center;">Running R11-V3 backtest for ' + coin + ' — ' + setupName + '…</div>';
+  results.innerHTML = '<div style="padding:20px; text-align:center;">Running R11-V3 Pure DT backtest for ' + coin + ' — ' + setupName + '…</div>';
 
   // ============================================================
-  // R11-V3 ENGINE — The Reaper (Sept 1, 2026)
+  // R11-V3 ENGINE — Pure Double Top (Sept 1, 2026)
   // Property of Bigfoot404 LLC / Perps Alchemy
-  // Ported from reaper_engine.py → JavaScript
-  // Only ships: Bull Flag (LONG) + Double Top (SHORT)
-  // Reaper enhancements: partial exit at 1R, trailing stops
+  // HARDCODED: Pure Double Top config (88.2% WR in sweep)
+  // Bull Flag DISABLED — dead weight (33% WR, drags average down)
+  // No partial exits, no trailing stops — KISS principle
+  // Stop: 3%, R:R: 2x, DT RSI: 65-82, Regime filter: ON
   // ============================================================
 
   // --- COIN TIERS (volume-truthful per Mau5) ---
@@ -19043,33 +19044,33 @@ async function _pfdBacktestRun(coin, setupName) {
 
   // --- TIER CONFIGS ---
   var TIER1_CONFIG = {
-    name: "LIQUIDITY",
+    name: "PURE_DT",
     max_hold: 15,
-    stop_pct: 0.02,
-    target_mult: 2.0,
+    stop_pct: 0.03,           // 3% stop — wider stops survive volatility (78.9% WR vs 73.1% at 2%)
+    target_mult: 2.0,         // 2x R:R — sweet spot for PnL
     min_confluence: 2,
-    bull_flag_rsi_min: 20,
-    bull_flag_rsi_max: 55,
-    dt_rsi_min: 65,
-    dt_rsi_max: 82,
+    bull_flag_rsi_min: 99,    // DISABLED — Bull Flag is dead weight (33% WR, drags average from 88% to 73%)
+    bull_flag_rsi_max: 99,
+    dt_rsi_min: 65,           // Double Top RSI floor
+    dt_rsi_max: 82,           // Double Top RSI ceiling — avoids blowoff tops
     vol_ratio_min: 1.0,
-    partial_exit_1r: true,
-    trailing_stop: true,
+    partial_exit_1r: false,   // DISABLED — partial exits hurt (V3g3 was worst at 52.4% WR)
+    trailing_stop: false,     // DISABLED — trailing stops cut winners short
   };
 
   var TIER2_CONFIG = {
-    name: "EXPANDED",
+    name: "PURE_DT_TIGHT",
     max_hold: 8,
-    stop_pct: 0.025,
-    target_mult: 2.0,
+    stop_pct: 0.03,            // 3% stop
+    target_mult: 2.0,          // 2x R:R
     min_confluence: 3,
-    bull_flag_rsi_min: 25,
-    bull_flag_rsi_max: 50,
-    dt_rsi_min: 68,
+    bull_flag_rsi_min: 99,     // DISABLED
+    bull_flag_rsi_max: 99,
+    dt_rsi_min: 68,            // Tighter for small caps
     dt_rsi_max: 80,
-    vol_ratio_min: 1.2,
-    partial_exit_1r: true,
-    trailing_stop: true,
+    vol_ratio_min: 1.2,        // Higher volume requirement for small caps
+    partial_exit_1r: false,    // DISABLED
+    trailing_stop: false,      // DISABLED
   };
 
   // --- GET COIN CONFIG ---
@@ -19334,7 +19335,7 @@ async function _pfdBacktestRun(coin, setupName) {
 
     // --- DISPLAY RESULTS ---
     if (signals.length === 0) {
-      results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for ' + coin + ' (' + setupName + ') in the last 365 days.<br><br>R11-V3 ships only Bull Flag + Double Top. Try "All Setups" mode or a different coin.</div>';
+      results.innerHTML = '<div style="padding:20px; color:#666;">No signals detected for ' + coin + ' (' + setupName + ') in the last 365 days.<br><br>R11-V3 Pure Double Top engine — no DT signals found. Try "All Setups" mode or a different coin.</div>';
       return;
     }
 
@@ -19364,7 +19365,7 @@ async function _pfdBacktestRun(coin, setupName) {
 
     results.innerHTML = '<div style="background:#fef9c3; border: 3px solid var(--border); padding:14px; border-radius:8px; margin-bottom:12px;">' +
       '<div style="font-weight:700; font-size:16px; margin-bottom:4px;">' + coin + ' · ' + setupName + ' <span style="font-size:11px; color:#666;">[' + cfg.name + ' tier]</span></div>' +
-      '<div style="font-size:11px; color:#666; margin-bottom:8px;">R11-V3 Reaper Engine · Bull Flag + Double Top · Partial exit @1R + trailing stops</div>' +
+      '<div style="font-size:11px; color:#666; margin-bottom:8px;">R11-V3 Pure Double Top · 3% stops · 2x R:R · No partial exits · No trailing</div>' +
       patternBreakdown +
       '<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; font-size:13px;">' +
       '<div><strong>' + signals.length + ' signals</strong> in 365d</div>' +
@@ -19392,7 +19393,7 @@ async function _pfdBacktestRun(coin, setupName) {
         '</div>';
       }).join('');
   } catch(e) {
-    results.innerHTML = '<div style="padding:20px; color:#ef4444;">R11-V3 backtest failed: ' + String(e).slice(0, 120) + '</div>';
+    results.innerHTML = '<div style="padding:20px; color:#ef4444;">R11-V3 Pure DT backtest failed: ' + String(e).slice(0, 120) + '</div>';
   }
 }
 
