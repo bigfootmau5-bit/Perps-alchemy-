@@ -19083,20 +19083,23 @@ async function _pfdBacktestRun(coin, setupName) {
       var po = parseFloat(prev.o), pc = parseFloat(prev.c), ph = parseFloat(prev.h), pl2 = parseFloat(prev.l);
       var isGreen = cl > o, isRed = cl < o;
 
-      // Fix 3: L:S ratio enforcement — skip longs if > 65%
+      // Fix 3: skipLong cap — skip Cup & Handle longs if longs > 60% of total (prevents long over-representation)
       var tot = longCount + shortCount;
       var longPct = tot > 10 ? longCount / tot : 0;
-/* L:S enforcement removed — signals fire on pattern quality alone */
+      var skipLongCap = longPct > 0.60;
 
       var signal = null;
 
-      // ---- Fix 1: Golden Cross (proper EMA50/EMA200 crossover) ----
+      // ---- Fix 4: Golden Cross (SMA50/SMA200 crossover + 3-bar close above EMA20) ----
       if (name.indexOf('golden cross') >= 0 && i >= 50) {
-        var e50n = calcEMA(candles, i, 50), e50p = calcEMA(candles, i-1, 50);
-        var e200n = calcMA(candles, i, 200), e200p = calcMA(candles, i-1, 200);
-        if (e50p < e200p && e50n > e200n) {
+        var s50n = calcMA(candles, i, 50), s50p = calcMA(candles, i-1, 50);
+        var s200n = calcMA(candles, i, 200), s200p = calcMA(candles, i-1, 200);
+        if (s50p < s200p && s50n > s200n) {
           var rsiGC = calcRSI(candles, 14, i);
-          if (rsiGC >= 25 && rsiGC <= 80) signal = 'long';
+          // Require close above EMA20 for 3 consecutive bars (filters single-candle noise)
+          var ema20_0 = calcEMA(candles, i, 20), ema20_1 = calcEMA(candles, i-1, 20), ema20_2 = calcEMA(candles, i-2, 20);
+          var aboveEma20 = parseFloat(candles[i].c) > ema20_0 && parseFloat(candles[i-1].c) > ema20_1 && parseFloat(candles[i-2].c) > ema20_2;
+          if (rsiGC >= 25 && rsiGC <= 80 && aboveEma20) signal = 'long';
         }
       }
 
@@ -19196,32 +19199,41 @@ async function _pfdBacktestRun(coin, setupName) {
         }
       }
 
-      // ---- Rising Wedge (short) ----
-      if (!signal && name.indexOf('rising wedge') >= 0 && i >= 10) {
-        var rwH1 = parseFloat(candles[i-10].h), rwH2 = parseFloat(candles[i-5].h);
-        var rwL1 = parseFloat(candles[i-10].l), rwL2 = parseFloat(candles[i-5].l);
-        if (rwH1 < rwH2 && rwL1 < rwL2 && isRed) {
-          var rwRange1 = rwH1 - rwL1, rwRange2 = rwH2 - rwL2;
-          if (rwRange2 < rwRange1 * 0.8) signal = 'short';
-        }
-      }
+      // ---- Rising Wedge REMOVED — 0% hit rate in 10 fires, rule inverted/broken ----
 
-      // ---- Cup & Handle (long) ----
-      if (!signal && name.indexOf('cup & handle') >= 0 && i >= 20) {
+      // ---- Fix: Cup & Handle (long) — TIGHTENED with volume + retest + U-shape ----
+      if (!signal && name.indexOf('cup & handle') >= 0 && i >= 25) {
         var cupStart = i - 20, cupEnd = i - 10;
-        var cupHigh = 0, cupLow = 999999;
+        var cupHigh = 0, cupLow = 999999, cupMidLow = 999999;
         for (var ci = cupStart; ci < cupEnd; ci++) {
           if (parseFloat(candles[ci].h) > cupHigh) cupHigh = parseFloat(candles[ci].h);
           if (parseFloat(candles[ci].l) < cupLow) cupLow = parseFloat(candles[ci].l);
+          // Check U-shape: middle third should contain the lowest point
+          if (ci >= cupStart + 3 && ci < cupStart + 7) {
+            if (parseFloat(candles[ci].l) < cupMidLow) cupMidLow = parseFloat(candles[ci].l);
+          }
         }
         var cupDepth = (cupHigh - cupLow) / cupHigh * 100;
-        var handleLow = 999999, handleHigh = 0;
+        var handleLow = 999999, handleHigh = 0, handleCount = 0;
+        var retested = false;
         for (var hi = cupEnd; hi < i; hi++) {
           if (parseFloat(candles[hi].l) < handleLow) handleLow = parseFloat(candles[hi].l);
           if (parseFloat(candles[hi].h) > handleHigh) handleHigh = parseFloat(candles[hi].h);
+          handleCount++;
+          // Retest confirmation: a candle in handle wicked above handleHigh but closed below it
+          if (parseFloat(candles[hi].h) >= handleHigh * 0.99 && parseFloat(candles[hi].c) < handleHigh) retested = true;
         }
         var handleDepth = (cupHigh - handleLow) / cupHigh * 100;
-        if (cupDepth >= 10 && cupDepth <= 35 && handleDepth <= cupDepth / 3 && cl > handleHigh && isGreen) signal = 'long';
+        // Volume confirmation: breakout candle volume > 1.5x average of last 10
+        var avgVol = 0;
+        for (var vi = i - 10; vi < i; vi++) avgVol += (parseFloat(candles[vi].h) - parseFloat(candles[vi].l));
+        avgVol /= 10;
+        var curVol = h - l;
+        var volConfirm = avgVol > 0 && curVol > avgVol * 1.5;
+        // Tightened: U-shape + volume + retest + deeper cup
+        if (cupDepth >= 12 && cupDepth <= 35 && handleDepth <= cupDepth / 3 && handleCount >= 5
+            && cl > handleHigh && isGreen && volConfirm && retested
+            && cupMidLow <= cupLow * 1.01 && !skipLongCap) signal = 'long';
       }
 
       // ---- Ascending Triangle (long) ----
