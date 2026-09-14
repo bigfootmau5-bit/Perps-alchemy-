@@ -6573,6 +6573,54 @@ body.beginner-mode .beginner-tip {
 
   <div class="content">
 
+  <!-- WS TICKER STRIP (Mau5 build, Sept 14) — slim Wall-Street quote marquee across the top -->
+  <div id="pfd-ws-ticker" role="marquee" aria-label="Live price ticker">
+    <div class="pfd-ws-track" id="pfd-ws-track"><span class="pfd-ws-item">⏳ loading live quotes…</span></div>
+  </div>
+
+  <style>
+  /* ===== WS TICKER STRIP (Mau5 build, Sept 14) ===== */
+  #pfd-ws-ticker {
+    overflow: hidden; white-space: nowrap; cursor: default;
+    background: #000; border-bottom: 1px solid var(--border, #232323);
+    padding: 4px 0; margin: 0 0 8px 0; min-height: 22px;
+    position: relative; z-index: 5;
+  }
+  .pfd-ws-track {
+    display: inline-block; padding-left: 100%;
+    animation: pfd-ws-scroll 45s linear infinite;
+    will-change: transform;
+  }
+  #pfd-ws-ticker:hover .pfd-ws-track { animation-play-state: paused; }
+  @keyframes pfd-ws-scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  .pfd-ws-item {
+    display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.02em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #d4d4d8; padding: 0 14px; cursor: pointer;
+  }
+  .pfd-ws-item:hover { color: #FFDE00; }
+  .pfd-ws-sym { color: #FFDE00; }
+  .pfd-ws-up { color: #22c55e; }
+  .pfd-ws-down { color: #ef4444; }
+  /* ===== TOP-TAB DROPDOWN NAV (Bude spec Sept 8, Mau5 build Sept 14) ===== */
+  .pfd-tab-dd-menu {
+    position: absolute; z-index: 9999; min-width: 180px; max-height: 70vh; overflow-y: auto;
+    background: var(--bg, #111); border: 2px solid var(--border, #232323); border-radius: 8px;
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.35); padding: 4px;
+  }
+  .pfd-tab-dd-item {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    background: transparent; border: none; text-align: left; cursor: pointer;
+    font-size: 12px; font-weight: 700; color: var(--fg, #fff);
+    padding: 7px 10px; border-radius: 6px;
+  }
+  .pfd-tab-dd-item:hover { background: rgba(255,222,0,0.12); }
+  .pfd-tab-dd-item.active { background: rgba(255,222,0,0.18); color: #FFDE00; }
+  .pfd-tab-dd-idx { opacity: 0.55; font-size: 10px; min-width: 14px; }
+  .pfd-tab-dd-check { margin-left: auto; color: #FFDE00; }
+  .tab[data-group]::after { content: ' ▾'; font-size: 10px; opacity: 0.7; }
+  </style>
+
   <div class="tabs">
     <div class="tab active" data-group="trade"  data-tab="playbook">📈 Trade</div>
     <div class="tab"        data-group="live"   data-tab="live">🔴 Live</div>
@@ -14181,7 +14229,8 @@ function _pfdDailyRoundPrice(p) {
 function _pfdDailyFindByDate(dateKey) {
   if (!_pfdDailyCalls || !Array.isArray(_pfdDailyCalls.calls)) return null;
   for (var i = 0; i < _pfdDailyCalls.calls.length; i++) {
-    if (_pfdDailyCalls.calls[i].date === dateKey) return _pfdDailyCalls.calls[i];
+    var _c = _pfdDailyCalls.calls[i];
+    if (_c && _c.date === dateKey && _c.status !== 'rerolled') return _c; // INTEGRITY FIX: rerolled calls never count as "today's call"
   }
   return null;
 }
@@ -14975,7 +15024,16 @@ function _pfdDailyGenerate(opts) {
     }
 
     if (opts.override) {
-      _pfdDailyCalls.calls = _pfdDailyCalls.calls.filter(function(c){ return !c || c.date !== today; });
+      // INTEGRITY FIX (Mau5 build, Sept 14): re-rolled calls STAY in history, marked
+      // 'rerolled' with their pre-reroll status preserved. The track record can no
+      // longer shed calls via bonus re-rolls — re-roll stats are counted separately.
+      _pfdDailyCalls.calls.forEach(function(c){
+        if (c && c.date === today && c.status !== 'rerolled') {
+          c.preRerollStatus = c.status;
+          c.status = 'rerolled';
+          c.rerolledAt = nowMs;
+        }
+      });
     }
     _pfdDailyCalls.calls.unshift(call);
     // Keep at most 400 historical calls (>1 year)
@@ -15105,7 +15163,7 @@ function _pfdDailyResolveOne(call) {
 function _pfdDailyStats() {
   var calls = (_pfdDailyCalls && _pfdDailyCalls.calls) ? _pfdDailyCalls.calls : [];
   var total = calls.length;
-  var wins = 0, losses = 0, expired = 0, noCall = 0, pending = 0, resolvedR = 0, allR = 0;
+  var wins = 0, losses = 0, expired = 0, noCall = 0, pending = 0, rerolled = 0, resolvedR = 0, allR = 0;
   var bestStreak = 0, curStreak = 0;
   // Iterate oldest → newest for streak
   var chrono = calls.slice().sort(function(a,b){ return (a.publishedAt||0) - (b.publishedAt||0); });
@@ -15115,15 +15173,17 @@ function _pfdDailyStats() {
     else if (c.status === 'expired') { expired++; allR += (c.rMultiple || 0); curStreak = 0; }
     else if (c.status === 'no_call') { noCall++; }
     else if (c.status === 'pending') { pending++; }
+    else if (c.status === 'rerolled') { rerolled++; } // INTEGRITY FIX: counted separately, never in WR
   });
   var resolved = wins + losses;
-  var winRate = resolved > 0 ? (wins / resolved) * 100 : 0;
+  var winRate = resolved > 0 ? (wins / resolved) * 100 : 0; // decisive WR: wins/(wins+losses)
   var counted = wins + losses + expired;
+  var allDaysWinRate = counted > 0 ? (wins / counted) * 100 : 0; // all-days WR incl. expired
   var avgR = counted > 0 ? allR / counted : 0;
   return {
     total: total, wins: wins, losses: losses, expired: expired, noCall: noCall, pending: pending,
     winRate: winRate, totalR: allR, resolvedR: resolvedR, avgR: avgR, bestStreak: bestStreak,
-    resolvedCount: counted
+    resolvedCount: counted, rerolled: rerolled, allDaysWinRate: allDaysWinRate, sampleSize: resolved
   };
 }
 
@@ -15163,6 +15223,7 @@ function _pfdDailyStatusBadge(status, rMultiple) {
   else if (status === 'expired') { bg = '#6b7280'; fg = '#fff'; txt = 'EXPIRED ' + (rMultiple != null ? (rMultiple >= 0 ? '+' : '') + rMultiple.toFixed(2) + 'R' : '0R'); }
   else if (status === 'pending') { bg = '#f59e0b'; fg = '#000'; txt = 'PENDING'; }
   else if (status === 'no_call') { bg = '#9ca3af'; fg = '#000'; txt = 'NO CALL'; }
+  else if (status === 'rerolled') { bg = '#4b5563'; fg = '#fff'; txt = 'REROLLED'; } // INTEGRITY FIX: visible in history
   return '<span style="display:inline-block; padding:3px 8px; background:' + bg + '; color:' + fg + '; font-weight:700; border:1px solid var(--border); border-radius:6px; font-size:11px; letter-spacing:0.5px;">' + _pfdDailyEsc(txt) + '</span>';
 }
 
@@ -15887,12 +15948,18 @@ function renderDailyCall() {
   // ---- Section 2: TRACK RECORD (slim glass 3-stat strip) ----
   var stats = _pfdDailyStats();
   var _wrDisplay = (stats.resolvedCount > 0 && (stats.wins + stats.losses) > 0) ? (stats.winRate.toFixed(0) + '%') : '—';
+  // INTEGRITY FIX (Sept 14): show sample size + all-days WR (incl. expired) under the decisive WR
+  var _wrSub = (stats.wins + stats.losses) > 0
+    ? ('n=' + stats.sampleSize + ' · all-days ' + (stats.allDaysWinRate > 0 ? stats.allDaysWinRate.toFixed(0) : '0') + '%' + (stats.expired > 0 ? ' · ' + stats.expired + ' exp' : ''))
+    : 'no resolved calls yet';
+  var _rrNote = (stats.rerolled || 0) > 0 ? ' · ' + stats.rerolled + ' rerolled (kept)' : '';
   var _trDisplay = (stats.totalR >= 0 ? '+' : '') + stats.totalR.toFixed(2) + 'R';
   var _bsDisplay = (stats.bestStreak || 0) + 'W';
   html += '<div style="background: var(--pfd-bg-glass); backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%); border: 1px solid var(--pfd-gold-line); border-radius: var(--pfd-radius-md); padding: 14px 18px; margin-bottom: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">';
   html +=   '<div>';
   html +=     '<div style="font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color: var(--pfd-text-muted); font-weight:700;">WIN RATE</div>';
   html +=     '<div class="pfd-num" style="font-size:18px; font-weight:700; color: var(--pfd-gold); margin-top:4px;">' + _wrDisplay + '</div>';
+  html +=     '<div style="font-size:9px; color: var(--pfd-text-muted); margin-top:2px;">' + _wrSub + _rrNote + '</div>';
   html +=   '</div>';
   html +=   '<div>';
   html +=     '<div style="font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color: var(--pfd-text-muted); font-weight:700;">TOTAL R</div>';
@@ -15904,6 +15971,8 @@ function renderDailyCall() {
   html +=   '</div>';
   html += '</div>';
 
+  html += '<div id="pfd-shared-record" style="background: var(--pfd-bg-glass); border: 1px dashed var(--pfd-gold-line); border-radius: var(--pfd-radius-md); padding: 10px 18px; margin-bottom: 18px; font-size:12px;"></div>';
+  html += '<div id="pfd-record-actions" style="display:flex; gap:8px; margin-bottom:18px;"></div>';
   body.innerHTML = html;
 
   // Inject the 5-pick lineup into its mount point (async — kicks a fetch if cache stale)
@@ -51826,5 +51895,234 @@ html, body { max-width: 100vw; overflow-x: hidden; }
 <!-- ==================== END PRO TOOLS ==================== -->
 
 
+<script>
+/* ============================================================
+   MAU5 BUILD — SEPT 14, 2026 (BIGagent404)
+   2) WS ticker strip + top-tab dropdown accordion nav
+   3) Shared canonical track record (record.json + export/import)
+   Rides on top of the existing app; no core paths modified.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  /* ---------- WS TICKER ---------- */
+  var WS_CACHE_KEY = 'perps-ws-ticker';
+  var WS_IDS = ['bitcoin','ethereum','solana','binancecoin','ripple','dogecoin','cardano','avalanche-2','chainlink','litecoin'];
+  var WS_SYMS = { bitcoin:'BTC', ethereum:'ETH', solana:'SOL', binancecoin:'BNB', ripple:'XRP', dogecoin:'DOGE', cardano:'ADA', 'avalanche-2':'AVAX', chainlink:'LINK', litecoin:'LTC' };
+  var WS_ICONS = { bitcoin:'₿', ethereum:'Ξ', solana:'◎', binancecoin:'⬡', ripple:'✕', dogecoin:'Ð', cardano:'₳', 'avalanche-2':'▲', chainlink:'⬛', litecoin:'Ł' };
+
+  function wsPaint(quotes){
+    var track = document.getElementById('pfd-ws-track');
+    if (!track) return;
+    var items = [];
+    Object.keys(WS_SYMS).forEach(function(id){
+      var q = quotes[id];
+      if (!q || typeof q.usd !== 'number' || !isFinite(q.usd)) return;
+      var px = q.usd >= 100 ? q.usd.toLocaleString(undefined,{maximumFractionDigits:0}) : q.usd.toFixed(3);
+      var chg = (typeof q.usd_24h_change === 'number') ? q.usd_24h_change : null;
+      var chgHtml = chg === null ? '' :
+        ' <span class="' + (chg >= 0 ? 'pfd-ws-up' : 'pfd-ws-down') + '">' + (chg >= 0 ? '▲' : '▼') + Math.abs(chg).toFixed(2) + '%</span>';
+      items.push('<span class="pfd-ws-item" data-asset="' + WS_SYMS[id] + '">' +
+        '<span class="pfd-ws-sym">' + (WS_ICONS[id] || '') + ' ' + WS_SYMS[id] + '</span> ' +
+        '$' + px + chgHtml + '</span>');
+    });
+    if (items.length === 0) return;
+    // duplicate the set for a seamless marquee loop
+    track.innerHTML = items.join('') + items.join('');
+    try { track.querySelectorAll('.pfd-ws-item').forEach(function(el){
+      el.addEventListener('click', function(){
+        try { if (typeof pfdSwitchTab === 'function') pfdSwitchTab('chart'); } catch(e){}
+      });
+    }); } catch(e){}
+  }
+
+  function wsFetch(){
+    var url = 'https://api.coingecko.com/api/v3/simple/price?ids=' + WS_IDS.join(',') + '&vs_currencies=usd&include_24hr_change=true';
+    fetch(url, { method: 'GET' }).then(function(r){
+      if (!r.ok) throw new Error('CG ' + r.status);
+      return r.json();
+    }).then(function(quotes){
+      try { localStorage.setItem(WS_CACHE_KEY, JSON.stringify({ ts: Date.now(), quotes: quotes })); } catch(e){}
+      wsPaint(quotes);
+    }).catch(function(){
+      try {
+        var raw = localStorage.getItem(WS_CACHE_KEY);
+        if (raw) wsPaint((JSON.parse(raw) || {}).quotes || {});
+      } catch(e){}
+    });
+  }
+
+  function wsInit(){
+    try {
+      var raw = localStorage.getItem(WS_CACHE_KEY);
+      if (raw) {
+        var c = JSON.parse(raw) || {};
+        if (c.quotes && Date.now() - (c.ts || 0) < 5 * 60 * 1000) wsPaint(c.quotes);
+      }
+    } catch(e){}
+    wsFetch();
+    setInterval(wsFetch, 60 * 1000);
+  }
+
+  /* ---------- TOP-TAB DROPDOWN ACCORDION NAV ---------- */
+  var ddMenu = null;
+
+  function ddClose(){
+    if (ddMenu) { ddMenu.remove(); ddMenu = null; }
+  }
+
+  function ddOpen(group, tabEl){
+    ddClose();
+    var g = window._pfdGroups && _pfdGroups[group];
+    if (!g) return;
+    ddMenu = document.createElement('div');
+    ddMenu.className = 'pfd-tab-dd-menu';
+    ddMenu.setAttribute('role', 'menu');
+    g.subs.forEach(function(sub, i){
+      var isActive = (window._pfdCurrentGroup === group && window._pfdCurrentSub === sub);
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pfd-tab-dd-item' + (isActive ? ' active' : '');
+      b.setAttribute('role', 'menuitem');
+      b.innerHTML = '<span class="pfd-tab-dd-idx">' + (i + 1) + '</span>' +
+                    '<span>' + (g.labels[i] || sub) + '</span>' +
+                    (isActive ? '<span class="pfd-tab-dd-check">✓</span>' : '');
+      b.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        ddClose();
+        try { if (typeof _pfdActivateSub === 'function') _pfdActivateSub(group, sub); } catch(e){}
+      });
+      ddMenu.appendChild(b);
+    });
+    document.body.appendChild(ddMenu);
+    var r = tabEl.getBoundingClientRect();
+    ddMenu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 200)) + 'px';
+    ddMenu.style.top = (r.bottom + 4) + 'px';
+  }
+
+  function ddInit(){
+    try {
+      document.querySelectorAll('.tab[data-group]').forEach(function(t){
+        t.addEventListener('click', function(ev){
+          // dropdown opens on tab click; accordion rule: only one menu, click elsewhere closes
+          setTimeout(function(){ ddOpen(t.dataset.group, t); }, 30);
+        });
+      });
+      document.addEventListener('click', function(ev){
+        if (ddMenu && !ddMenu.contains(ev.target)) {
+          var onTab = ev.target && ev.target.closest && ev.target.closest('.tab[data-group]');
+          if (!onTab) ddClose();
+        }
+      });
+      document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape') ddClose(); });
+    } catch(e){}
+  }
+
+  /* ---------- SHARED CANONICAL TRACK RECORD ---------- */
+  var SHARED = null;
+
+  function sharedStats(calls){
+    var wins = 0, losses = 0, expired = 0, allR = 0;
+    (calls || []).forEach(function(c){
+      if (c.status === 'win') { wins++; allR += (c.rMultiple || 0); }
+      else if (c.status === 'loss') { losses++; allR += (c.rMultiple || 0); }
+      else if (c.status === 'expired') { expired++; allR += (c.rMultiple || 0); }
+    });
+    var n = wins + losses + expired;
+    return { n: n, wr: (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 0, r: allR };
+  }
+
+  function sharedPaint(){
+    var mount = document.getElementById('pfd-shared-record');
+    if (!mount) return;
+    if (!SHARED || !SHARED.calls || SHARED.calls.length === 0) {
+      mount.innerHTML = '<span style="color: var(--pfd-text-muted); font-size:10px; font-weight:600;">CANONICAL RECORD (shared, repo record.json): empty — export a device record and publish to seed it</span>';
+      return;
+    }
+    var st = sharedStats(SHARED.calls);
+    mount.innerHTML = '<span style="color:#FFDE00; font-weight:900;">CANONICAL RECORD</span>' +
+      ' <span style="color: var(--pfd-text-muted); font-size:10px;">(shared · ' + (SHARED.source || 'repo') + ' · ' + (SHARED.updated_at || '') + ')</span><br>' +
+      '<span class="pfd-num" style="font-size:14px; font-weight:800; color: var(--pfd-gold);">' + st.wr.toFixed(0) + '% WR</span>' +
+      ' <span style="color: var(--pfd-text-muted); font-size:10px;">n=' + st.n + '</span>' +
+      ' <span class="pfd-num" style="font-size:14px; font-weight:800; color:#fff; margin-left:8px;">' + (st.r >= 0 ? '+' : '') + st.r.toFixed(2) + 'R</span>';
+  }
+
+  function sharedLoad(){
+    fetch('record.json', { cache: 'no-cache' }).then(function(r){
+      if (!r.ok) throw new Error('no record.json');
+      return r.json();
+    }).then(function(j){
+      SHARED = j || null;
+      sharedPaint();
+    }).catch(function(){ /* static deploy without record.json — fine */ });
+  }
+
+  function exportRecord(){
+    try {
+      var payload = {
+        schema: 1,
+        exported_at: new Date().toISOString(),
+        source: 'device-export',
+        calls: (_pfdDailyCalls && _pfdDailyCalls.calls) ? _pfdDailyCalls.calls : []
+      };
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'perps-alchemy-record.json';
+      document.body.appendChild(a); a.click(); a.remove();
+    } catch(e) { try { alert('Export failed: ' + e.message); } catch(_e){} }
+  }
+
+  function importRecord(file){
+    var fr = new FileReader();
+    fr.onload = function(){
+      try {
+        var j = JSON.parse(fr.result);
+        if (!j || !Array.isArray(j.calls)) throw new Error('not a record file');
+        var byId = {};
+        (((window._pfdDailyCalls || {}).calls) || []).forEach(function(c){ if (c && c.id) byId[c.id] = c; });
+        j.calls.forEach(function(c){ if (c && c.id && !byId[c.id]) byId[c.id] = c; });
+        var merged = Object.keys(byId).map(function(k){ return byId[k]; });
+        merged.sort(function(a,b){ return (b.publishedAt||0) - (a.publishedAt||0); });
+        if (merged.length > 400) merged.length = 400;
+        _pfdDailyCalls.calls = merged;
+        if (typeof _pfdDailySave === 'function') _pfdDailySave();
+        try { if (typeof renderDailyCall === 'function' && _pfdCurrentSub === 'daily') renderDailyCall(); } catch(e){}
+        try { alert('Imported — record now ' + merged.length + ' calls.'); } catch(e){}
+      } catch(e) { try { alert('Import failed: ' + e.message); } catch(_e){} }
+    };
+    fr.readAsText(file);
+  }
+
+  function recordButtonsInit(){
+    var mount = document.getElementById('pfd-record-actions');
+    if (!mount) return;
+    mount.innerHTML =
+      '<button id="pfd-rec-export" style="font-size:10px; font-weight:800; background:#FFDE00; color:#000; border:2px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer;">⬇ EXPORT RECORD</button>' +
+      '<label style="font-size:10px; font-weight:800; background:transparent; color:var(--fg,#fff); border:2px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer;">⬆ IMPORT' +
+      '<input id="pfd-rec-import" type="file" accept="application/json,.json" style="display:none;"></label>';
+    document.getElementById('pfd-rec-export').addEventListener('click', exportRecord);
+    document.getElementById('pfd-rec-import').addEventListener('change', function(){
+      if (this.files && this.files[0]) importRecord(this.files[0]);
+      this.value = '';
+    });
+  }
+
+  /* ---------- BOOT ---------- */
+  function boot(){
+    try { wsInit(); } catch(e){}
+    try { ddInit(); } catch(e){}
+    try { recordButtonsInit(); } catch(e){}
+    try { sharedLoad(); } catch(e){}
+    // repaint shared record whenever the daily panel re-renders (its mount is wiped each render)
+    var _obs = new MutationObserver(function(){ try { sharedPaint(); recordButtonsInit(); } catch(e){} });
+    var dailyPanel = document.getElementById('panel-daily');
+    if (dailyPanel) _obs.observe(dailyPanel, { childList: true, subtree: true });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
 </body>
 </html>
